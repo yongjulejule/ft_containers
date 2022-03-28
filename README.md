@@ -40,7 +40,8 @@ typedef const T* const_pointer;
 typedef const T& const_reference;
 typedef std::size_t size_type;
 typedef std::ptrdiff_t difference_type;
-typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind; // 주어진 타입이 아닌 다른 타입으로 할당하기 위함. e.g) list<int> 는 int 형 리스트를 만들지만, 메모리의 크기는 int가 아닌 node의 크기여야 함.
+// 주어진 타입이 아닌 다른 타입으로 할당하기 위함.
+typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind;
 ```
 
 ## Vector
@@ -49,27 +50,35 @@ Prototype:
 
 ```c++
 /**
- * @brief Vector
- * @tparam T: type of the elements. Must meet the requirements of CopyAssignable and CopyConstructible
- * @tparam Allocator: type of the allocator that is used to acquire/release memory and to construct/destroy the elements in that memory Must meet the requirements of Allocator
+ * @brief generic template of vector
+ * @tparam T: type of the elements. Must meet the requirements of
+ * CopyAssignable and CopyConstructible
+ * @tparam Allocator: type of the allocator that is used to acquire/release
+ * memory and to construct/destroy the elements in that memory
+ * Must meet the requirements of Allocator
  *
  **/
-template <class T, class Allocator = std::allocator<T> > class vector; // generic template
+template <class T, class Allocator = std::allocator<T> > class vector;
 ```
 
 Member types:
 
 ```c++
 typedef T value_type;
-typedef Allocator allocator_type; // default to allocator<value_type>
+// default to allocator<value_type>
+typedef Allocator allocator_type;
 typedef typename allocator_type::pointer pointer;
 typedef typename allocator_type::const_pointer const_pointer;
 typedef typename allocator_type::reference reference;
 typedef typename allocator_type::const_reference const_reference;
-typedef typename allocator_type::size_type size_type; // same to std::size_t when Allocator is std::allocator
-typedef typename allocator_type::difference_type difference_type; // same to std::ptrdiff_t when Allocator is std::allocator
-typedef pointer iterator; // a random access iterator to value_type
-typedef const_pointer const_iterator; // a random access iterator to const value_type
+// same to std::size_t when Allocator is std::allocator
+typedef typename allocator_type::size_type size_type;
+// same to std::ptrdiff_t when Allocator is std::allocator
+typedef typename allocator_type::difference_type difference_type;
+// a random access iterator to value_type
+typedef pointer iterator;
+// a random access iterator to const value_type
+typedef const_pointer const_iterator;
 typedef std::reverse_iterator<iterator> reverse_iterator;
 typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 ```
