@@ -18,11 +18,12 @@
 
 namespace ft {
 template <typename _T, typename _Allocator>
-class vector {
- private:
+class __vector_base {
+ public:
+  typedef _Allocator allocator_type;
+
  protected:
   typedef _T value_type;
-  typedef _Allocator allocator_type;
   typedef typename allocator_type::reference reference;
   typedef typename allocator_type::const_reference const_reference;
   typedef typename allocator_type::size_type size_type;
@@ -35,6 +36,32 @@ class vector {
   // TODO: convert to ft::reverse_iterator
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+
+  pointer __begin_;
+  pointer __end_;
+  pointer __end_cap_;
+  allocator_type __a_;
+
+  allocator_type& __alloc() { return __a_; }
+  const allocator_type& __alloc() const { return __a_; }
+
+  pointer& __end_cap() { return __end_cap_; }
+  const pointer& __end_cap() const { return __end_cap_; }
+
+  __vector_base();
+  __vector_base(const allocator_type& __a);
+  ~__vector_base();
+
+  void clear() { __destruct_at_end(__begin_); }
+  size_type capacity() const {
+    return static_case<size_type>(__end_cap_ - __begin_);
+  }
+};
+
+template <typename _T, typename _Allocator>
+class vector : private __vector_base<_T, _Allocator> {
+ private:
+  typedef __vector_base<_T, _Allocator> __base;
 
  public:
   // constructor
@@ -103,6 +130,7 @@ class vector {
   ~vector();
 };
 
+// comparision operators
 template <typename _T, typename _Allocator>
 bool operator==(const vector<_T, _Allocator>& lhs,
                 const vector<_T, _Allocator>& rhs);
@@ -121,6 +149,8 @@ bool operator>(const vector<_T, _Allocator>& lhs,
 template <typename _T, typename _Allocator>
 bool operator>=(const vector<_T, _Allocator>& lhs,
                 const vector<_T, _Allocator>& rhs);
+
+// TODO: swap needed
 
 }  // namespace ft
 
