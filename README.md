@@ -45,7 +45,72 @@ typedef std::ptrdiff_t difference_type;
 typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind;
 ```
 
+## Exception safety
+
+<details> 
+<summary> 원문 </summary>
+
+> The C++ standard library provides a generally useful conceptual framework for design for exception-safe program components. The library provides one of the following guarantees for every library operation:
+>
+> - The basic guarantee for all operations: The basic invariants of all objects are maintained, and no resources, such as memory, are leaked. In particular, the basic invariants of every built-in and standard-library type guarantee that you can destroy an object or assign to it after every standard-library operation (§iso.17.6.3.1).
+> - The strong guarantee for key operations: in addition to providing the basic guarantee, either the operation succeeds, or it has no effect. This guarantee is provided for key operations, such as `push_back(), single-element insert() on a list, and uninitialized_copy()`.
+> - The nothrow guarantee for some operations: in addition to providing the basic guarantee, some operations are guaranteed not to throw an exception. This guarantee is provided for a few simple operations, such as `swap() of two containers and pop_back()`.
+>   > _Reference : The c++ Programming language, 4rd edition_
+
+</details>
+
+- The basic guarantee:
+  - 모든 객체가 유지되며 리소스가 부족한 상태에선 누수가 발생하지 않음. 특히, 빌트인 혹은 표준 라이브러리에서 the basic garantee를 보장할 땐 객체를 소멸시키거나 값을 할당할 수 있음.
+- The strong Guarantee for key operations:
+  - the basic guarantee에 추가로 operation이 실패시 아무런 영향을 미치지 않음.
+- The nothrow guarantee for some operations:
+  - the basic guarantee에 추가로 일부 operation은 예외를 발생시키지 않음.
+
+[한국문서](https://scvgoe.github.io/2019-07-06-Exception-Safety/)
+
+### RAII (Resource Acquisition Is Initialization)
+
+exception safety를 보장하기 위한 방법중 하나.
+초기화에 성공하면 리소스가 존재하는것을 보장해줘야 하며, 초기화에 실패시 (construct 실패) 자원을 해제해줘야함.
+
+이게 보장이 된다면, 컨테이너를 생성할때 \_\_container_type_base 를 상속받아서 생성하면 된다?
+
+[Ref](https://www.stroustrup.com/3rd_safe.pdf)
+
+> The ‘‘resource acquisition is initialization’’ technique (§14.4) can be used to reduce the amount of
+> code needing to be written and to make the code more stylized. In this case, the key resource
+> required by the vectoris memory to hold its elements. By providing an auxiliary class to represent
+> the notion of memory used by a vector, we can simplify the code and decrease the chance of accidentally forgetting to release it:
+
+```c++
+template<class T, class A= allocator<T> >
+struct vector_base{
+	A alloc; // allocator
+	T* v;  // start of allocation
+	T* space; // end of element sequence, start of space allocated for possible expansion
+	T* last; // end of allocated space
+	vector_base(const A& a, typename A: :size_type n)
+	: alloc(a) , v(a.allocate(n)) , space(v + n) , last(v + n) { }
+	~vector_base() { alloc.deallocate(v,last - v) ; }
+};
+```
+
+[한국어 문서](https://occamsrazr.net/tt/297)
+
+[\_\_base_vector](https://stackoverflow.com/questions/50050659/what-is-going-on-with-vector-base-common)
+
 ## Vector
+
+<details>
+<summary> vector 내부 구현 </summary>
+
+# LLVM
+
+`__vector_base_common`, `__vector_base` 를 사용하여 vector 내부 구현을 제공.
+
+vector implementation에 필요한 메소드들을 정의해서 이를 이용하여 vector를 구현함.
+
+</details>
 
 ### Prototype
 
@@ -192,3 +257,10 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 - [ ] equal and lexicographical_compare
 - [ ] std::pair
 - [ ] std::make_pair
+
+# Reference
+
+[gnu source code (github)](https://github.com/gcc-mirror/gcc/tree/master/libstdc%2B%2B-v3/include/bits)
+[gnu docs](https://gcc.gnu.org/onlinedocs/gcc-11.2.0/libstdc++/api/files.html)
+[cplusplus](https://www.cplusplus.com/)
+[cppreference](https://en.cppreference.com/)
