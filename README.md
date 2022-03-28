@@ -40,6 +40,7 @@ typedef const T* const_pointer;
 typedef const T& const_reference;
 typedef std::size_t size_type;
 typedef std::ptrdiff_t difference_type;
+
 // 주어진 타입이 아닌 다른 타입으로 할당하기 위함.
 typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind;
 ```
@@ -97,13 +98,16 @@ constructor:
 ```c++
 // default constructor which constructs an empty container
 explicit vector(const allocator_type& alloc = allocator_type());
+
 // fill constructor which constructs a container with n elements with value val
 explicit vector(size_type n, const value_type& val = value_type(),
-								const allocator_type& alloc = allocator_type());
+		const allocator_type& alloc = allocator_type());
+
 // range constructor which constructs a container with range first to last
 template <class InputIterator>
 vector (InputIterator first, InputIterator last,
-				const allocator_type& alloc = allocator_type());
+		const allocator_type& alloc = allocator_type());
+
 // copy constructor which constructs a container with the copy of the container
 vector (const vector& other);
 ```
@@ -148,24 +152,24 @@ relational operators:
 
 ```c++
 template <class T, class Alloc>
-  bool operator == (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator == (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 template <class T, class Alloc>
-  bool operator != (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator != (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 template <class T, class Alloc>
-  bool operator <  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator <  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 template <class T, class Alloc>
-  bool operator <= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator <= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 template <class T, class Alloc>
-  bool operator > (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator > (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 template <class T, class Alloc>
-  bool operator >= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+bool operator >= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 ```
 
 swap()
 
 ```c++
 template <class T, class Alloc>
-  void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
+void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 ```
 
 #### Template specializations:
