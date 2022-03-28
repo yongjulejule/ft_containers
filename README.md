@@ -46,7 +46,7 @@ typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind;
 
 ## Vector
 
-Prototype:
+### Prototype
 
 ```c++
 /**
@@ -61,27 +61,116 @@ Prototype:
 template <class T, class Allocator = std::allocator<T> > class vector;
 ```
 
-Member types:
+### Member types
 
 ```c++
 typedef T value_type;
+
 // default to allocator<value_type>
 typedef Allocator allocator_type;
 typedef typename allocator_type::pointer pointer;
 typedef typename allocator_type::const_pointer const_pointer;
 typedef typename allocator_type::reference reference;
 typedef typename allocator_type::const_reference const_reference;
+
 // same to std::size_t when Allocator is std::allocator
 typedef typename allocator_type::size_type size_type;
+
 // same to std::ptrdiff_t when Allocator is std::allocator
 typedef typename allocator_type::difference_type difference_type;
+
 // a random access iterator to value_type
 typedef pointer iterator;
+
 // a random access iterator to const value_type
 typedef const_pointer const_iterator;
+
+// TODO: convert to ft::reverse_iterator later
 typedef std::reverse_iterator<iterator> reverse_iterator;
 typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 ```
+
+### Member functions
+
+constructor:
+
+```c++
+// default constructor which constructs an empty container
+explicit vector(const allocator_type& alloc = allocator_type());
+// fill constructor which constructs a container with n elements with value val
+explicit vector(size_type n, const value_type& val = value_type(),
+								const allocator_type& alloc = allocator_type());
+// range constructor which constructs a container with range first to last
+template <class InputIterator>
+vector (InputIterator first, InputIterator last,
+				const allocator_type& alloc = allocator_type());
+// copy constructor which constructs a container with the copy of the container
+vector (const vector& other);
+```
+
+destructor:
+
+This destroys all elements in the container and deallocates all the storage capacity.
+
+operator=:
+
+Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.
+
+**The container preserve its current allocator.** -> 재할당 하는 경우에 사용됨!
+
+```c++
+vector& operator=(const vector& rhs);
+```
+
+#### Iterators:
+
+`begin(), end(), rbegin(), rend(), cbegin(), cend(), crbegin(), crend()`
+
+#### Capacity:
+
+`size(), max_size(), resize(), capacity(), empty(), reserve()`
+
+#### Element access:
+
+`operator[], at(), front(), back()`
+
+#### Modifiers:
+
+`assign(), push_back(), pop_back(), insert(), erase(), swap(), clear()`
+
+#### Allocator:
+
+`get_allocator()`
+
+#### Non-member functions:
+
+relational operators:
+
+```c++
+template <class T, class Alloc>
+  bool operator == (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+template <class T, class Alloc>
+  bool operator != (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+template <class T, class Alloc>
+  bool operator <  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+template <class T, class Alloc>
+  bool operator <= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+template <class T, class Alloc>
+  bool operator > (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+template <class T, class Alloc>
+  bool operator >= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
+```
+
+swap()
+
+```c++
+template <class T, class Alloc>
+  void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
+```
+
+#### Template specializations:
+
+`vector<bool>`
 
 ## TODO
 

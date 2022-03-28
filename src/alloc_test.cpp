@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
 void allocTest(std::allocator<int> myAlloc, int **arr) {
   myAlloc.construct(*arr, 1);
   myAlloc.construct(*arr + 1, 1);
@@ -24,5 +25,8 @@ int main() {
   std::allocator<int> myAlloc;
   int *arr = myAlloc.allocate(14);
   allocTest(myAlloc, &arr);
+  std::vector<double> a(42, 10, myAlloc);
+  std::cout << sizeof(a);
+  std::allocator<unsigned int> al = a.get_allocator();
   myAlloc.deallocate(arr, 243256);
 }
