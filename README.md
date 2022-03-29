@@ -58,6 +58,12 @@ struct vector_base{
 
 [\_\_base_vector](https://stackoverflow.com/questions/50050659/what-is-going-on-with-vector-base-common)
 
+# SFINAE (Substitution Failure Is Not An Error)
+
+치환에 실패해도 에러를 뱉지 않고 그냥 그 오버로딩된 함수를 무시하고 다음걸 찾음...!
+
+## enable_if
+
 # Allocator
 
 할당을 위한 `template class`
@@ -249,6 +255,7 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 - [ ] map
 - [ ] stack
 - [ ] set
+  - [ ] Red-Black tree
 
 ---
 

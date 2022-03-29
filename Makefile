@@ -4,20 +4,32 @@ ifdef DEBUG
 	CXXFLAGS = --std=c++98 -g3 -fsanitize=address
 else ifdef LEAKS
 	CXXFLAGS = --std=c++98 -g
-else 
+else ifdef TEST
+	CXXFLAGS = -g --std=c++11
+else
 	CXXFLAGS	= --std=c++98 -Wall -Wextra -Werror
 endif
 
-NAME			=  tests #Name of program
+ifdef TEST
+	NAME			=		$(TEST)
+else
+	NAME			=		containers #Name of program
+endif
 
 INC_DIR		= ./include/
 
 SRCS_DIR	= ./src/
 
+TEST_DIR	= ./tests/
+
 SRCS			= $(addprefix $(SRCS_DIR), \
-				  vector_main.cpp \
 				)
 
+ifdef TEST
+	SRCS += $(addprefix $(TEST_DIR), $(TEST).cpp)
+else
+	SRCS += $(addprefix $(SRCS_DIR), main.cpp)
+endif
 
 OBJS			= ${SRCS:%.cpp=%.o}
 

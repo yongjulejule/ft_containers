@@ -159,10 +159,10 @@ class vector : private __vector_base<_T, _Allocator> {
   // constructor
   explicit vector(const allocator_type& _Alloc = allocator_type());
   explicit vector(size_type n, const value_type& val = value_type(),
-                  const allocator_type& alloc = allocator_type());
+                  const allocator_type& _Alloc = allocator_type());
   template <typename InputIterator>
   vector(InputIterator first, InputIterator last,
-         const allocator_type& alloc = allocator_type());
+         const allocator_type& _Alloc = allocator_type());
   vector(const vector& x);
 
   // assign operator
@@ -221,6 +221,24 @@ class vector : private __vector_base<_T, _Allocator> {
   // destructor
   ~vector();
 };
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector(const allocator_type& _Alloc = allocator_type())
+    : __base_vector<_T, _Allocator>(_Alloc) {}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector(size_type n,
+                               const value_type& val = value_type(),
+                               const allocator_type& _Alloc = allocator_type)
+    : __base_vector<_T, _Allocator>(n, _Alloc) {
+  std::uninitialized_fill(__begin_, __begin_ + n, val);
+}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
 
 // comparision operators
 template <typename _T, typename _Allocator>
