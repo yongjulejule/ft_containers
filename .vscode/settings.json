@@ -62,6 +62,12 @@
 		"utility": "cpp",
 		"vector": "cpp",
 		"__undef_macros": "cpp",
-		"memory_resource": "cpp"
-	}
+		"memory_resource": "cpp",
+		"__functional_03": "cpp",
+		"deque": "cpp",
+		"__tree": "cpp",
+		"map": "cpp",
+		"stack": "cpp"
+	},
+	"C_Cpp.errorSquiggles": "Enabled"
 }

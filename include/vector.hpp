@@ -16,9 +16,22 @@
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
 
+#define FT_NOEXCEPT throw()
+
 namespace ft {
+
+/**
+ * @brief base of Vector to RAII.
+ *
+ * @tparam _T: Type of Vector
+ * @tparam _Allocator: Allocator of Vector
+ *
+ * @details 벡터의 데이터가 실제로 저장되는 base. 벡터의 Exception-safety를
+ * 보장하기 위해 RAII 구조로 작성. 외부에서 객체로 만들 수 없으며 vector
+ * 클래스에선 이곳에 정의된 메소드들로 데이터에 접근한다.
+ */
 template <typename _T, typename _Allocator>
-class __vector_base {
+struct __vector_base {
  public:
   typedef _Allocator allocator_type;
 
@@ -30,6 +43,112 @@ class __vector_base {
   typedef typename allocator_type::difference_type difference_type;
   typedef typename allocator_type::pointer pointer;
   typedef typename allocator_type::const_pointer const_pointer;
+
+  pointer __begin_;
+  pointer __end_;
+  pointer __end_cap_;
+  allocator_type __a_;
+
+  allocator_type& __alloc() FT_NOEXCEPT { return __a_; }
+  const allocator_type& __alloc() const FT_NOEXCEPT { return __a_; }
+
+  pointer& __end_cap() FT_NOEXCEPT { return __end_cap_; }
+  const pointer& __end_cap() const FT_NOEXCEPT { return __end_cap_; }
+
+  __vector_base() FT_NOEXCEPT;
+  __vector_base(const allocator_type& a) FT_NOEXCEPT;
+  __vector_base(size_type __n_);
+  __vector_base(size_type __n_, const allocator_type& alloc = allocator_type());
+  ~__vector_base() FT_NOEXCEPT { __a_.deallocate(__begin_, capacity()); }
+
+  void clear() FT_NOEXCEPT {
+    if (__begin_) __destruct_storage();
+  }
+  size_type capacity() const FT_NOEXCEPT {
+    return static_cast<size_type>(__end_cap_ - __begin_);
+  }
+
+  void __destruct_storage() FT_NOEXCEPT;
+  pointer __construct_storage(size_type __n_) {
+    return __n_ == 0 ? pointer() : __alloc().allocate(__n_);
+  };
+  void __copy_data(__vector_base const& __src_) FT_NOEXCEPT;
+  void __swap_data(__vector_base& __src_) FT_NOEXCEPT;
+
+ private:
+  __vector_base(const __vector_base& other) { (void)other; };
+  __vector_base& operator=(const __vector_base& other) { (void)other; };
+};
+
+template <typename _T, typename _Allocator>
+__vector_base<_T, _Allocator>::__vector_base() FT_NOEXCEPT
+    : __begin_(NULL),
+      __end_(NULL),
+      __end_cap_(NULL),
+      __a_(std::allocator<_T>()) {}
+
+template <typename _T, typename _Allocator>
+__vector_base<_T, _Allocator>::__vector_base(const allocator_type& a)
+    FT_NOEXCEPT : __begin_(NULL),
+                  __end_(NULL),
+                  __end_cap_(NULL),
+                  __a_(a) {}
+
+template <typename _T, typename _Allocator>
+__vector_base<_T, _Allocator>::__vector_base(size_type __n_)
+    : __a_(std::allocator<_T>()) {
+  __begin_ = __construct_storage(__n_);
+  __end_ = __begin_;
+  __end_cap_ = __begin_ + __n_;
+}
+
+template <typename _T, typename _Allocator>
+__vector_base<_T, _Allocator>::__vector_base(size_type __n_,
+                                             const allocator_type& a)
+    : __a_(a) {
+  __begin_ = __construct_storage(__n_);
+  __end_ = __begin_;
+  __end_cap_ = __begin_ + __n_;
+}
+
+template <typename _T, typename _Allocator>
+void __vector_base<_T, _Allocator>::__copy_data(__vector_base const& __src_)
+    FT_NOEXCEPT {
+  __begin_ = __src_.__begin_;
+  __end_ = __src_.__end_;
+  __end_cap_ = __src_.__end_cap_;
+};
+
+template <typename _T, typename _Allocator>
+void __vector_base<_T, _Allocator>::__swap_data(__vector_base& __src_)
+    FT_NOEXCEPT {
+  __vector_base<_T, _Allocator> tmp;
+  tmp.__copy_data(__src_);
+  __src_.copy_data(*this);
+  __copy_data(tmp);
+};
+
+template <typename _T, typename _Allocator>
+void __vector_base<_T, _Allocator>::__destruct_storage() FT_NOEXCEPT {
+  __alloc().deallocate(__begin_, capacity());
+  __end_ = __begin_ = __end_cap_ = NULL;
+}
+
+template <typename _T, typename _Allocator = std::allocator<_T> >
+class vector : private __vector_base<_T, _Allocator> {
+ private:
+  typedef __vector_base<_T, _Allocator> __base;
+
+ public:
+  typedef _T value_type;
+  typedef _Allocator allocator_type;
+  typedef typename __base::reference reference;
+  typedef typename __base::const_reference const_reference;
+  typedef typename __base::size_type size_type;
+  typedef typename __base::difference_type difference_type;
+  typedef typename __base::pointer pointer;
+  typedef typename __base::const_pointer const_pointer;
+
   // TODO: convert to ft::iterator_traits
   typedef pointer iterator;
   typedef const pointer const_iterator;
@@ -37,35 +156,8 @@ class __vector_base {
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
-  pointer __begin_;
-  pointer __end_;
-  pointer __end_cap_;
-  allocator_type __a_;
-
-  allocator_type& __alloc() { return __a_; }
-  const allocator_type& __alloc() const { return __a_; }
-
-  pointer& __end_cap() { return __end_cap_; }
-  const pointer& __end_cap() const { return __end_cap_; }
-
-  __vector_base();
-  __vector_base(const allocator_type& __a);
-  ~__vector_base();
-
-  void clear() { __destruct_at_end(__begin_); }
-  size_type capacity() const {
-    return static_case<size_type>(__end_cap_ - __begin_);
-  }
-};
-
-template <typename _T, typename _Allocator>
-class vector : private __vector_base<_T, _Allocator> {
- private:
-  typedef __vector_base<_T, _Allocator> __base;
-
- public:
   // constructor
-  explicit vector(const allocator_type& _Allocator = allocator_type());
+  explicit vector(const allocator_type& _Alloc = allocator_type());
   explicit vector(size_type n, const value_type& val = value_type(),
                   const allocator_type& alloc = allocator_type());
   template <typename InputIterator>
@@ -114,7 +206,7 @@ class vector : private __vector_base<_T, _Allocator> {
   void assign(size_type n, const value_type& val);
   void push_back(const value_type& val);
   void pop_back();
-  iterator insert(interator position, const value_type& val);
+  iterator insert(iterator position, const value_type& val);
   void insert(iterator position, size_type n, const value_type& val);
   template <typename InputIterator>
   void insert(iterator position, InputIterator first, InputIterator last);

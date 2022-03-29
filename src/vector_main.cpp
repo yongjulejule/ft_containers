@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+#include "vector.hpp"
+
 int main(void) {
   int arr[] = {1, 2, 3, 4, 5};
   std::vector<int> a(arr, arr + 5);
@@ -36,4 +38,8 @@ int main(void) {
   std::cout << sizeof(a) << "\n";
   std::cout << c.size() << "\n";
   std::cout << a.size() << "\n";
+  // std::vector<int, std::vector<int>::iterator> t;
+  // std::__vector_base<int, std::allocator<int> > tt;
+  ft::vector<int, std::allocator<int> > h;
+  // ft::vector<int, std::allocator<int>> asd;
 }

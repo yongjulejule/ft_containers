@@ -15,7 +15,7 @@ INC_DIR		= ./include/
 SRCS_DIR	= ./src/
 
 SRCS			= $(addprefix $(SRCS_DIR), \
-				  alloc_test.cpp \
+				  vector_main.cpp \
 				)
 
 
