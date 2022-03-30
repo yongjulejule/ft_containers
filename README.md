@@ -2,7 +2,46 @@
 
 My c++ STL container (c++98)
 
-# Exception safety
+# keywords
+
+## stack unwinding
+
+- 스택에서 함수 진행 중, exception이 발생했을 시 catch를 찾아가면서 콜스택을 되돌아가게 되고, 이때 콜스택 하나 하나를 빠져나올 때 마다 해당 스택을 정리해주는것. 만약, 스택 내부에서 힙에 할당된 메모리가 있으면 릭이 발생함! (RAII가 대표적인 해결책.)
+
+```c++
+void f3() {
+	int *c = new int[100]; // will be leak
+	std::string s = "this is stack... would be destroied";
+	throw "exception!";
+}
+
+void f2() { f3() }
+
+void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
+```
+
+- `f1->f2->f3` 순으로 스택이 쌓이며, `f3->f2->f1` 순으로 스택이 해제됨.
+- RAII를 보장하여 `f3` 의 스코프를 나가면서 메모리 해제가 보장된다면, leak이 발생하지 않음.
+
+## dynamic exception specification _(deprecated c++11, removed c++17)_
+
+- `throw(expression)`을 통하여 특정 함수가 어떤 exception을 던지는지 설정 가능
+- 만약 expression에 없는 exception이 throw 된다면, std::unexcepted가 작동함.
+- `throw()` 형태로 쓴다면, 해당 함수는 exception을 던지지 않는다는 의미가 됨.
+- 프로그래머의 의도를 함수에 녹여낼 수 있으며, 컴파일러 상에서 최적화도 가능해짐.
+- 하지만 [여러가지 이유](https://stackoverflow.com/questions/13841559/deprecated-throw-list-in-c11)로 삭제됨
+
+  - 런타임시 체크되어서 프로그래머가 모든 runtime-failure를 다룰 수 없음.
+  - 오히려 런타임 오버헤드가 생김.
+  - generic code에서 사용성이 떨어짐. 해당 함수가 던질 수 있는 exception이 늘어나면 고쳐야할게 더 많아짐.
+  - 실제로, 함수가 아무 exception이나 던지거나(`throw(...)`이 없을때) 또는 exception을 절대 던지지 않는 상황(`throw()`)에서만 최적화가 가능
+  - 이에 맞게 [noexcept](https://en.cppreference.com/w/cpp/language/noexcept_spec)로 대체됨.
+
+- std::unexpected
+
+  - `std::unexcepted_handler`가 실행되는데, 기본 핸들러가 `std::terminate`이므로 `std::abort()`를 통해 프로그램이 종료됨
+
+## Exception safety
 
 <details> 
 <summary> 원문 </summary>
@@ -30,11 +69,10 @@ My c++ STL container (c++98)
 exception safety를 보장하기 위한 방법중 하나.
 초기화에 성공하면 리소스가 존재하는것을 보장해줘야 하며, 초기화에 실패시 (construct 실패) 자원을 해제해줘야함. 또한, 소멸자 호출 시 사용한 리소스들을 모두 잘 해제해줘야함.
 
-따라서, 스코프에서 객체를 생성하고 스코프에서 나올 때, 객체가 소멸되면서 모든 자원이 정상적으로 반환되면 됨! - 그래서 base_vector를 쓰는거??? 아-하!
+따라서, 스코프에서 객체를 생성하고 스코프에서 나올 때, 객체가 소멸되면서 모든 자원이 정상적으로 반환되면 됨!
 
-이게 보장이 된다면, 컨테이너를 생성할때 \_\_container_type_base 를 상속받아서 생성하면 된다?
-
-[Ref](https://www.stroustrup.com/3rd_safe.pdf)
+<details> 
+<summary> 참고 </summary>
 
 > The ‘‘resource acquisition is initialization’’ technique (§14.4) can be used to reduce the amount of
 > code needing to be written and to make the code more stylized. In this case, the key resource
@@ -54,13 +92,19 @@ struct vector_base{
 };
 ```
 
+[Stroustrup's document](https://www.stroustrup.com/3rd_safe.pdf)
+
 [한국어 문서](https://occamsrazr.net/tt/297)
 
 [\_\_base_vector](https://stackoverflow.com/questions/50050659/what-is-going-on-with-vector-base-common)
 
-# SFINAE (Substitution Failure Is Not An Error)
+</details>
+
+## SFINAE (Substitution Failure Is Not An Error)
 
 치환에 실패해도 에러를 뱉지 않고 그냥 그 오버로딩된 함수를 무시하고 다음걸 찾음...!
+
+## \*\_traits
 
 ## enable_if
 
