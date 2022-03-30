@@ -67,9 +67,9 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
 ## RAII (Resource Acquisition Is Initialization)
 
 exception safety를 보장하기 위한 방법중 하나.
-초기화에 성공하면 리소스가 존재하는것을 보장해줘야 하며, 초기화에 실패시 (construct 실패) 자원을 해제해줘야함. 또한, 소멸자 호출 시 사용한 리소스들을 모두 잘 해제해줘야함.
+초기화에 성공하면 리소스가 존재하는것을 보장해줘야 하며, 초기화에 실패시 (construct 실패) 자원을 해제해줘야함. 또한, 소멸자 호출 시 사용한 리소스들을 모두 잘 해제해줘야함. 따라서 객체가 사용하는 자원은 객체의 수명 내에서 관리됨.
 
-따라서, 스코프에서 객체를 생성하고 스코프에서 나올 때, 객체가 소멸되면서 모든 자원이 정상적으로 반환되면 됨!
+따라서, 스코프에서 객체를 생성하고 스코프에서 나올 때, 모든 자원이 정상적으로 반환되면 됨!
 
 <details> 
 <summary> 참고 </summary>
@@ -100,13 +100,49 @@ struct vector_base{
 
 </details>
 
-## SFINAE (Substitution Failure Is Not An Error)
-
-치환에 실패해도 에러를 뱉지 않고 그냥 그 오버로딩된 함수를 무시하고 다음걸 찾음...!
-
 ## \*\_traits
 
+> A traits class provides a way of associating information with a compile-time entity (a type, integral constant, or address).
+
+c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` 등 수많은 `*_traits`가 존재하며 STL에서 이런 `*_trait`가 정말 많이 쓰임. 이는 컴파일 타임에 타입을 특성화 해주기 위함이며, 타입이 중요한 메타 프로그래밍에서 많이 쓰임...
+
+`iterator_traits`를 활용하여 5가지 이터레이터에 대한 generic한 코드를 짤 수 있고, `char_traits`를 통하여 `char` 과 `wchar`를 묶어줄 수 있으며 `type_traits`를 이용하여 컴파일 타임에 `true, false`를 사용할 수 있는 등 다양한 기능을 제공해줌
+
+이러한 `traits`은 주로 템플릿 특수화를 통하여 구현됨!
+
+## SFINAE (Substitution Failure Is Not An Error)
+
+c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/cpp/language/functions)를 찾아가는 과정은 매우 복잡하며, 이 과정에서 수많은 후보가 생김.
+
+1. name lookup 을 통하여 함수 이름을 찾음.
+2. ADL을 통하여 매칭되는 함수를 찾음. (이 과정에서 암시적 형변환이 일어날 수 있음)
+3. 템플릿 함수는 타입이 정해지지 않았으므로 인스턴스화가 될 필요가 있음.
+4. 명시적 혹은 암시적으로 템플릿 함수가 인스턴스화가 되지만, 항상 템플릿의 모든 인자가 정해지지는 않음.
+5. 이때 가능하다면, 컴파일러가 템플릿의 인자를 추론함(Template argument deduction)
+6. 이렇게 candidated function set이 생성되는데 둘 이상의 함수가 후보가 될 수 있음
+7. 목록에서 함수의 인자들을 치환하는데, 이때 타입이나 표현상의 문제가 있으면 치환에 실패함
+8. **치환에 실패할 시 컴파일 에러를 내지 않고, 해당 후보 함수를 후보군에서 제외하는 방식으로 작동!(SFINAE)**
+9. overload resolution을 통하여 실제로 호출한 함수를 찾음!
+
+- [name lookup](https://en.cppreference.com/w/cpp/language/lookup)
+  - [unqualified name lookup](https://en.cppreference.com/w/cpp/language/unqualified_lookup)
+  - [qualified name loopup](https://en.cppreference.com/w/cpp/language/qualified_lookup)
+- [ADL (Argument Dependent Lookup)](https://en.cppreference.com/w/cpp/language/adl)
+- [template argument deduction](https://en.cppreference.com/w/cpp/language/template_argument_deduction)
+- [template argument substitution](https://en.cppreference.com/w/cpp/language/function_template#Template_argument_substitution)
+- [overload resolution](https://en.cppreference.com/w/cpp/language/overload_resolution)
+
 ## enable_if
+
+SFINAE를 활용하여 특정 조건에서만 해당 템플릿 함수를 호출하게 만들어주는 도구
+
+```c++
+template<bool B, class T = void>
+struct enable_if {};
+
+template<class T>
+struct enable_if<true, T> { typedef T type; };
+```
 
 # Allocator
 

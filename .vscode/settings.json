@@ -67,7 +67,10 @@
 		"deque": "cpp",
 		"__tree": "cpp",
 		"map": "cpp",
-		"stack": "cpp"
+		"stack": "cpp",
+		"__functional_base_03": "cpp",
+		"compare": "cpp",
+		"__memory": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Enabled"
 }
