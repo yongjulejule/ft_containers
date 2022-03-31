@@ -91,6 +91,12 @@ struct _is_integral<unsigned long long> : public true_type {};
 template <typename T>
 struct is_integral : public _is_integral<typename remove_cv<T>::type> {};
 
+template <typename T, typename U>
+struct is_same : public false_type {};
+
+template <typename T>
+struct is_same<T, T> : public true_type {};
+
 }  // namespace ft
 
-#endif  // ENABLE_IF
+#endif  // TYPE_TRAITS

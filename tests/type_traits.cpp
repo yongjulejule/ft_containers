@@ -1,5 +1,6 @@
 #include "type_traits.hpp"
 
+#include <deque>
 #include <iostream>
 #include <memory>
 #include <type_traits>
@@ -149,6 +150,21 @@ void is_integral_test() {
   print_integral_test(test);
 }
 
+void is_same_test() {
+  std::cout << ft::is_same<int, double>::value << ", "
+            << std::is_same<int, double>::value << "\n";
+  std::cout << ft::is_same<unsigned int, u_int32_t>::value << ", "
+            << std::is_same<unsigned int, u_int32_t>::value << "\n";
+  std::cout << ft::is_same<std::vector<int>, std::vector<int> >::value << ", "
+            << std::is_same<std::vector<int>, std::vector<int> >::value << "\n";
+  std::cout << ft::is_same<std::vector<int>, std::deque<int> >::value << ", "
+            << std::is_same<std::vector<int>, std::deque<int> >::value << "\n";
+  std::cout << ft::is_same<std::vector<double>, std::vector<int> >::value
+            << ", "
+            << std::is_same<std::vector<double>, std::vector<int> >::value
+            << "\n";
+}
+
 int main() {
   std::cout << "===== SIFAE_TEST ===== \n";
   sifae_test();
@@ -158,4 +174,6 @@ int main() {
   integral_constant_test();
   std::cout << "===== is_integral_test ===== \n";
   is_integral_test();
+  std::cout << "===== is_same_test ===== \n";
+  is_same_test();
 }
