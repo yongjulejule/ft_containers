@@ -17,10 +17,7 @@ int main() {
   std::vector<int>::pointer t1;
   std::vector<int>::iterator t2;
   std::cout << typeid(t1).name() << "\n" << typeid(t2).name() << "\n";
-  ft::__wrap_iter<std::vector<int>::iterator, std::vector<int> > gg(it);
-  std::__wrap_iter<std::vector<int>::iterator> ff;
-  gg = it;
-  // ff = gg;
-  std::cout << &ff << ":"
-            << "\n";
+  typedef std::iterator<std::forward_iterator_tag, int> my_it;
+  std::reverse_iterator<my_it> rit;
+  // std::cout << rit[5];
 }

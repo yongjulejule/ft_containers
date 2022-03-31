@@ -16,6 +16,18 @@
 		"externalConsole": false,
 		"MIMode": "lldb",
 		"preLaunchTask": "Use Makefile"
+	},
+	{
+		"name": "(lldb) Launch tests",
+		"type": "lldb",
+		"request": "launch",
+		"program": "${workspaceFolder}/tests",
+		"args": [],
+		"stopAtEntry": false,
+		"cwd": "${fileDirname}",
+		"environment": [],
+		"externalConsole": false,
+		"MIMode": "lldb",
 	}
 	],
 	"inputs":[
