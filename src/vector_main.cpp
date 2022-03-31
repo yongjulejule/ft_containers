@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #include "vector.hpp"
@@ -19,7 +20,6 @@ int main(void) {
   int arr[] = {1, 2, 3, 4, 5};
   std::vector<int> a(arr, arr + 5);
   std::vector<bool> c;
-  std::cout << int * ::type;
 
   c.push_back(false);
   c.push_back(true);
