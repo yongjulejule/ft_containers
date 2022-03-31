@@ -110,6 +110,8 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 
 이러한 `traits`은 주로 템플릿 특수화를 통하여 구현됨!
 
+[자세한 설명](http://egloos.zum.com/sweeper/v/3007176)
+
 ## SFINAE (Substitution Failure Is Not An Error)
 
 c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/cpp/language/functions)를 찾아가는 과정은 매우 복잡하며, 이 과정에서 수많은 후보가 생김.
