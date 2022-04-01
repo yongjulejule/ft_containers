@@ -9,15 +9,17 @@
  *
  */
 
+#include "vector.hpp"
+
 #include <iostream>
 #include <iterator>
 #include <memory>
 #include <type_traits>
 #include <vector>
 
-#include "vector.hpp"
+#include "iterator.hpp"
 
-int main(void) {
+void stl_vec_test() {
   int arr[] = {1, 2, 3, 4, 5};
   std::vector<int> a(arr, arr + 5);
   std::vector<bool> c;
@@ -40,8 +42,20 @@ int main(void) {
   std::cout << sizeof(a) << "\n";
   std::cout << c.size() << "\n";
   std::cout << a.size() << "\n";
-  // std::vector<int, std::vector<int>::iterator> t;
-  // std::__vector_base<int, std::allocator<int> > tt;
-  ft::vector<int, std::allocator<int> > h;
-  // ft::vector<int, std::allocator<int>> asd;
+}
+
+int main(void) {
+  stl_vec_test();
+  // ft::vector<int, std::allocator<int> > h;
+
+  ft::__vector_iterator<ft::iterator<ft::input_iterator_tag, int> > ok;
+
+  std::cout << typeid(ok).name();
+  ft::vector<int> my_v(10, 10);
+  ft::vector<int>::iterator it = my_v.begin();
+  ft::vector<int>::iterator ite = my_v.end();
+  for (; it != ite; it++) {
+    std::cout << *it << ", ";
+  }
+  std::cout << "\n";
 }

@@ -9,9 +9,10 @@
  *
  */
 
-#include <iterator>
 #include <memory>
 #include <vector>
+
+#include "iterator.hpp"
 
 #ifndef VECTOR_HPP
 #define VECTOR_HPP
@@ -58,7 +59,7 @@ struct __vector_base {
   __vector_base() FT_NOEXCEPT;
   __vector_base(const allocator_type& a) FT_NOEXCEPT;
   __vector_base(size_type __n_);
-  __vector_base(size_type __n_, const allocator_type& alloc = allocator_type());
+  __vector_base(size_type __n_, const allocator_type& alloc);
   ~__vector_base() FT_NOEXCEPT { __a_.deallocate(__begin_, capacity()); }
 
   void clear() FT_NOEXCEPT {
@@ -134,6 +135,137 @@ void __vector_base<_T, _Allocator>::__destruct_storage() FT_NOEXCEPT {
   __end_ = __begin_ = __end_cap_ = NULL;
 }
 
+/**
+ * @brief Iterator for vector.
+ *
+ * @tparam _Iter: type of iterator
+ */
+template <typename _Iter>
+class __vector_iterator {
+ public:
+  typedef _Iter iterator_type;
+  typedef typename iterator_traits<iterator_type>::iterator_category
+      iterator_category;
+  typedef typename iterator_traits<iterator_type>::value_type value_type;
+  typedef
+      typename iterator_traits<iterator_type>::difference_type difference_type;
+  typedef typename iterator_traits<iterator_type>::pointer pointer;
+  typedef typename iterator_traits<iterator_type>::reference reference;
+
+ private:
+  iterator_type __it;
+
+ public:
+  __vector_iterator() FT_NOEXCEPT {}
+  template <typename _U>
+  __vector_iterator(
+      const __vector_iterator<_U>& __u,
+      typename enable_if<__is_random_access_iterator<_U>::value>::type* =
+          0)  // can copy when the category is random_access
+      FT_NOEXCEPT : __it(__u.base()) {}
+
+  __vector_iterator(iterator_type __x) FT_NOEXCEPT : __it(__x) {}
+
+  const iterator_type& base() const { return __it; }
+
+  // operator
+  reference operator*() const FT_NOEXCEPT { return *__it; }
+  pointer operator->() const FT_NOEXCEPT { return __it; }
+  __vector_iterator& operator++() FT_NOEXCEPT {
+    ++__it;
+    return *this;
+  }
+  __vector_iterator operator++(int) FT_NOEXCEPT {
+    __vector_iterator __tmp(*this);
+    ++(*this);
+    return __tmp;
+  }
+  __vector_iterator& operator--() FT_NOEXCEPT {
+    --__it;
+    return *this;
+  }
+  __vector_iterator operator--(int) FT_NOEXCEPT {
+    __vector_iterator __tmp(*this);
+    --(*this);
+    return __tmp;
+  }
+  __vector_iterator& operator+=(difference_type __n) {
+    __it += __n;
+    return *this;
+  }
+  __vector_iterator operator+(difference_type __n) {
+    __vector_iterator __w(*this);
+    __w += __n;
+    return __w;
+  }
+  __vector_iterator& operator-=(difference_type __n) {
+    __it -= __n;
+    return *this;
+  }
+  __vector_iterator operator-(difference_type __n) {
+    __vector_iterator __w(*this);
+    __w -= __n;
+    return __w;
+  }
+  reference operator[](difference_type __n) { return __it[__n]; }
+};
+
+template <typename _Iter1, typename _Iter2>
+bool operator==(const __vector_iterator<_Iter1>& __lhs,
+                const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() == __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+bool operator!=(const __vector_iterator<_Iter1>& __lhs,
+                const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() != __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+bool operator<(const __vector_iterator<_Iter1>& __lhs,
+               const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() < __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+bool operator>(const __vector_iterator<_Iter1>& __lhs,
+               const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() > __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+bool operator>=(const __vector_iterator<_Iter1>& __lhs,
+                const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() >= __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+bool operator<=(const __vector_iterator<_Iter1>& __lhs,
+                const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() <= __rhs.base();
+}
+
+template <typename _Iter1, typename _Iter2>
+typename __vector_iterator<_Iter1>::difference_type operator-(
+    const __vector_iterator<_Iter1>& __lhs,
+    const __vector_iterator<_Iter2>& __rhs) {
+  return __lhs.base() - __rhs.base();
+}
+
+template <typename _Iter>
+__vector_iterator<_Iter> operator+(
+    typename __vector_iterator<_Iter>::difference_type __n,
+    const __vector_iterator<_Iter>& __it) {
+  return __vector_iterator<_Iter>(__it.base() + __n);
+}
+
+/**
+ * @brief vector container class.
+ *
+ * @tparam _T: each element type in vector
+ * @tparam _Allocator: Allocator of vector
+ */
 template <typename _T, typename _Allocator = std::allocator<_T> >
 class vector : private __vector_base<_T, _Allocator> {
  private:
@@ -149,30 +281,32 @@ class vector : private __vector_base<_T, _Allocator> {
   typedef typename __base::pointer pointer;
   typedef typename __base::const_pointer const_pointer;
 
-  // TODO: convert to ft::iterator_traits
-  typedef pointer iterator;
-  typedef const pointer const_iterator;
-  // TODO: convert to ft::reverse_iterator
-  typedef std::reverse_iterator<iterator> reverse_iterator;
-  typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+  typedef __vector_iterator<pointer> iterator;
+  typedef __vector_iterator<const_pointer> const_iterator;
+  typedef ft::reverse_iterator<iterator> reverse_iterator;
+  typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
   // constructor
   explicit vector(const allocator_type& _Alloc = allocator_type());
-  explicit vector(size_type n, const value_type& val = value_type(),
-                  const allocator_type& _Alloc = allocator_type());
+  explicit vector(size_type n);
+  explicit vector(size_type n, const value_type& val);
+  explicit vector(size_type n, const value_type& val,
+                  const allocator_type& _Alloc);
   template <typename InputIterator>
-  vector(InputIterator first, InputIterator last,
-         const allocator_type& _Alloc = allocator_type());
-  vector(const vector& x);
+  vector(InputIterator first,
+         typename enable_if<__is_input_iterator<InputIterator>::value &&
+                                !__is_forward_iterator<InputIterator>::value,
+                            InputIterator>::type last,
+         const allocator_type& _Alloc);
 
   // assign operator
   vector& operator=(const vector& rhs);
 
   // iterators
-  iterator begin();
-  const_iterator begin() const;
-  iterator end();
-  const_iterator end() const;
+  iterator begin() FT_NOEXCEPT { return this->__begin_; }
+  const_iterator begin() const { return this->__begin_; }
+  iterator end() { return this->__end_; }
+  const_iterator end() const { return this->__end_; }
   reverse_iterator rbegin();
   const_reverse_iterator rbegin() const;
   reverse_iterator rend();
@@ -218,47 +352,65 @@ class vector : private __vector_base<_T, _Allocator> {
   // Allocator
   allocator_type get_allocator() const;
 
-  // destructor
-  ~vector();
+  // TODO: Impl destructor
+  ~vector() {}
 };
 
-template <typename _T, typename _Allocator>
-vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
+// TODO: 디폴트가 설정되어 있으면 거기로 알아서 가는지 확인해봐야함.
+// template <typename _T, typename _Allocator>
+// vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
+
+/*
+ * explicit vector(const allocator_type& _Alloc = allocator_type());
+ * explicit vector(size_type n);
+ * explicit vector(size_type n, const value_type& val);
+ * explicit vector(size_type n, const value_type& val,
+ * const allocator_type& _Alloc);
+ * template <typename InputIterator>
+ * vector(InputIterator first, typename
+ * enable_if<__is_input_iterator<InputIterator>::value &&
+ *                               !__is_forward_iterator<InputIterator>::value,
+ *                           InputIterator>::type last,
+ *        const allocator_type& _Alloc = allocator_type());
+ **/
 
 template <typename _T, typename _Allocator>
-vector<_T, _Allocator>::vector(const allocator_type& _Alloc = allocator_type())
-    : __base_vector<_T, _Allocator>(_Alloc) {}
+vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
+    : __vector_base<_T, _Allocator>(_Alloc) {}
 
 template <typename _T, typename _Allocator>
-vector<_T, _Allocator>::vector(size_type n,
-                               const value_type& val = value_type(),
-                               const allocator_type& _Alloc = allocator_type)
-    : __base_vector<_T, _Allocator>(n, _Alloc) {
-  std::uninitialized_fill(__begin_, __begin_ + n, val);
+vector<_T, _Allocator>::vector(size_type n, const value_type& val)
+    : __vector_base<_T, _Allocator>(n) {
+  std::uninitialized_fill(this->__begin_, this->__begin_ + n, val);
+  this->__end_ += n;
 }
-
 template <typename _T, typename _Allocator>
-vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
+vector<_T, _Allocator>::vector(size_type n, const value_type& val,
+                               const allocator_type& _Alloc)
+    : __vector_base<_T, _Allocator>(n, _Alloc) {
+  std::uninitialized_fill(this->__begin_, this->__begin_ + n, val);
+  this->__end_ += n;
+}
 
 // comparision operators
 template <typename _T, typename _Allocator>
-bool operator==(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs);
+bool operator==(const vector<_T, _Allocator>& __lhs,
+                const vector<_T, _Allocator>& __rhs);
 template <typename _T, typename _Allocator>
-bool operator!=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs);
+bool operator!=(const vector<_T, _Allocator>& __lhs,
+                const vector<_T, _Allocator>& __rhs);
 template <typename _T, typename _Allocator>
-bool operator<(const vector<_T, _Allocator>& lhs,
-               const vector<_T, _Allocator>& rhs);
+bool operator<(const vector<_T, _Allocator>& __lhs,
+               const vector<_T, _Allocator>& __rhs);
 template <typename _T, typename _Allocator>
-bool operator<=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs);
+bool operator<=(const vector<_T, _Allocator>& __lhs,
+                const vector<_T, _Allocator>& __rhs);
 template <typename _T, typename _Allocator>
-bool operator>(const vector<_T, _Allocator>& lhs,
-               const vector<_T, _Allocator>& rhs);
+bool operator>(const vector<_T, _Allocator>& __lhs,
+               const vector<_T, _Allocator>& __rhs);
 template <typename _T, typename _Allocator>
-bool operator>=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs);
+bool operator>=(const vector<_T, _Allocator>& __lhs,
+                const vector<_T, _Allocator>& __rhs);
 
 // TODO: swap needed
 

@@ -1,8 +1,11 @@
 #include "iterator.hpp"
 
+#include <deque>
 #include <iostream>
 #include <iterator>
+#include <list>
 #include <map>
+#include <set>
 #include <vector>
 
 template <typename tag>

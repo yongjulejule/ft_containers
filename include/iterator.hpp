@@ -197,47 +197,47 @@ reverse_iterator<_Iter> operator+(
   return reverse_iterator<_Iter>(__it.base() - __n);
 }
 
-template <typename _Iterator>
+template <typename _T>
 struct __is_input_iterator
     : public integral_constant<
-          bool, is_same<typename _Iterator::iterator_category,
-                        input_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
-                            forward_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
-                            bidirectional_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
-                            random_access_iterator_tag>::value> {};
+          bool, (is_same<typename iterator_traits<_T>::iterator_category,
+                         input_iterator_tag>::value ||
+                 is_same<typename iterator_traits<_T>::iterator_category,
+                         forward_iterator_tag>::value ||
+                 is_same<typename iterator_traits<_T>::iterator_category,
+                         bidirectional_iterator_tag>::value ||
+                 is_same<typename iterator_traits<_T>::iterator_category,
+                         random_access_iterator_tag>::value)> {};
 
-template <typename _Iterator>
+template <typename _T>
 struct __is_output_iterator
-    : public integral_constant<bool,
-                               is_same<typename _Iterator::iterator_category,
-                                       output_iterator_tag>::value> {};
+    : public integral_constant<
+          bool, is_same<typename iterator_traits<_T>::iterator_category,
+                        output_iterator_tag>::value> {};
 
-template <typename _Iterator>
+template <typename _T>
 struct __is_forward_iterator
     : public integral_constant<
-          bool, is_same<typename _Iterator::iterator_category,
+          bool, is_same<typename iterator_traits<_T>::iterator_category,
                         forward_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
+                    is_same<typename iterator_traits<_T>::iterator_category,
                             bidirectional_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
+                    is_same<typename iterator_traits<_T>::iterator_category,
                             random_access_iterator_tag>::value> {};
 
-template <typename _Iterator>
+template <typename _T>
 struct __is_bidirectional_iterator
     : public integral_constant<
-          bool, is_same<typename _Iterator::iterator_category,
+          bool, is_same<typename iterator_traits<_T>::iterator_category,
                         bidirectional_iterator_tag>::value ||
-                    is_same<typename _Iterator::iterator_category,
+                    is_same<typename iterator_traits<_T>::iterator_category,
                             random_access_iterator_tag>::value> {};
 
-template <typename _Iterator>
+template <typename _T>
 struct __is_random_access_iterator
-    : public integral_constant<bool,
-                               is_same<typename _Iterator::iterator_category,
-                                       random_access_iterator_tag>::value> {};
+    : public integral_constant<
+          bool, is_same<typename iterator_traits<_T>::iterator_category,
+                        random_access_iterator_tag>::value> {};
 
 }  // namespace ft
 

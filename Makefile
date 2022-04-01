@@ -11,7 +11,7 @@ else
 endif
 
 ifdef TEST
-	NAME			=		$(TEST)
+	NAME			=		test.out
 else
 	NAME			=		containers #Name of program
 endif

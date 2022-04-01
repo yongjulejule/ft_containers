@@ -70,7 +70,9 @@
 		"stack": "cpp",
 		"__functional_base_03": "cpp",
 		"compare": "cpp",
-		"__memory": "cpp"
+		"__memory": "cpp",
+		"set": "cpp",
+		"list": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Enabled"
 }
