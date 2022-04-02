@@ -11,7 +11,7 @@ else
 endif
 
 ifdef TEST
-	NAME			=		test.out
+	NAME			=		mine.out
 else
 	NAME			=		containers #Name of program
 endif

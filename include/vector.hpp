@@ -60,13 +60,23 @@ struct __vector_base {
   __vector_base(const allocator_type& a) FT_NOEXCEPT;
   __vector_base(size_type __n_);
   __vector_base(size_type __n_, const allocator_type& alloc);
-  ~__vector_base() FT_NOEXCEPT { __a_.deallocate(__begin_, capacity()); }
+  ~__vector_base() FT_NOEXCEPT {
+    if (__begin_) __a_.deallocate(__begin_, capacity());
+  }
 
   void clear() FT_NOEXCEPT {
     if (__begin_) __destruct_storage();
   }
+
   size_type capacity() const FT_NOEXCEPT {
     return static_cast<size_type>(__end_cap_ - __begin_);
+  }
+
+  // TODO: throw suitable error when __n_ > max_size()
+  size_type __check_size(size_type __n_) {
+    // if (__n_ > __a_.max_size())
+    // 	throw_blah
+    return __n_;
   }
 
   void __destruct_storage() FT_NOEXCEPT;
@@ -288,16 +298,15 @@ class vector : private __vector_base<_T, _Allocator> {
 
   // constructor
   explicit vector(const allocator_type& _Alloc = allocator_type());
-  explicit vector(size_type n);
-  explicit vector(size_type n, const value_type& val);
-  explicit vector(size_type n, const value_type& val,
-                  const allocator_type& _Alloc);
-  template <typename InputIterator>
-  vector(InputIterator first,
-         typename enable_if<__is_input_iterator<InputIterator>::value &&
-                                !__is_forward_iterator<InputIterator>::value,
-                            InputIterator>::type last,
+  explicit vector(size_type n, const value_type& val = value_type(),
+                  const allocator_type& _Alloc = allocator_type());
+  template <typename _InputIterator>
+  vector(_InputIterator first,
+         typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                                !__is_forward_iterator<_InputIterator>::value,
+                            _InputIterator>::type last,
          const allocator_type& _Alloc);
+  vector(const vector<_T, _Allocator>& other);
 
   // assign operator
   vector& operator=(const vector& rhs);
@@ -335,22 +344,22 @@ class vector : private __vector_base<_T, _Allocator> {
   const_reference back() const;
 
   // modifiers
-  template <typename InputIterator>
-  void assign(InputIterator first, InputIterator last);
+  template <typename _InputIterator>
+  void assign(_InputIterator first, _InputIterator last);
   void assign(size_type n, const value_type& val);
   void push_back(const value_type& val);
   void pop_back();
   iterator insert(iterator position, const value_type& val);
   void insert(iterator position, size_type n, const value_type& val);
-  template <typename InputIterator>
-  void insert(iterator position, InputIterator first, InputIterator last);
+  template <typename _InputIterator>
+  void insert(iterator position, _InputIterator first, _InputIterator last);
   iterator erase(iterator position);
   iterator erase(iterator first, iterator last);
   void swap(vector& x);
   void clear();
 
   // Allocator
-  allocator_type get_allocator() const;
+  allocator_type get_allocator() const FT_NOEXCEPT { return this->__a_; };
 
   // TODO: Impl destructor
   ~vector() {}
@@ -362,34 +371,41 @@ class vector : private __vector_base<_T, _Allocator> {
 
 /*
  * explicit vector(const allocator_type& _Alloc = allocator_type());
- * explicit vector(size_type n);
- * explicit vector(size_type n, const value_type& val);
- * explicit vector(size_type n, const value_type& val,
- * const allocator_type& _Alloc);
- * template <typename InputIterator>
- * vector(InputIterator first, typename
- * enable_if<__is_input_iterator<InputIterator>::value &&
- *                               !__is_forward_iterator<InputIterator>::value,
- *                           InputIterator>::type last,
- *        const allocator_type& _Alloc = allocator_type());
+ * explicit vector(size_type n, const value_type& val = value_type(),
+ *                 const allocator_type& _Alloc = allocator_type());
+ * template <typename _InputIterator>
+ * vector(_InputIterator first,
+ *        typename enable_if<__is_input_iterator<_InputIterator>::value &&
+ *                               !__is_forward_iterator<_InputIterator>::value,
+ *                           _InputIterator>::type last,
+ *        const allocator_type& _Alloc);
+ * vector(const vector<_T, _Allocator>& other);
  **/
+
+// constructors
 
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(_Alloc) {}
 
 template <typename _T, typename _Allocator>
-vector<_T, _Allocator>::vector(size_type n, const value_type& val)
-    : __vector_base<_T, _Allocator>(n) {
-  std::uninitialized_fill(this->__begin_, this->__begin_ + n, val);
-  this->__end_ += n;
-}
-template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(size_type n, const value_type& val,
                                const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(n, _Alloc) {
   std::uninitialized_fill(this->__begin_, this->__begin_ + n, val);
   this->__end_ += n;
+}
+
+template <typename _T, typename _Allocator>
+template <typename _InputIterator>
+vector<_T, _Allocator>::vector(_InputIterator first,
+       typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                              !__is_forward_iterator<_InputIterator>::value,
+                          _InputIterator>::type last,
+       const allocator_type& _Alloc) : __vector_base<_T, _Allocator>) {
+  for (; first == last; first++) {
+    pointer _p = __construct_one_storage()
+  }
 }
 
 // comparision operators

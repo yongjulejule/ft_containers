@@ -21,7 +21,7 @@
 		"name": "(lldb) Launch tests",
 		"type": "lldb",
 		"request": "launch",
-		"program": "${workspaceFolder}/test.out",
+		"program": "${workspaceFolder}/mine.out",
 		"args": [],
 		"stopAtEntry": false,
 		"cwd": "${fileDirname}",

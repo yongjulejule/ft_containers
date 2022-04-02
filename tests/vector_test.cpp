@@ -44,13 +44,13 @@ void stl_vec_test() {
   std::cout << a.size() << "\n";
 }
 
-int main(void) {
-  stl_vec_test();
-  // ft::vector<int, std::allocator<int> > h;
-
+void my_vec_test() {
   ft::__vector_iterator<ft::iterator<ft::input_iterator_tag, int> > ok;
 
   std::cout << typeid(ok).name();
+  ft::vector<int> dd;
+  std::cout << typeid(dd.get_allocator()).name() << "\n";
+  ft::vector<int> v(10);
   ft::vector<int> my_v(10, 10);
   ft::vector<int>::iterator it = my_v.begin();
   ft::vector<int>::iterator ite = my_v.end();
@@ -58,4 +58,13 @@ int main(void) {
     std::cout << *it << ", ";
   }
   std::cout << "\n";
+}
+
+int main(void) {
+  std::cout << "===== stl_vec_test() =====\n";
+  stl_vec_test();
+  std::cout << "===== my_vec_test() =====\n";
+  my_vec_test();
+  system("leaks mine.out");
+  // ft::vector<int, std::allocator<int> > h;
 }
