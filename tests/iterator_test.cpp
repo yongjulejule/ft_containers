@@ -75,7 +75,7 @@ void check_iterator_category() {
   std::cout << "lib ret -> " << lib_rd_tag << "\n";
 }
 
-int main() {
+void simple_test() {
   std::iterator<int, int, int, int *, int *> a;
   std::cout << typeid(a).name() << "\n";
   ft::iterator<int, int, int, int *, int *> b;
@@ -90,6 +90,19 @@ int main() {
   std::cout << typeid(t1).name() << "\n" << typeid(t2).name() << "\n";
   typedef ft::iterator<ft::input_iterator_tag, int> my_it;
   ft::reverse_iterator<my_it> rit;
+}
+
+void iterable_test() {
+  std::iterator<std::random_access_iterator_tag, float> f_it;
+  ft::iterator<std::input_iterator_tag, float> ft_f_it;
+}
+
+int main() {
+  std::cout << "==== simple_test =====\n";
+  simple_test();
+  std::cout << "==== iterable_test =====\n";
+  iterable_test();
+  std::cout << "==== check_iterator_category =====\n";
   check_iterator_category();
   // std::cout << rit[5];
 }

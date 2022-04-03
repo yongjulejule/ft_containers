@@ -21,6 +21,8 @@
 
 void stl_vec_test() {
   int arr[] = {1, 2, 3, 4, 5};
+  // std::vector<int> thw(10, ULLONG_MAX);
+  // ft::vector<int> ft_thw(10, ULLONG_MAX);
   std::vector<int> a(arr, arr + 5);
   std::vector<bool> c;
 
@@ -54,6 +56,7 @@ void my_vec_test() {
   ft::vector<int> my_v(10, 10);
   ft::vector<int>::iterator it = my_v.begin();
   ft::vector<int>::iterator ite = my_v.end();
+  ft::vector<int> c_it(it, ite);
   for (; it != ite; it++) {
     std::cout << *it << ", ";
   }

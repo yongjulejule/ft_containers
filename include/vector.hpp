@@ -50,8 +50,8 @@ struct __vector_base {
   pointer __end_cap_;
   allocator_type __a_;
 
-  allocator_type& __alloc() FT_NOEXCEPT { return __a_; }
-  const allocator_type& __alloc() const FT_NOEXCEPT { return __a_; }
+  allocator_type& __get_allocator() FT_NOEXCEPT { return __a_; }
+  const allocator_type& __get_allocator() const FT_NOEXCEPT { return __a_; }
 
   pointer& __end_cap() FT_NOEXCEPT { return __end_cap_; }
   const pointer& __end_cap() const FT_NOEXCEPT { return __end_cap_; }
@@ -61,14 +61,14 @@ struct __vector_base {
   __vector_base(size_type __n_);
   __vector_base(size_type __n_, const allocator_type& alloc);
   ~__vector_base() FT_NOEXCEPT {
-    if (__begin_) __a_.deallocate(__begin_, capacity());
+    if (__begin_) __a_.deallocate(__begin_, __capacity());
   }
 
   void clear() FT_NOEXCEPT {
     if (__begin_) __destruct_storage();
   }
 
-  size_type capacity() const FT_NOEXCEPT {
+  size_type __capacity() const FT_NOEXCEPT {
     return static_cast<size_type>(__end_cap_ - __begin_);
   }
 
@@ -81,8 +81,9 @@ struct __vector_base {
 
   void __destruct_storage() FT_NOEXCEPT;
   pointer __construct_storage(size_type __n_) {
-    return __n_ == 0 ? pointer() : __alloc().allocate(__n_);
+    return __n_ == 0 ? pointer() : __get_allocator().allocate(__n_);
   };
+
   void __copy_data(__vector_base const& __src_) FT_NOEXCEPT;
   void __swap_data(__vector_base& __src_) FT_NOEXCEPT;
 
@@ -141,7 +142,7 @@ void __vector_base<_T, _Allocator>::__swap_data(__vector_base& __src_)
 
 template <typename _T, typename _Allocator>
 void __vector_base<_T, _Allocator>::__destruct_storage() FT_NOEXCEPT {
-  __alloc().deallocate(__begin_, capacity());
+  __get_allocator().deallocate(__begin_, __capacity());
   __end_ = __begin_ = __end_cap_ = NULL;
 }
 
@@ -298,14 +299,22 @@ class vector : private __vector_base<_T, _Allocator> {
 
   // constructor
   explicit vector(const allocator_type& _Alloc = allocator_type());
+
   explicit vector(size_type n, const value_type& val = value_type(),
                   const allocator_type& _Alloc = allocator_type());
+
   template <typename _InputIterator>
   vector(_InputIterator first,
          typename enable_if<__is_input_iterator<_InputIterator>::value &&
                                 !__is_forward_iterator<_InputIterator>::value,
                             _InputIterator>::type last,
-         const allocator_type& _Alloc);
+         const allocator_type& _Alloc = allocator_type());
+
+  template <typename _ForwardIterator>
+  vector(_ForwardIterator first,
+         typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+                            _ForwardIterator>::type last,
+         const allocator_type& _Alloc = allocator_type());
   vector(const vector<_T, _Allocator>& other);
 
   // assign operator
@@ -398,14 +407,41 @@ vector<_T, _Allocator>::vector(size_type n, const value_type& val,
 
 template <typename _T, typename _Allocator>
 template <typename _InputIterator>
-vector<_T, _Allocator>::vector(_InputIterator first,
-       typename enable_if<__is_input_iterator<_InputIterator>::value &&
-                              !__is_forward_iterator<_InputIterator>::value,
-                          _InputIterator>::type last,
-       const allocator_type& _Alloc) : __vector_base<_T, _Allocator>) {
-  for (; first == last; first++) {
-    pointer _p = __construct_one_storage()
+vector<_T, _Allocator>::vector(
+    _InputIterator first,
+    typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                           !__is_forward_iterator<_InputIterator>::value,
+                       _InputIterator>::type last,
+    const allocator_type& _Alloc)
+    : __vector_base<_T, _Allocator>(
+          static_cast<size_type>(std::distance(first, last)), _Alloc) {
+  for (; first == last; ++first) {
+    // __construct_one(first);
+    // pointer _p = __construct_one_storage();
   }
+}
+
+template <typename _T, typename _Allocator>
+template <typename _ForwardIterator>
+vector<_T, _Allocator>::vector(
+    _ForwardIterator first,
+    typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+                       _ForwardIterator>::type last,
+    const allocator_type& _Alloc)
+    : __vector_base<_T, _Allocator>(
+          static_cast<size_type>(std::distance(first, last)), _Alloc) {
+  std::uninitialized_copy(this->__begin_, this->__end_cap_, first);
+  this->__end_ = this->__end_cap_;
+}
+
+template <typename _T, typename _Allocator>
+void vector<_T, _Allocator>::push_back(const value_type& val) {
+  if (this->__end_ != this->__end_cap_) {
+    // __construct_one();
+    return;
+  }
+  // __reconstruct_memory();
+  // __construct_one();
 }
 
 // comparision operators
