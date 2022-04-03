@@ -244,22 +244,6 @@ void destroy( pointer p ); // Calls ((T*)p)->~T()
 
 # Vector
 
-## __vector_base
-
-exception-safety를 위한 RAII로 `__vector_base`를 만들고 `vector`에서 `__vector_base` 를 상속받음.
-
-`vector` 클래스에서 자원(메모리)를 획득할 필요가 있는 경우, `__vector_base`를 통해 자원을 획득함. 
-획득한 메모리에 적절한 값을 쓰는것은 exception-safety 하므로 `vector`클래스에서 획득한 메모리에 데이터를 적절히 넣어줌.
-
-`__vector_base` 에서 필요한 기능
-- 생성자에서 메모리 획득이 되어야 하며, 소멸자에서 메모리를 모두 해제해야 함 (RAII)
-- 현재 메모리 정보 저장 (`begin, end, capacity, allocator`)
-- 특정 사이즈의 메모리 획득
-- 메모리 재할당
-- 메모리 해제
-- 메모리 정보 `getter`
-- 문제 발생시 적절한 에러 throw  // -> 미정
-
 ## Prototype
 
 ```c++
@@ -322,6 +306,28 @@ vector (InputIterator first, InputIterator last,
 
 // copy constructor which constructs a container with the copy of the container
 vector (const vector& other);
+```
+
+template specialization for consturctor: 
+```c++
+// InputIterator는 uninitialized_* 을 사용할 수 없어서 하나씩 push_back를 해야함!
+template <typename _T, typename _Allocator>
+template <typename _InputIterator>
+vector<_T, _Allocator>::vector(
+    _InputIterator first,
+    typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                           !__is_forward_iterator<_InputIterator>::value,
+                       _InputIterator>::type last,
+    const allocator_type& _Alloc);
+
+// ForwardIterator 부터는 uninitialized_* 를 사용할 수 있어 한번에 초기화 가능!
+template <typename _T, typename _Allocator>
+template <typename _ForwardIterator>
+vector<_T, _Allocator>::vector(
+    _ForwardIterator first,
+    typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+                       _ForwardIterator>::type last,
+    const allocator_type& _Alloc);
 ```
 
 destructor:
@@ -388,6 +394,42 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 
 `vector<bool>`
 
+## private things to implement vector
+
+### __vector_base
+
+exception-safety를 위한 RAII로 `__vector_base`를 만들고 `vector`에서 `__vector_base` 를 상속받음.
+
+`vector` 클래스에서 자원(메모리)를 획득할 필요가 있는 경우, `__vector_base`를 통해 자원을 획득함. 
+획득한 메모리에 적절한 값을 쓰는것은 exception-safety 하므로 `vector`클래스에서 획득한 메모리에 데이터를 적절히 넣어줌.
+
+`__vector_base` 에서 필요한 기능
+- 생성자에서 메모리 획득이 되어야 하며, 소멸자에서 메모리를 모두 해제해야 함 (RAII)
+- 현재 메모리 정보 저장 (`begin, end, capacity, allocator`)
+- 특정 사이즈의 메모리 획득
+- 메모리 재할당
+- 메모리 해제
+- 메모리 정보 `getter`
+- 문제 발생시 적절한 에러 throw  // -> 미정
+
+
+```c++
+__construct_storage();
+__reconstruct_storage();
+__copy_data();
+__swap_data();
+__destruct_storage();
+__clear();
+__capacity();
+__check_size();
+```
+
+### private method in vector
+
+```c++
+__construct_one(); // push_back 하는데, 메모리 용량이 충분할때
+```
+
 ## TODO
 
 - [ ] vector
@@ -398,10 +440,10 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 
 ---
 
-- [ ] iterator_traits
-- [ ] reverse_iterator
-- [ ] enable_if
-- [ ] is_integral
+- [x] iterator_traits
+- [x] reverse_iterator
+- [x] enable_if
+- [x] is_integral
 - [ ] equal and lexicographical_compare
 - [ ] std::pair
 - [ ] std::make_pair
