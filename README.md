@@ -112,6 +112,23 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 
 [자세한 설명](http://egloos.zum.com/sweeper/v/3007176)
 
+## type_traits
+
+- `integral_constant`
+  - `true_type`
+  - `false_type`
+- `is_intrgral`
+- `is_same`
+- `remove_cv`
+- `enable_if`
+
+
+
+## iterator_traits
+
+![iterator traits](asset/iterator_traits.png)
+<p align='center' color='gray'> Reference: https://www.cplusplus.com/reference/iterator/ </p>
+
 ## SFINAE (Substitution Failure Is Not An Error)
 
 c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/cpp/language/functions)를 찾아가는 과정은 매우 복잡하며, 이 과정에서 수많은 후보가 생김.
@@ -189,18 +206,59 @@ typedef std::ptrdiff_t difference_type;
 typedef template<class U> struct rebind{ typedef allocator<U> other; } rebind;
 ```
 
+Member functions:
+
+```c++
+
+// (constructor): Construct allocator object (public member function )
+allocator() throw();
+allocator(const allocator& alloc) throw();
+template <class U>
+allocator(const allocator<U>& alloc) throw();
+
+// (destructor): Allocator destructor (public member function )
+~allocator() ;
+
+// address:  Return address (public member function )
+pointer address(reference x) const;
+const_pointer address(const_reference x) const;
+
+// allocate:  Allocate block of storage (public member function )
+// @param hint: 0이 아니면, 이전에 할당한 공간의 가장 가까운 곳에 할당해주기 위한 힌트가 됨!
+pointer allocate (size_type n, allocator<void>::const_pointer hint=0);
+
+// deallocate:  Release block of storage (public member function )
+// @param n: 이전에 allocate를 이용하여 할당한 공간과 크기가 다르면 UB임!
+void deallocate (pointer p, size_type n);
+
+// max_size: Maximum size possible to allocate (public member function )
+size_type max_size() const throw();
+
+// construct: Construct an object (public member function ). 할당되었던 p 메모리에 val을 씀
+void construct(pointer p, const_reference val);
+
+// destroy: Destroy an object (public member function )
+void destroy( pointer p ); // Calls ((T*)p)->~T()
+
+```
+
 # Vector
 
-<details>
-<summary> vector 내부 구현 </summary>
+## __vector_base
 
-# LLVM
+exception-safety를 위한 RAII로 `__vector_base`를 만들고 `vector`에서 `__vector_base` 를 상속받음.
 
-`__vector_base_common`, `__vector_base` 를 사용하여 vector 내부 구현을 제공.
+`vector` 클래스에서 자원(메모리)를 획득할 필요가 있는 경우, `__vector_base`를 통해 자원을 획득함. 
+획득한 메모리에 적절한 값을 쓰는것은 exception-safety 하므로 `vector`클래스에서 획득한 메모리에 데이터를 적절히 넣어줌.
 
-vector implementation에 필요한 메소드들을 정의해서 이를 이용하여 vector를 구현함.
-
-</details>
+`__vector_base` 에서 필요한 기능
+- 생성자에서 메모리 획득이 되어야 하며, 소멸자에서 메모리를 모두 해제해야 함 (RAII)
+- 현재 메모리 정보 저장 (`begin, end, capacity, allocator`)
+- 특정 사이즈의 메모리 획득
+- 메모리 재할당
+- 메모리 해제
+- 메모리 정보 `getter`
+- 문제 발생시 적절한 에러 throw  // -> 미정
 
 ## Prototype
 
@@ -236,14 +294,13 @@ typedef typename allocator_type::size_type size_type;
 typedef typename allocator_type::difference_type difference_type;
 
 // a random access iterator to value_type
-typedef pointer iterator;
+typedef __vector_iterator<pointer> iterator;
 
 // a random access iterator to const value_type
-typedef const_pointer const_iterator;
+typedef __vector_iterator<const_pointer> const_iterator;
 
-// TODO: convert to ft::reverse_iterator later
-typedef std::reverse_iterator<iterator> reverse_iterator;
-typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
+typedef ft::reverse_iterator<iterator> reverse_iterator;
+typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 ```
 
 ## Member functions
