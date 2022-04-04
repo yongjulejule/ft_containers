@@ -197,6 +197,29 @@ reverse_iterator<_Iter> operator+(
   return reverse_iterator<_Iter>(__it.base() - __n);
 }
 
+template <class, class Enable = void>
+struct is_iterator : false_type {};
+
+template <typename T>
+struct is_iterator<T, typename enable_if<T::iterator_category>::type>
+    : public true_type {};
+
+// template <typename _T>
+// struct __is_input_iterator<
+//     _T,
+//     typename enable_if<(is_same<typename
+//     iterator_traits<_T>::iterator_category,
+//                                 input_iterator_tag>::value ||
+//                         is_same<typename
+//                         iterator_traits<_T>::iterator_category,
+//                                 forward_iterator_tag>::value ||
+//                         is_same<typename
+//                         iterator_traits<_T>::iterator_category,
+//                                 bidirectional_iterator_tag>::value ||
+//                         is_same<typename
+//                         iterator_traits<_T>::iterator_category,
+//                                 random_access_iterator_tag>::value)>::type>
+//     : public true_type {};
 template <typename _T>
 struct __is_input_iterator
     : public integral_constant<

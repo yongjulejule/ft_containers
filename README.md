@@ -142,6 +142,7 @@ c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/c
 7. 목록에서 함수의 인자들을 치환하는데, 이때 타입이나 표현상의 문제가 있으면 치환에 실패함
 8. **치환에 실패할 시 컴파일 에러를 내지 않고, 해당 후보 함수를 후보군에서 제외하는 방식으로 작동!(SFINAE)**
 9. overload resolution을 통하여 실제로 호출한 함수를 찾음!
+10. 이때, 함수의 후보들을 `candidate functions`, 실제 호출되는 함수는 `viable function`이라고 부름!
 
 - [name lookup](https://en.cppreference.com/w/cpp/language/lookup)
   - [unqualified name lookup](https://en.cppreference.com/w/cpp/language/unqualified_lookup)
@@ -149,7 +150,14 @@ c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/c
 - [ADL (Argument Dependent Lookup)](https://en.cppreference.com/w/cpp/language/adl)
 - [template argument deduction](https://en.cppreference.com/w/cpp/language/template_argument_deduction)
 - [template argument substitution](https://en.cppreference.com/w/cpp/language/function_template#Template_argument_substitution)
-- [overload resolution](https://en.cppreference.com/w/cpp/language/overload_resolution)
+- [overload resolution](https://en.cppreference.com/w/cpp/language/overload_resolution) -> 방대한 설명이 있음...
+
+### ⚠️ Default Argument Do Not Participate in Overload Resolution
+
+- Default Argument 는 overload resolution에 포함되지 않음!!!!!
+
+[function overloading with default parameter](https://stackoverflow.com/questions/53376620/function-overloading-with-default-parameter-in-c)
+[why SFINAE doesn't work in right side in default function argument](https://stackoverflow.com/questions/24909652/why-sfinae-doesnt-work-in-right-side-in-default-function-arguments)
 
 ## enable_if
 

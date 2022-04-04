@@ -53,10 +53,11 @@ void my_vec_test() {
   ft::vector<int> dd;
   std::cout << typeid(dd.get_allocator()).name() << "\n";
   ft::vector<int> v(10);
+  std::cout << "size is:" << v.size() << "\n";
   ft::vector<int> my_v(10, 10);
   ft::vector<int>::iterator it = my_v.begin();
   ft::vector<int>::iterator ite = my_v.end();
-  ft::vector<int> c_it(it, ite);
+  // ft::vector<int> c_it(it, ite);
   for (; it != ite; it++) {
     std::cout << *it << ", ";
   }

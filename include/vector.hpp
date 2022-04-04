@@ -9,6 +9,7 @@
  *
  */
 
+#include <iterator>
 #include <memory>
 #include <vector>
 
@@ -31,7 +32,7 @@ namespace ft {
  * 보장하기 위해 RAII 구조로 작성. 외부에서 객체로 만들 수 없으며 vector
  * 클래스에선 이곳에 정의된 메소드들로 데이터에 접근한다.
  */
-template <typename _T, typename _Allocator>
+template <typename _T, typename _Allocator = std::allocator<_T>()>
 struct __vector_base {
  public:
   typedef _Allocator allocator_type;
@@ -155,13 +156,13 @@ template <typename _Iter>
 class __vector_iterator {
  public:
   typedef _Iter iterator_type;
-  typedef typename iterator_traits<iterator_type>::iterator_category
+  typedef typename ft::iterator_traits<iterator_type>::iterator_category
       iterator_category;
-  typedef typename iterator_traits<iterator_type>::value_type value_type;
-  typedef
-      typename iterator_traits<iterator_type>::difference_type difference_type;
-  typedef typename iterator_traits<iterator_type>::pointer pointer;
-  typedef typename iterator_traits<iterator_type>::reference reference;
+  typedef typename ft::iterator_traits<iterator_type>::value_type value_type;
+  typedef typename ft::iterator_traits<iterator_type>::difference_type
+      difference_type;
+  typedef typename ft::iterator_traits<iterator_type>::pointer pointer;
+  typedef typename ft::iterator_traits<iterator_type>::reference reference;
 
  private:
   iterator_type __it;
@@ -300,21 +301,31 @@ class vector : private __vector_base<_T, _Allocator> {
   // constructor
   explicit vector(const allocator_type& _Alloc = allocator_type());
 
-  explicit vector(size_type n, const value_type& val = value_type(),
-                  const allocator_type& _Alloc = allocator_type());
+  explicit vector(size_type n);
+  vector(size_type n, const value_type& val);
+  vector(size_type n, const value_type& val, const allocator_type& _Alloc);
+
+  // explicit vector(size_type n, const value_type& val = value_type(),
+  //                 const allocator_type& _Alloc = allocator_type());
+  // explicit vector(size_type n, const value_type& val = value_type(),
+  //                 const allocator_type& _Alloc = allocator_type());
 
   template <typename _InputIterator>
-  vector(_InputIterator first,
-         typename enable_if<__is_input_iterator<_InputIterator>::value &&
-                                !__is_forward_iterator<_InputIterator>::value,
-                            _InputIterator>::type last,
+  vector(_InputIterator first, _InputIterator last,
          const allocator_type& _Alloc = allocator_type());
+  // template <typename _InputIterator>
+  // vector(_InputIterator first, _InputIterator last,
+  //        const allocator_type& _Alloc = allocator_type(),
+  //        typename enable_if<__is_input_iterator<_InputIterator>::value &&
+  //                               !__is_forward_iterator<_InputIterator>::value,
+  //                           _InputIterator>::type = nullptr);
 
-  template <typename _ForwardIterator>
-  vector(_ForwardIterator first,
-         typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
-                            _ForwardIterator>::type last,
-         const allocator_type& _Alloc = allocator_type());
+  // template <typename _ForwardIterator>
+  // vector(_ForwardIterator first,
+  //        typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+  //                           _ForwardIterator>::type last,
+  //        const allocator_type& _Alloc = allocator_type());
+
   vector(const vector<_T, _Allocator>& other);
 
   // assign operator
@@ -335,7 +346,9 @@ class vector : private __vector_base<_T, _Allocator> {
   const_reverse_iterator crend() const;
 
   // capacity
-  size_type size() const;
+  size_type size() const {
+    return std::distance(this->__begin_, this->__end_cap_);
+  }
   size_type max_size() const;
   void resize(size_type n, value_type val = value_type());
   size_type capacity() const;
@@ -393,9 +406,27 @@ class vector : private __vector_base<_T, _Allocator> {
 
 // constructors
 
+// template <typename _T, typename _Allocator>
+// vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
+//     : __vector_base<_T, _Allocator>(_Alloc) {}
+
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
-    : __vector_base<_T, _Allocator>(_Alloc) {}
+    : __vector_base<_T, _Allocator>(size_type(), _Alloc) {}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector(size_type n)
+    : __vector_base<_T, _Allocator>(n, allocator_type()) {
+  std::uninitialized_fill(this->__begin_, this->__begin_ + n, value_type());
+  this->__end_ += n;
+}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector(size_type n, const value_type& val)
+    : __vector_base<_T, _Allocator>(n, allocator_type()) {
+  std::uninitialized_fill(this->__begin_, this->__begin_ + n, val);
+  this->__end_ += n;
+}
 
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(size_type n, const value_type& val,
@@ -408,11 +439,10 @@ vector<_T, _Allocator>::vector(size_type n, const value_type& val,
 template <typename _T, typename _Allocator>
 template <typename _InputIterator>
 vector<_T, _Allocator>::vector(
-    _InputIterator first,
+    _InputIterator first, _InputIterator last, const allocator_type& _Alloc,
     typename enable_if<__is_input_iterator<_InputIterator>::value &&
                            !__is_forward_iterator<_InputIterator>::value,
-                       _InputIterator>::type last,
-    const allocator_type& _Alloc)
+                       _InputIterator>::type)
     : __vector_base<_T, _Allocator>(
           static_cast<size_type>(std::distance(first, last)), _Alloc) {
   for (; first == last; ++first) {
@@ -421,18 +451,18 @@ vector<_T, _Allocator>::vector(
   }
 }
 
-template <typename _T, typename _Allocator>
-template <typename _ForwardIterator>
-vector<_T, _Allocator>::vector(
-    _ForwardIterator first,
-    typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
-                       _ForwardIterator>::type last,
-    const allocator_type& _Alloc)
-    : __vector_base<_T, _Allocator>(
-          static_cast<size_type>(std::distance(first, last)), _Alloc) {
-  std::uninitialized_copy(this->__begin_, this->__end_cap_, first);
-  this->__end_ = this->__end_cap_;
-}
+// template <typename _T, typename _Allocator>
+// template <typename _ForwardIterator>
+// vector<_T, _Allocator>::vector(
+//     _ForwardIterator first,
+//     typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+//                        _ForwardIterator>::type last,
+//     const allocator_type& _Alloc)
+//     : __vector_base<_T, _Allocator>(
+//           static_cast<size_type>(std::distance(first, last)), _Alloc) {
+//   std::uninitialized_copy(this->__begin_, this->__end_cap_, first);
+//   this->__end_ = this->__end_cap_;
+// }
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::push_back(const value_type& val) {
