@@ -2,6 +2,44 @@
 
 My c++ STL container (c++98)
 
+# 목차  
+- [ft_container](#ft_container)
+- [목차](#목차)
+- [keywords](#keywords)
+	- [stack unwinding](#stack-unwinding)
+	- [dynamic exception specification _(deprecated c++11, removed c++17)_](#dynamic-exception-specification-deprecated-c11-removed-c17)
+	- [Exception safety](#exception-safety)
+	- [RAII (Resource Acquisition Is Initialization)](#raii-resource-acquisition-is-initialization)
+	- [\*\_traits](#_traits)
+	- [type_traits](#type_traits)
+	- [iterator_traits](#iterator_traits)
+		- [InputIterator](#inputiterator)
+	- [SFINAE (Substitution Failure Is Not An Error)](#sfinae-substitution-failure-is-not-an-error)
+		- [⚠️ Default Argument Do Not Participate in Overload Resolution](#️-default-argument-do-not-participate-in-overload-resolution)
+	- [enable_if](#enable_if)
+- [Allocator](#allocator)
+	- [C++ named requirements: Allocaotr](#c-named-requirements-allocaotr)
+	- [C++ std::allocator](#c-stdallocator)
+- [Vector](#vector)
+	- [Prototype](#prototype)
+	- [Member types](#member-types)
+	- [Member functions](#member-functions)
+		- [Iterators:](#iterators)
+		- [Capacity:](#capacity)
+		- [Element access:](#element-access)
+		- [Modifiers:](#modifiers)
+		- [Allocator:](#allocator-1)
+		- [Non-member functions:](#non-member-functions)
+		- [Template specializations:](#template-specializations)
+	- [private things to implement vector](#private-things-to-implement-vector)
+		- [__vector_base](#__vector_base)
+		- [private method in vector](#private-method-in-vector)
+	- [TODO](#todo)
+- [Reference](#reference)
+
+<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
+
+
 # keywords
 
 ## stack unwinding
@@ -133,6 +171,7 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 
 값이 increment되면 이전의 값들의 복사본은 invalidate 될 수 있음.... 왜? 문자를 하나씩 받다가 버퍼가 가득 차면 그냥 버리는 경우를 생각하자.
 -> [why does an input iterator invalidate itself after incrementing](https://stackoverflow.com/questions/56319796/why-does-an-input-iterator-invalidate-itself-after-incrementing)
+
 ## SFINAE (Substitution Failure Is Not An Error)
 
 c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/cpp/language/functions)를 찾아가는 과정은 매우 복잡하며, 이 과정에서 수많은 후보가 생김.
