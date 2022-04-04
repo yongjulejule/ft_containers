@@ -129,6 +129,10 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 ![iterator traits](asset/iterator_traits.png)
 <p align='center' color='gray'> Reference: https://www.cplusplus.com/reference/iterator/ </p>
 
+### InputIterator
+
+값이 increment되면 이전의 값들의 복사본은 invalidate 될 수 있음.... 왜? 문자를 하나씩 받다가 버퍼가 가득 차면 그냥 버리는 경우를 생각하자.
+-> [why does an input iterator invalidate itself after incrementing](https://stackoverflow.com/questions/56319796/why-does-an-input-iterator-invalidate-itself-after-incrementing)
 ## SFINAE (Substitution Failure Is Not An Error)
 
 c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/cpp/language/functions)를 찾아가는 과정은 매우 복잡하며, 이 과정에서 수많은 후보가 생김.
@@ -299,6 +303,10 @@ typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
 constructor:
 
+- exception safety: Strong.
+  - [first, last) 가 정상적이지 않으면 UB
+  - `allocator::constructor`가 정상적이지 않으면 UB
+
 ```c++
 // default constructor which constructs an empty container
 explicit vector(const allocator_type& alloc = allocator_type());
@@ -340,11 +348,15 @@ vector<_T, _Allocator>::vector(
 
 destructor:
 
-This destroys all elements in the container and deallocates all the storage capacity.
+- This destroys all elements in the container and deallocates all the storage capacity.
+- exception-safety: No-throw
 
 operator=:
 
-Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.
+- Assigns new contents to the container, replacing its current contents, and modifying its size accordingly.
+- exception-safety: Basic
+  - `allocator::constructor`가 정상적이지 않거나, `value_type`이 copy-assignable 하지 않으면 UB
+
 
 **The container preserve its current allocator.** -> 재할당 하는 경우에 사용됨!
 
@@ -354,40 +366,96 @@ vector& operator=(const vector& rhs);
 
 ### Iterators:
 
-`begin(), end(), rbegin(), rend(), cbegin(), cend(), crbegin(), crend()`
+- exception-safety: No-throw
+
+```c++
+iterator begin() FT_NOEXCEPT;
+iterator end() FT_NOEXCEPT;
+reverse_iterator rbegin() FT_NOEXCEPT;
+reverse_iterator rend() FT_NOEXCEPT;
+const iterator cbegin() const FT_NOEXCEPT;
+const iterator cend() const FT_NOEXCEPT;
+const reverse_iterator crbegin() const FT_NOEXCEPT;
+const reverse_iterator crend() const FT_NOEXCEPT;
+```
 
 ### Capacity:
 
-`size(), max_size(), resize(), capacity(), empty(), reserve()`
+```c++
+// 컨테이너에 저장된 elements의 수를 반환
+size_type size() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너에 할당할 수 있는 최대 메모리를 반환
+size_type max_size() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너가 가지고 있는 메모리 크기 반환
+size_type capacity() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너가 비었는지 여부를 boolean으로 반환
+bool empty() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너가 최소한 new_n 만큼의 데이터를 저장하기 위한 메모리를 확보
+// n > capacity() 면 재할당, 그렇지 않으면 재할당 x
+
+/* TODO: 번역
+If no reallocations happen or if the type of the elements has either a non-throwing move constructor or a copy constructor, there are no changes in the container in case of exception (strong guarantee).
+Otherwise, the container is guaranteed to end in a valid state (basic guarantee).
+The function throws length_error if n is greater than max_size.
+*/
+
+void reserve(size_type __new_n_)
+
+// 컨테이너가 n개의 데이터를 저장하도록 resize.
+// n < size()면, n개의 데이터만 저장. 나머지는 제거 -> strong guarantee
+// n >= size()면, 남는 공간에 val을 채움  -> No-throw
+// n > capacity()면, 현재 메모리만큼 재할당 -> strong guarantee
+// val이 copyable하지 않으면 basic guarantee
+void resize(size_type __n_, value_type __val_ = value_type());
+```
 
 ### Element access:
 
-`operator[], at(), front(), back()`
+```c++
+operator[]
+at()
+front()
+back()
+```
 
 ### Modifiers:
 
-`assign(), push_back(), pop_back(), insert(), erase(), swap(), clear()`
+```c++
+template <typename _InputIterator>
+void assign(_InputIterator first, _InputIterator last); // range
+void assign(size_type n, const value_type& val); // fill
+void push_back(const value_type& val);
+void pop_back();
+iterator insert(iterator position, const value_type& val);
+void insert(iterator position, size_type n, const value_type& val);
+template <typename _InputIterator>
+void insert(iterator position, _InputIterator first, _InputIterator last);
+iterator erase(iterator position);
+iterator erase(iterator first, iterator last);
+void swap(vector& x);
+void clear();
+```
 
 ### Allocator:
 
-`get_allocator()`
+```c++
+get_allocator()
+```
 
 ### Non-member functions:
 
 relational operators:
 
 ```c++
-template <class T, class Alloc>
 bool operator == (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-template <class T, class Alloc>
 bool operator != (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-template <class T, class Alloc>
 bool operator <  (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-template <class T, class Alloc>
 bool operator <= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-template <class T, class Alloc>
 bool operator > (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
-template <class T, class Alloc>
 bool operator >= (const vector<T,Alloc>& lhs, const vector<T,Alloc>& rhs);
 ```
 
@@ -422,20 +490,39 @@ exception-safety를 위한 RAII로 `__vector_base`를 만들고 `vector`에서 `
 
 
 ```c++
-__construct_storage();
-__reconstruct_storage();
-__copy_data();
-__swap_data();
-__destruct_storage();
-__clear();
-__capacity();
-__check_size();
+// construct n size of memory
+pointer __construct_storage(size_type __n_);
+
+// deallocate and construct n size of memory near pointer p
+pointer __reconstruct_storage(size_type __n_, pointer __p_);
+
+// copy data of __vector_base
+void __copy_data(__vector_base const& __src_);
+
+// swap data of src and this
+void __swap_data(__vector_base& __src_);
+
+// destruct storage (only memory)
+void __destruct_storage();
+
+// destory data
+void __clear();
+
+// get current capacity
+size_type __capacity() const;
+
+// check whether current capacity is enough to store n elements
+size_type __check_size(size_type __n_);
 ```
 
 ### private method in vector
 
 ```c++
-__construct_one(); // push_back 하는데, 메모리 용량이 충분할때
+// push data to end of vector. (not allocate memory)
+__construct_one(value_type &__v_); // push_back 하는데, 메모리 용량이 충분할때
+
+// push range of data at specific position
+__construct_point(point __pos_, size_type __n_, const_iterator __first_, const_iterator __last_);
 ```
 
 ## TODO
