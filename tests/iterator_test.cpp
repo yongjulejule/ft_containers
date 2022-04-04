@@ -104,8 +104,6 @@ int main() {
   iterable_test();
   std::cout << "==== check_iterator_category =====\n";
   check_iterator_category();
-  std::cout << std::__is_cpp17_input_iterator<int>::value;
-  std::cout << ft::is_iterator<int>::value;
 
   // std::cout << rit[5];
 }
