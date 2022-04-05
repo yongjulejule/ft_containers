@@ -1,11 +1,21 @@
-# ft_container
+# ft_containers
 
-My c++ STL container (c++98)
+My c++ STL containers (c++98)
 
-# 목차  
-- [ft_container](#ft_container)
-- [목차](#목차)
-- [keywords](#keywords)
+- vector
+- map
+- set
+- stack
+- iterator
+
+
+# Index  
+
+- [ft_containers](#ft_containers)
+- [Index](#index)
+- [Convention](#convention)
+- [Functional Specification](#functional-specification)
+- [Keywords](#keywords)
 	- [stack unwinding](#stack-unwinding)
 	- [dynamic exception specification _(deprecated c++11, removed c++17)_](#dynamic-exception-specification-deprecated-c11-removed-c17)
 	- [Exception safety](#exception-safety)
@@ -39,8 +49,23 @@ My c++ STL container (c++98)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
+# Convention
 
-# keywords
+- STL의 메소드들에 맞게, snake_case 사용
+- 최대한 공식문서([1](https://en.cppreference.com/w/), [2](https://www.cplusplus.com/))와 일치하도록 작성
+- 라이브러리에서만 사용되는 메소드, 클래스는 __class_name 과 같은 형태로 작성
+- 외부로 공개되지 않는 변수는 __variable_name_ 과 같은 형태로 작성
+- format는 [google style guide](https://google.github.io/styleguide/cppguide.html)에 따름
+
+
+# Functional Specification
+
+- c++98 기준 모든 기능 구현
+- 같은 exception-safety를 보장
+- c++98로 가능한 Template Meta Programming 최대한 활용
+
+
+# Keywords
 
 ## stack unwinding
 
@@ -435,13 +460,9 @@ bool empty() const FT_NOEXCEPT; // No-throw
 
 // 컨테이너가 최소한 new_n 만큼의 데이터를 저장하기 위한 메모리를 확보
 // n > capacity() 면 재할당, 그렇지 않으면 재할당 x
-
-/* TODO: 번역
-If no reallocations happen or if the type of the elements has either a non-throwing move constructor or a copy constructor, there are no changes in the container in case of exception (strong guarantee).
-Otherwise, the container is guaranteed to end in a valid state (basic guarantee).
-The function throws length_error if n is greater than max_size.
-*/
-
+// n > max_size() 면 length_error throw
+// 재할당이 일어나지 않거나, copy constructor가 있으면 strong guarantee
+// 그 외에는 basic guarantee
 void reserve(size_type __new_n_)
 
 // 컨테이너가 n개의 데이터를 저장하도록 resize.
@@ -450,15 +471,32 @@ void reserve(size_type __new_n_)
 // n > capacity()면, 현재 메모리만큼 재할당 -> strong guarantee
 // val이 copyable하지 않으면 basic guarantee
 void resize(size_type __n_, value_type __val_ = value_type());
+
 ```
 
 ### Element access:
 
 ```c++
-operator[]
-at()
-front()
-back()
+// 컨테이너에서 저장된 n번째 데이터를 반환
+// size() > n 이면 no-throw. 그 외에는 UB
+reference operator[] (size_type __n_)
+const reference operator[] (size_type __n_) const;
+
+// 컨테이너에 저장된 n번째 데이터를 반환
+// n이 범위를 벗어나면 out_of_range exception 발생
+// strong-guarantee
+reference at(size_type __n_);
+const_reference at(size_type __n_) const;
+
+// 컨테이너에 저장된 첫번째 요소의 레퍼런스 반환
+// empty이면 UB. empty가 아니면 no-throw
+reference front();
+const_reference front() const;
+
+// 컨테이너에 저장된 마지막 요소의 레퍼런스 반환
+// empty이면 UB. empty가 아니면 no-throw
+reference back();
+const_reference back() const;
 ```
 
 ### Modifiers:
@@ -467,15 +505,21 @@ back()
 template <typename _InputIterator>
 void assign(_InputIterator first, _InputIterator last); // range
 void assign(size_type n, const value_type& val); // fill
+
 void push_back(const value_type& val);
+
 void pop_back();
+
 iterator insert(iterator position, const value_type& val);
 void insert(iterator position, size_type n, const value_type& val);
 template <typename _InputIterator>
 void insert(iterator position, _InputIterator first, _InputIterator last);
+
 iterator erase(iterator position);
 iterator erase(iterator first, iterator last);
+
 void swap(vector& x);
+
 void clear();
 ```
 
@@ -562,6 +606,9 @@ __construct_one(value_type &__v_); // push_back 하는데, 메모리 용량이 �
 
 // push range of data at specific position
 __construct_point(point __pos_, size_type __n_, const_iterator __first_, const_iterator __last_);
+
+// 메모리 재할당 후 내용을 copy
+__reconstruct(size_type __new_n_);
 ```
 
 ## TODO
@@ -584,10 +631,12 @@ __construct_point(point __pos_, size_type __n_, const_iterator __first_, const_i
 
 # Reference
 
-[gnu source code (github)](https://github.com/gcc-mirror/gcc/tree/master/libstdc%2B%2B-v3/include/bits)
-
-[gnu docs](https://gcc.gnu.org/onlinedocs/gcc-11.2.0/libstdc++/api/files.html)
-
 [cplusplus](https://www.cplusplus.com/)
 
 [cppreference](https://en.cppreference.com/)
+
+[LLVM libcxx source code (github)](https://github.com/llvm/llvm-project/tree/main/libcxx)
+
+[gnu source code (github)](https://github.com/gcc-mirror/gcc/tree/master/libstdc%2B%2B-v3/include/bits)
+
+[gnu docs](https://gcc.gnu.org/onlinedocs/gcc-11.2.0/libstdc++/api/files.html)
