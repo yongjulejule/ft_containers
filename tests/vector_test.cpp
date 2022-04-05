@@ -84,6 +84,10 @@ int main(void) {
   stl_vec_test();
   std::cout << "===== my_vec_test() =====\n";
   my_vec_test();
+  std::vector<int> x(10, 10);
+  std::vector<int>().swap(x);  // ??????????? 이런걸 왜하지?
+  std::cout << "x capacity and size : " << x.capacity() << "," << x.size()
+            << "\n";
   system("leaks mine.out");
   // ft::vector<int, std::allocator<int> > h;
 }

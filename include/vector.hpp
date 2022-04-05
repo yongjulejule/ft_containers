@@ -65,19 +65,17 @@ struct __vector_base {
     if (__begin_) __a_.deallocate(__begin_, __capacity());
   }
 
-  // FIXME: not destruct. destory
   void clear() FT_NOEXCEPT {
-    if (__begin_) __destruct_storage();
+    if (__begin_) __a_.destroy(__begin_);
   }
 
   size_type __capacity() const FT_NOEXCEPT {
     return static_cast<size_type>(__end_cap_ - __begin_);
   }
 
-  // TODO: throw suitable error when __n_ > max_size()
-  size_type __check_size(size_type __n_) {
-    // if (__n_ > __a_.max_size())
-    // 	throw_blah
+  size_type __check_length(size_type __n_) {
+    if (__n_ > __a_.max_size())
+      __throw_langth_error("vector: cannot allocate requested size");
     return __n_;
   }
 
@@ -91,9 +89,12 @@ struct __vector_base {
                    pointer const& __new_end_cap_) FT_NOEXCEPT;
   void __swap_data(__vector_base& __src_) FT_NOEXCEPT;
 
+  void __throw_langth_error(char* msg) { throw std::length_error(msg); }
+  void __throw_out_of_range(char* msg) { throw std::out_of_range(msg); }
+
  private:
-  __vector_base(const __vector_base& other) { (void)other; };
-  __vector_base& operator=(const __vector_base& other) { (void)other; };
+  __vector_base(const __vector_base& other) { (void)other; }
+  __vector_base& operator=(const __vector_base& other) { (void)other; }
 };
 
 template <typename _T, typename _Allocator>
@@ -400,8 +401,8 @@ class vector : private __vector_base<_T, _Allocator> {
   ~vector() {}
 
  private:
-  void __construct_one(const value_type& val);
-  void __reconstruct(size_type __new_n_);
+  void __reconstruct_push_back(const value_type& val);
+  void __reallocate(size_type __n_);
 };
 
 template <typename _T, typename _Allocator>
@@ -439,8 +440,13 @@ vector<_T, _Allocator>::vector(
                        _InputIterator>::type last,
     const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(size_type(), _Alloc) {
-  for (; first == last; ++first) {
-    // push_back(*first);
+  try {
+    for (; first == last; ++first) push_back(*first);
+  } catch (...) {
+    if (this->__begin_) {
+      clear();
+      this->__a_.deallocate(this->__begin_);
+    }
   }
 }
 
@@ -453,8 +459,7 @@ vector<_T, _Allocator>::vector(
     const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(
           static_cast<size_type>(std::distance(first, last)), _Alloc) {
-  std::uninitialized_copy(first, last, this->__begin_);
-  this->__end_ = this->__end_cap_;
+  this->__end_ = std::uninitialized_copy(first, last, this->__begin_);
 }
 
 template <typename _T, typename _Allocator>
@@ -464,29 +469,40 @@ vector<_T, _Allocator>::vector(const vector<_T, _Allocator>& other)
       std::uninitialized_copy(other.__begin_, other.__end_, this->__begin_);
 }
 
+// template <typename _T, typename _Allocator>
+// void vector<_T, _Allocator>::__reconstruct(size_type __new_n_) {
+//   pointer __new_begin_, __new_end_, __new_cap_;
+//   __new_begin_ = this->__reconstruct_storage(__new_n_);
+//   __new_end_ =
+//       std::uninitialized_copy(this->__begin_, this->__end_, __new_begin_);
+//   __new_cap_ = __new_n_;
+// }
+
 template <typename _T, typename _Allocator>
-void vector<_T, _Allocator>::__reconstruct(size_type __new_n_) {
-  pointer __new_begin_, __new_end_, __new_cap_;
-  __new_begin_ = this->__reconstruct_storage(__new_n_);
-  __new_end_ =
-      std::uninitialized_copy(this->__begin_, this->__end_, __new_begin_);
-  __new_cap_ = __new_n_;
+void vector<_T, _Allocator>::__reconstruct_push_back(const value_type& val) {
+  size_type __new_size =
+      capacity() > (max_size() >> 1) ? max_size() : capacity() * 2;
+  reserve(__check_length(this->capacity() * 2));
+  this->__a_.construct(this->__end_++, val);
 }
 
 template <typename _T, typename _Allocator>
-void vector<_T, _Allocator>::__construct_one(const value_type& val) {
-  if (this->__end_ == this->__end_cap_) __reconstruct(this->__capacity() * 2);
-  *this->end++ = val
+void vector<_T, _Allocator>::__reallocate(size_type __n_) {}
+
+template <typename _T, typename _Allocator>
+void vector<_T, _Allocator>::reserve(size_type n) {
+  size_type __new_size = __check_length(n);
+  if (__new_size > capacity()) {
+    __reallocate(__new_size);
+  }
 }
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::push_back(const value_type& val) {
-  if (this->__end_ != this->__end_cap_) {
-    // __construct_one();
-    return;
-  }
-  // __reconstruct_storage();
-  // __construct_one();
+  if (this->__end_ != this->__end_cap_)
+    this->__a_.construct(this->__end_++, val);
+  else
+    __reconstruct_push_back(val);
 }
 
 // comparision operators
