@@ -44,6 +44,7 @@ My c++ STL containers (c++98)
 	- [private things to implement vector](#private-things-to-implement-vector)
 		- [__vector_base](#__vector_base)
 		- [private method in vector](#private-method-in-vector)
+		- [exceptions](#exceptions)
 	- [TODO](#todo)
 - [Reference](#reference)
 
@@ -501,26 +502,42 @@ const_reference back() const;
 
 ### Modifiers:
 
+- 모든 method는 작동 후 적절하게 size()를 수정하고, 재할당시 내부의 allocator를 사용하여 메모리 할당.
+- 할당시 allocator::construct에 문제가 있으면 UB
+- `iterator validity`가 있어서, 데이터가 수정되는 경우 이전에 생성된 iterator들의 validity에 유의해야함.
+
 ```c++
+// 벡터에 새로운 데이터를 넣고 size를 알맞게 수정
+// 이전 데이터는 모두 destroy되고, 새로운 데이터로 replace됨
+// 재할당은 새로운 size > capacity인 상황에만 일어나며 내부의 allocator를 이용
+// basic-guarantee를 보장
 template <typename _InputIterator>
 void assign(_InputIterator first, _InputIterator last); // range
 void assign(size_type n, const value_type& val); // fill
 
+// val을 컨테이너 end에 추가. 필요하다면 메모리 재할당.
+// 재할당이 일어나지 않으면 strong guarantee
+// 재할당이 일어나는데, copy constructor가 유효하면 strong guarantee
+// 그 외에는 basic guarantee
 void push_back(const value_type& val);
 
+// 컨테이너의 마지막 요소를 삭제.
+// 컨테이너가 비어있지 않으면 no-throw. 그 외에는 UB
 void pop_back();
 
-iterator insert(iterator position, const value_type& val);
-void insert(iterator position, size_type n, const value_type& val);
+iterator insert(iterator position, const value_type& val); // single element
+void insert(iterator position, size_type n, const value_type& val); // fill
 template <typename _InputIterator>
-void insert(iterator position, _InputIterator first, _InputIterator last);
+void insert(iterator position, _InputIterator first, _InputIterator last); // range
 
 iterator erase(iterator position);
 iterator erase(iterator first, iterator last);
 
-void swap(vector& x);
+// swap data
+void swap(vector& x) FT_NOEXCEPT; // no-throw
 
-void clear();
+// 컨테이너에 저장된 모든 데이터를 삭제하고, size를 0으로 설정
+void clear() FT_NOEXCEPT; // no-throw
 ```
 
 ### Allocator:
@@ -610,6 +627,14 @@ __construct_point(point __pos_, size_type __n_, const_iterator __first_, const_i
 // 메모리 재할당 후 내용을 copy
 __reconstruct(size_type __new_n_);
 ```
+
+
+### exceptions
+
+`out_of_range`
+`length_error`
+
+constructor에서 할당 실패는 그냥 exception throw...! 따라서	`max_size()` 체크 안해도 됨
 
 ## TODO
 
