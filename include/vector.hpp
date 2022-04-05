@@ -87,6 +87,8 @@ struct __vector_base {
   };
 
   void __copy_data(__vector_base const& __src_) FT_NOEXCEPT;
+  void __copy_data(pointer const& __new_begin_, pointer const& __new_end_,
+                   pointer const& __new_end_cap_) FT_NOEXCEPT;
   void __swap_data(__vector_base& __src_) FT_NOEXCEPT;
 
  private:
@@ -131,6 +133,15 @@ void __vector_base<_T, _Allocator>::__copy_data(__vector_base const& __src_)
   __begin_ = __src_.__begin_;
   __end_ = __src_.__end_;
   __end_cap_ = __src_.__end_cap_;
+};
+
+template <typename _T, typename _Allocator>
+void __vector_base<_T, _Allocator>::__copy_data(
+    pointer const& __new_begin_, pointer const& __new_end_,
+    pointer const& __new_end_cap_) FT_NOEXCEPT {
+  __begin_ = __new_begin_;
+  __end_ = __new_end_;
+  __end_cap_ = __new_end_cap_;
 };
 
 template <typename _T, typename _Allocator>
@@ -328,34 +339,44 @@ class vector : private __vector_base<_T, _Allocator> {
   const_iterator begin() const { return this->__begin_; }
   iterator end() { return this->__end_; }
   const_iterator end() const { return this->__end_; }
-  reverse_iterator rbegin();
-  const_reverse_iterator rbegin() const;
-  reverse_iterator rend();
-  const_reverse_iterator rend() const;
-  const_iterator cbegin() const;
-  const_iterator cend() const;
-  const_reverse_iterator crbegin() const;
-  const_reverse_iterator crend() const;
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(end());
+  }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(begin());
+  }
+  const_iterator cbegin() const { return const_iterator(begin()); }
+  const_iterator cend() const { return const_iterator(begin()); }
+  const_reverse_iterator crbegin() const {
+    return const_reverse_iterator(end());
+  }
+  const_reverse_iterator crend() const {
+    return const_reverse_iterator(begin());
+  }
 
   // capacity
   size_type size() const {
     return std::distance(this->__begin_, this->__end_cap_);
   }
-  size_type max_size() const;
+  size_type max_size() const { return this->__a_.max_size(); }
   void resize(size_type n, value_type val = value_type());
-  size_type capacity() const;
-  bool empty() const;
+  size_type capacity() const { return this->__capacity(); }
+  bool empty() const { return this->__begin_ == this->__end_; }
   void reserve(size_type n);
 
   // element access
-  reference operator[](size_type n);
-  const_reference operator[](size_type n) const;
+  reference operator[](size_type n) { return this->__begin_ + n; }
+  const_reference operator[](size_type n) const { return this->__begin_ + n; }
   reference at(size_type n);
   const_reference at(size_type n) const;
-  reference front();
-  const_reference front() const;
-  reference back();
-  const_reference back() const;
+
+  // FIXME: what if vector is empty?
+  reference front() { return *this->__begin_; }
+  const_reference front() const { return *this->__begin_; }
+  reference back() { return *(this->__end_ - 1); }
+  const_reference back() const { return *(this->__end_ - 1); }
 
   // modifiers
   template <typename _InputIterator>
@@ -373,34 +394,15 @@ class vector : private __vector_base<_T, _Allocator> {
   void clear();
 
   // Allocator
-  allocator_type get_allocator() const FT_NOEXCEPT { return this->__a_; };
+  allocator_type get_allocator() const FT_NOEXCEPT { return this->__a_; }
 
   // TODO: Impl destructor
   ~vector() {}
+
+ private:
+  void __construct_one(const value_type& val);
+  void __reconstruct(size_type __new_n_);
 };
-
-// TODO: 디폴트가 설정되어 있으면 거기로 알아서 가는지 확인해봐야함.
-// template <typename _T, typename _Allocator>
-// vector<_T, _Allocator>::vector() : __base_vector<_T, _Allocator>() {}
-
-/*
- * explicit vector(const allocator_type& _Alloc = allocator_type());
- * explicit vector(size_type n, const value_type& val = value_type(),
- *                 const allocator_type& _Alloc = allocator_type());
- * template <typename _InputIterator>
- * vector(_InputIterator first,
- *        typename enable_if<__is_input_iterator<_InputIterator>::value &&
- *                               !__is_forward_iterator<_InputIterator>::value,
- *                           _InputIterator>::type last,
- *        const allocator_type& _Alloc);
- * vector(const vector<_T, _Allocator>& other);
- **/
-
-// constructors
-
-// template <typename _T, typename _Allocator>
-// vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
-//     : __vector_base<_T, _Allocator>(_Alloc) {}
 
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(const allocator_type& _Alloc)
@@ -436,10 +438,9 @@ vector<_T, _Allocator>::vector(
                            !__is_forward_iterator<_InputIterator>::value,
                        _InputIterator>::type last,
     const allocator_type& _Alloc)
-    : __vector_base<_T, _Allocator>(
-          static_cast<size_type>(std::distance(first, last)), _Alloc) {
+    : __vector_base<_T, _Allocator>(size_type(), _Alloc) {
   for (; first == last; ++first) {
-    // __construct_one(first);
+    // push_back(*first);
   }
 }
 
@@ -457,12 +458,34 @@ vector<_T, _Allocator>::vector(
 }
 
 template <typename _T, typename _Allocator>
+vector<_T, _Allocator>::vector(const vector<_T, _Allocator>& other)
+    : __vector_base<_T, _Allocator>(other.capacity()) {
+  this->__end_ =
+      std::uninitialized_copy(other.__begin_, other.__end_, this->__begin_);
+}
+
+template <typename _T, typename _Allocator>
+void vector<_T, _Allocator>::__reconstruct(size_type __new_n_) {
+  pointer __new_begin_, __new_end_, __new_cap_;
+  __new_begin_ = this->__reconstruct_storage(__new_n_);
+  __new_end_ =
+      std::uninitialized_copy(this->__begin_, this->__end_, __new_begin_);
+  __new_cap_ = __new_n_;
+}
+
+template <typename _T, typename _Allocator>
+void vector<_T, _Allocator>::__construct_one(const value_type& val) {
+  if (this->__end_ == this->__end_cap_) __reconstruct(this->__capacity() * 2);
+  *this->end++ = val
+}
+
+template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::push_back(const value_type& val) {
   if (this->__end_ != this->__end_cap_) {
     // __construct_one();
     return;
   }
-  // __reconstruct_memory();
+  // __reconstruct_storage();
   // __construct_one();
 }
 
