@@ -100,6 +100,7 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
   - generic code에서 사용성이 떨어짐. 해당 함수가 던질 수 있는 exception이 늘어나면 고쳐야할게 더 많아짐.
   - 실제로, 함수가 아무 exception이나 던지거나(`throw(...)`이 없을때) 또는 exception을 절대 던지지 않는 상황(`throw()`)에서만 최적화가 가능
   - 이에 맞게 [noexcept](https://en.cppreference.com/w/cpp/language/noexcept_spec)로 대체됨.
+  - 따라서, `#define FT_NOEXCEPT throw()` 로 `noexcept` 대체!
 
 - std::unexpected
 
@@ -432,6 +433,7 @@ vector& operator=(const vector& rhs);
 ### Iterators:
 
 - exception-safety: No-throw
+- return corresponding iterator
 
 ```c++
 iterator begin() FT_NOEXCEPT;
@@ -505,6 +507,12 @@ const_reference back() const;
 - 모든 method는 작동 후 적절하게 size()를 수정하고, 재할당시 내부의 allocator를 사용하여 메모리 할당.
 - 할당시 allocator::construct에 문제가 있으면 UB
 - `iterator validity`가 있어서, 데이터가 수정되는 경우 이전에 생성된 iterator들의 validity에 유의해야함.
+- range는 당연히 [first, last) 임! 
+
+- exception-safety(공통 적용)
+  - 재할당이 일어나지 않거나, 재할당이 일어나도 각 요소가 copyable이면 strong guarantee (1)
+	- 재할당이 일어났는데, 각 요소가 copyable하지 않으면 basic guarantee (2)
+  - allocator::construct에 문제가 있거나, 인자의 iterator가 invalid하면 UB
 
 ```c++
 // 벡터에 새로운 데이터를 넣고 size를 알맞게 수정
@@ -516,20 +524,24 @@ void assign(_InputIterator first, _InputIterator last); // range
 void assign(size_type n, const value_type& val); // fill
 
 // val을 컨테이너 end에 추가. 필요하다면 메모리 재할당.
-// 재할당이 일어나지 않으면 strong guarantee
-// 재할당이 일어나는데, copy constructor가 유효하면 strong guarantee
-// 그 외에는 basic guarantee
 void push_back(const value_type& val);
 
 // 컨테이너의 마지막 요소를 삭제.
 // 컨테이너가 비어있지 않으면 no-throw. 그 외에는 UB
 void pop_back();
 
+// position 에 해당하는 값들을 삽입. 
+// 현재 벡터 size보다 커지게 되면 자동으로 재할당
+// iterator를 반환하는 경우, insert된 위치의 iterator 반환
 iterator insert(iterator position, const value_type& val); // single element
 void insert(iterator position, size_type n, const value_type& val); // fill
+// inputiterator면 하나씩 삽입해야 해서 logN의 시간복잡도가 나옴
 template <typename _InputIterator>
 void insert(iterator position, _InputIterator first, _InputIterator last); // range
 
+// 해당 인자의 element를 destroy하고, size를 줄임
+// position이나 range에 end()가 포함되지 않으면, relocate하는 과정이 필요함!
+// 마지막으로 지워진 부분의 다음 element가 있는 위치를 리턴
 iterator erase(iterator position);
 iterator erase(iterator first, iterator last);
 
@@ -543,7 +555,9 @@ void clear() FT_NOEXCEPT; // no-throw
 ### Allocator:
 
 ```c++
-get_allocator()
+// return copy of vector's allocator
+allocator_type get_allocator() const FT_NOEXCEPT ; // no-throw
+
 ```
 
 ### Non-member functions:
@@ -567,6 +581,8 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 ```
 
 ### Template specializations:
+
+boolean값을 비트단위로 저장함... 와우... 
 
 `vector<bool>`
 
