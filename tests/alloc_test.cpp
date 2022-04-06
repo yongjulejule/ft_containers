@@ -41,10 +41,14 @@ void uninitialized_fill(_ForwardIterator __f, _ForwardIterator __l,
 }
 }  // namespace my
 
-int *test_init_is_heap() {
-  int *val;
-  my::uninitialized_fill(val, val + 7, 42);
-  return val;
+void test_init_is_heap() {
+  // int *val = NULL;
+  // my::uninitialized_fill(val, val + 7, 42);
+  // return val;
+  int b = 42;
+  int c = b;
+  int *val = ::new (static_cast<void *>(&c)) int(b);
+  std::cout << *val;
 }
 
 int main() {
@@ -66,6 +70,8 @@ int main() {
     std::uninitialized_fill(&arr[0], &arr[10], 42);
     std::cout << *arr << "\n";
   }
+
+  { test_init_is_heap(); }
   // int *val = test_init_is_heap();
   // for (int *tmp = val; tmp < val + 10; tmp++) {
   //   std::cout << *tmp << ",";
