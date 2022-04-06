@@ -11,6 +11,8 @@
 
 #include "vector.hpp"
 
+#include <sys/time.h>
+
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -18,6 +20,21 @@
 #include <vector>
 
 #include "iterator.hpp"
+
+template <typename T>
+void print_vector(T it, T ite) {
+  while (it != ite) {
+    std::cout << *it << ", ";
+    ++it;
+    if (it == ite) std::cout << "\n";
+  }
+}
+
+template <typename vec>
+void print_vector(vec v) {
+  std::cout << "vector info (size, capacity) : (" << v.size() << ", "
+            << v.capacity() << ")\n";
+}
 
 void stl_vec_test() {
   // std::vector<int> thw(10, ULLONG_MAX);
@@ -79,7 +96,7 @@ void my_vec_test() {
   }
 }
 
-void method_test() {
+void stl_method_test() {
   typedef std::vector<int>::iterator iterator;
 
   {
@@ -114,16 +131,74 @@ void method_test() {
     for (; itb != a.end(); itb++) std::cout << *itb << ",";
     std::cout << "\n";
   }
+  {
+    std::cout << "front and back test when empty\n";
+    std::vector<int> a;
+    std::cout << "vecot default capacity : " << a.capacity() << "\n";
+    try {
+      std::cout << a.at(0) << "\n";
+    } catch (std::exception &e) {
+      std::cout << "vector at :" << e.what() << "\n";
+      std::cout << typeid(e).name() << "\n";
+    }
+    std::cout << "is empty? : " << a.empty() << "\n";
+    // std::cout << "a (front, back) : (" << a.front() << ", " << a.back()
+    //           << ")\n";
+  }
+}
+
+void my_vec_method_test() {
+  // typedef ft::vector<int>::iterator iterator;
+  {
+    std::cout << "push_back()\n";
+    int arr[] = {4, 2, 42, 424, 242, 4242, 2424, 424242, 242424};
+    ft::vector<int> my_v(arr, arr + (sizeof(arr) / sizeof(int)));
+    print_vector(my_v.begin(), my_v.end());
+    for (int i = 0; i < 42; i++) my_v.push_back(-4242);
+    print_vector(my_v.begin(), my_v.end());
+    print_vector(my_v);
+  }
+}
+
+void std_vec_method_test() {
+  // typedef ft::vector<int>::iterator iterator;
+  {
+    std::cout << "push_back()\n";
+    int arr[] = {4, 2, 42, 424, 242, 4242, 2424, 424242, 242424};
+    std::vector<int> my_v(arr, arr + (sizeof(arr) / sizeof(int)));
+    print_vector(my_v.begin(), my_v.end());
+    for (int i = 0; i < 42; i++) my_v.push_back(-4242);
+    print_vector(my_v.begin(), my_v.end());
+    print_vector(my_v);
+  }
 }
 
 int main(void) {
+  std::cout << std::boolalpha;
   std::cout << "===== stl_vec_test() =====\n";
   stl_vec_test();
   std::cout << "===== my_vec_test() =====\n";
   my_vec_test();
-  std::cout << "===== insert_test() =====\n";
-  method_test();
+  std::cout << "===== stl_method_test() =====\n";
+  stl_method_test();
+  struct timeval tv;
+  std::cout << "===== my_vec_method_test() =====\n";
+  gettimeofday(&tv, NULL);
+  suseconds_t beg = tv.tv_usec;
+  my_vec_method_test();
+  gettimeofday(&tv, NULL);
+  suseconds_t taken = tv.tv_usec - beg;
+  std::cout << "===== std_vec_method_test() =====\n";
+  gettimeofday(&tv, NULL);
+  suseconds_t beg2 = tv.tv_usec;
+  std_vec_method_test();
+  gettimeofday(&tv, NULL);
+  suseconds_t taken2 = tv.tv_usec - beg2;
 
-  system("leaks mine.out");
+  std::cout << "ft::vector : <" << taken << "> std::vector : <" << taken2
+            << ">\n";
+  std::cout << (taken < taken2);
+
+  // system("leaks mine.out");
   // ft::vector<int, std::allocator<int> > h;
 }

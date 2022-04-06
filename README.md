@@ -492,12 +492,12 @@ reference at(size_type __n_);
 const_reference at(size_type __n_) const;
 
 // 컨테이너에 저장된 첫번째 요소의 레퍼런스 반환
-// empty이면 UB. empty가 아니면 no-throw
+// empty이면 UB. empty가 아니면 no-throw -> LLVM 기준 segmentation fault!
 reference front();
 const_reference front() const;
 
 // 컨테이너에 저장된 마지막 요소의 레퍼런스 반환
-// empty이면 UB. empty가 아니면 no-throw
+// empty이면 UB. empty가 아니면 no-throw -> LLVM 기준 segmentation fault!
 reference back();
 const_reference back() const;
 ```

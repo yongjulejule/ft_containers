@@ -5,7 +5,7 @@ ifdef DEBUG
 else ifdef LEAKS
 	CXXFLAGS = --std=c++98 -g
 else ifdef TEST
-	CXXFLAGS = -g --std=c++98
+	CXXFLAGS = -g --std=c++98 -Wall -Wextra -Werror
 else
 	CXXFLAGS	= --std=c++98 -Wall -Wextra -Werror
 endif
