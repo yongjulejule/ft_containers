@@ -13,33 +13,13 @@
 #include <memory>
 #include <vector>
 void allocTest(std::allocator<int> myAlloc, int **arr) {
-  myAlloc.construct(*arr, 1);
+  myAlloc.construct(*arr, 42412);
   myAlloc.construct(*arr + 1, 1);
   myAlloc.construct(*arr + 2, 1);
+  myAlloc.destroy(*arr);
   // for (int i = 0; i < 2; i++) std::cout << sizeof(*arr[i]) << ",";
   // for (int i = 0; i < 2; i++) std::cout << *arr[i] << ",";
 }
-
-namespace my {
-template <class _ForwardIterator, class _Tp>
-void uninitialized_fill(_ForwardIterator __f, _ForwardIterator __l,
-                        const _Tp &__x) {
-  typedef
-      typename std::iterator_traits<_ForwardIterator>::value_type value_type;
-#ifndef _LIBCPP_NO_EXCEPTIONS
-  _ForwardIterator __s = __f;
-  try {
-#endif
-    for (; __f != __l; ++__f)
-      ::new (static_cast<void *>(_VSTD::addressof(*__f))) value_type(__x);
-#ifndef _LIBCPP_NO_EXCEPTIONS
-  } catch (...) {
-    for (; __s != __f; ++__s) __s->~value_type();
-    throw;
-  }
-#endif
-}
-}  // namespace my
 
 void test_init_is_heap() {
   // int *val = NULL;
@@ -51,9 +31,17 @@ void test_init_is_heap() {
   std::cout << *val;
 }
 
+template <typename T>
+void my_destroy(T t) {
+  ~T(t);
+}
+
 int main() {
   std::allocator<int> myAlloc;
   int *arr = myAlloc.allocate(14);
+  myAlloc.construct(arr, 424242);
+  my_destroy(*arr);
+  std::cout << *arr << "\n";
   allocTest(myAlloc, &arr);
   // std::vector<int> a(42, 10, myAlloc);
   // std::cout << sizeof(a);
@@ -72,6 +60,15 @@ int main() {
   }
 
   { test_init_is_heap(); }
+  {
+    try {
+      std::vector<int> a(SIZE_MAX, 42);
+      a.push_back(1002);
+    } catch (...) {
+      std::cout << "alloc error?\n";
+    }
+  }
+
   // int *val = test_init_is_heap();
   // for (int *tmp = val; tmp < val + 10; tmp++) {
   //   std::cout << *tmp << ",";

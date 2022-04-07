@@ -93,6 +93,7 @@ void my_vec_test() {
       std::cout << *it << ", ";
     }
     std::cout << "\n";
+    ft::vector<int> my_cp_v(my_v);
   }
 }
 
@@ -154,7 +155,7 @@ void my_vec_method_test() {
     int arr[] = {4, 2, 42, 424, 242, 4242, 2424, 424242, 242424};
     ft::vector<int> my_v(arr, arr + (sizeof(arr) / sizeof(int)));
     print_vector(my_v.begin(), my_v.end());
-    for (int i = 0; i < 42; i++) my_v.push_back(-4242);
+    for (int i = 0; i < 420; i++) my_v.push_back(-4242);
     print_vector(my_v.begin(), my_v.end());
     print_vector(my_v);
   }
@@ -167,20 +168,13 @@ void std_vec_method_test() {
     int arr[] = {4, 2, 42, 424, 242, 4242, 2424, 424242, 242424};
     std::vector<int> my_v(arr, arr + (sizeof(arr) / sizeof(int)));
     print_vector(my_v.begin(), my_v.end());
-    for (int i = 0; i < 42; i++) my_v.push_back(-4242);
+    for (int i = 0; i < 420; i++) my_v.push_back(-4242);
     print_vector(my_v.begin(), my_v.end());
     print_vector(my_v);
   }
 }
 
-int main(void) {
-  std::cout << std::boolalpha;
-  std::cout << "===== stl_vec_test() =====\n";
-  stl_vec_test();
-  std::cout << "===== my_vec_test() =====\n";
-  my_vec_test();
-  std::cout << "===== stl_method_test() =====\n";
-  stl_method_test();
+void perfomance_test() {
   struct timeval tv;
   std::cout << "===== my_vec_method_test() =====\n";
   gettimeofday(&tv, NULL);
@@ -197,8 +191,117 @@ int main(void) {
 
   std::cout << "ft::vector : <" << taken << "> std::vector : <" << taken2
             << ">\n";
-  std::cout << (taken < taken2);
+  std::cout << "ft is faster than std? :" << (taken < taken2) << "\n";
+}
 
-  // system("leaks mine.out");
+class alloc_ed {
+ private:
+  int *a;
+
+ public:
+  alloc_ed() : a(new int[24]()) {
+    std::cout << "constructer called\n";
+    for (int i = 0; i < 24; i++) a[i] = i * 2;
+  }
+  ~alloc_ed() {
+    std::cout << "destructor called\n";
+    delete[] a;
+  }
+};
+
+void erase_test() {
+  {
+    std::cout << "std vector erase test\n";
+    std::vector<int> v(10, 10);
+    v[5] = 421;
+    v.push_back(42);
+    std::cout << "erase from end -> seg fault\n";
+    std::vector<int>::iterator it = v.begin();
+    std::cout << "befre erase: capacity :" << v.capacity() << "\n";
+    v.erase(v.begin() + 5);
+    std::cout << "after erase: capacity :" << v.capacity() << "\n";
+    std::cout << "erased\n";
+    print_vector(v.begin(), v.end());
+  }
+
+  {
+    std::cout << "ft vector erase test\n";
+    ft::vector<int> v(10, 10);
+    v[5] = 421;
+    v.push_back(42);
+    std::cout << "erase from end -> seg fault\n";
+    ft::vector<int>::iterator it = v.begin();
+    std::cout << "befre erase: capacity :" << v.capacity() << "\n";
+    v.erase(v.begin() + 5);
+    std::cout << "after erase: capacity :" << v.capacity() << "\n";
+    std::cout << "erased\n";
+    print_vector(v.begin(), v.end());
+  }
+
+  {
+    std::cout
+        << "std vector alloc_ed class test\n";  // ????????? vector 가 터지네?
+    std::vector<int> a;
+    a.push_back(421);
+    a.push_back(422);
+    a.push_back(423);
+    // a.pop_back();
+    a.erase(a.begin() + 1);
+    print_vector(a.begin(), a.end());
+    // std::cout << "erase begin() + 5\n";
+  }
+
+  {
+    std::cout << "ft vector alloc_ed class test\n";
+    std::vector<int> b;
+    std::cout << b.capacity() << "\n";
+    std::cout << &(*b.begin()) << &(*b.end()) << "\n";
+    ft::vector<int> a;
+    std::cout << "push_back\n";
+    a.push_back(421);
+    a.push_back(422);
+    a.push_back(423);
+    // a.pop_back();
+    std::cout << "erase\n";
+    a.erase(a.begin() + 1);
+    print_vector(a.begin(), a.end());
+  }
+  {
+    std::cout << "std vector range erase test\n";
+    std::string a[10] = {"a", "b", "c", "d", "e", "f"};
+    std::vector<std::string> v(a, a + 5);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+    v.erase(v.begin() + 1, v.end() - 2);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+  {
+    std::cout << "std vector range erase test\n";
+    std::string a[10] = {"a", "b", "c", "d", "e", "f"};
+    ft::vector<std::string> v(a, a + 5);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+    v.erase(v.begin() + 1, v.end());
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+}
+
+int main(int argc, char **argv) {
+  std::cout << std::boolalpha;
+  std::cout << "===== stl_vec_test() =====\n";
+  stl_vec_test();
+  std::cout << "===== my_vec_test() =====\n";
+  my_vec_test();
+  std::cout << "===== stl_method_test() =====\n";
+  stl_method_test();
+  perfomance_test();
+  erase_test();
+
+  (void)argc;
+  std::string leak = std::string("leaks ") + &argv[0][2];
+  system(leak.c_str());
+  // int empty = a.front(); -> SEG_FAULT
   // ft::vector<int, std::allocator<int> > h;
 }

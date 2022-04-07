@@ -542,6 +542,7 @@ void insert(iterator position, _InputIterator first, _InputIterator last); // ra
 // 해당 인자의 element를 destroy하고, size를 줄임
 // position이나 range에 end()가 포함되지 않으면, relocate하는 과정이 필요함!
 // 마지막으로 지워진 부분의 다음 element가 있는 위치를 리턴
+// 이때 iterator는 random_access_iterator
 iterator erase(iterator position);
 iterator erase(iterator first, iterator last);
 
