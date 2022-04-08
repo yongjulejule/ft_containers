@@ -43,6 +43,7 @@ My c++ STL containers (c++98)
 		- [Template specializations:](#template-specializations)
 	- [private things to implement vector](#private-things-to-implement-vector)
 		- [__vector_base](#__vector_base)
+		- [__vector_base methods](#__vector_base-methods)
 		- [private method in vector](#private-method-in-vector)
 		- [exceptions](#exceptions)
 	- [TODO](#todo)
@@ -591,27 +592,98 @@ boolean값을 비트단위로 저장함... 와우...
 
 ### __vector_base
 
-exception-safety를 위한 RAII로 `__vector_base`를 만들고 `vector`에서 `__vector_base` 를 상속받음.
-
-`vector` 클래스에서 자원(메모리)를 획득할 필요가 있는 경우, `__vector_base`를 통해 자원을 획득함. 
-획득한 메모리에 적절한 값을 쓰는것은 exception-safety 하므로 `vector`클래스에서 획득한 메모리에 데이터를 적절히 넣어줌.
-
 `__vector_base` 에서 필요한 기능
 - 생성자에서 메모리 획득이 되어야 하며, 소멸자에서 메모리를 모두 해제해야 함 (RAII)
 - 현재 메모리 정보 저장 (`begin, end, capacity, allocator`)
-- 특정 사이즈의 메모리 획득
-- 메모리 재할당
+- 메모리 획득
 - 메모리 해제
-- 메모리 정보 `getter`
-- 문제 발생시 적절한 에러 throw  // -> 미정
+- 문제 발생시 적절한 에러 throw 
 
+base vector 가 필요한 이유
+- `vector`의 `consturctor`는 `strong-guarantee`여야 함! 
+- 모종의 이유로 `vector`의 `constructor`가 `exception`을 던지면, `vector`의 `destructor`가 호출되지 않음.
+- 따라서 벡터 내부에서 자원을 얻고 헤제하는 과정이 `RAII`에 따라 잘 작성되었다고 하더라도, `destructor`가 호출되지 않아 리소스가 적절하게 반환되지 않을 수 있음(`strong-guarantee`를 만족하지 못함)
+- `vector_base`를 만들어서 자원을 사용하는 데이터를 이곳에 저장하고, `vector`가 이를 상속받는 구조로 `vector`를 구성한 뒤 자원의 획득과 반환을 `vector_base`에서 `RAII`구조로 처리한다면, `vector`의 `constructor`에서 `exception`이 나더라도 `vector_base`의 `destructor`는 정상적으로 호출이 되어 자원이 반납됨.
+
+<details>
+<summary> 간단한 테스트 </summary>
+
+```c++
+class thrw {
+ protected:
+  int *x;
+  size_t size;
+  std::allocator<int> a;
+
+ public:
+  thrw() : x(NULL), size(424242), a(std::allocator<int>()) {
+    std::cout << "thrw constructor\n";
+    // @@@@ allocate_memory(); <- leaks here! @@@@@@
+  }
+  void allocate_memory() {
+    std::cout << "allocate_memory\n";
+    for (;;) {
+      x = a.allocate(size);
+      if (size > (a.max_size() >> 32)) throw std::bad_alloc();
+      a.deallocate(x, size);
+      size *= 2;
+    }
+  }
+  ~thrw() {
+    std::cout << "thrw destructor\n";
+    a.deallocate(x, size);
+  }
+};
+
+class thrw_child : public thrw {
+ public:
+  thrw_child() : thrw() {
+    std::cout << "thrw_child constructor\n";
+    allocate_memory();
+  }
+  ~thrw_child() { std::cout << "thrw_child destructor\n"; }
+};
+
+void raii_test() {
+  thrw a;
+  std::cout << "a constructed...\n";
+  a.allocate_memory();
+}
+
+void raii_child_test() { thrw_child a; }
+
+int main() {
+  try {
+    raii_test();
+  } catch (std::exception &e) {
+    std::cout << e.what() << " in Main raii_test CATCH\n";
+  }
+  try {
+    raii_child_test();
+  } catch (std::exception &e) {
+    std::cout << e.what() << " in Main raii_child_test CATCH\n";
+  }
+  system("leaks mine.out | grep leaked");
+}
+```
+
+`thrw` 가 부모 클래스가 되며 `thrw_child` 가 자식 클래스가 됨. 
+이때, 부모 클래스의 생성자에서 `allocate_memory` 함수를 호출하여 exception이 발생하면 메모리 누수가 발생!
+![parent throw](asset/parent_alloc.png)
+주석을 해제하고 실행하면 소멸자가 호출되지 않은 모습을 확인할 수 있음.
+
+주석을 넣고 실행하면 자식 클래스의 소멸자는 호출되지 않았지만, 부모 클래스의 소멸자는 정상적으로 호출됨
+![child throw](asset/child_alloc.png)
+따라서 누수가 발생하지 않음!!
+
+</details>
+
+
+### __vector_base methods
 
 ```c++
 // construct n size of memory
 pointer __construct_storage(size_type __n_);
-
-// deallocate and construct n size of memory near pointer p
-pointer __reconstruct_storage(size_type __n_, pointer __p_);
 
 // copy data of __vector_base
 void __copy_data(__vector_base const& __src_);
@@ -621,9 +693,6 @@ void __swap_data(__vector_base& __src_);
 
 // destruct storage (only memory)
 void __destruct_storage();
-
-// destory data
-void __clear();
 
 // get current capacity
 size_type __capacity() const;

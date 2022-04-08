@@ -8,69 +8,57 @@
 class thrw {
  protected:
   int *x;
+  size_t size;
+  std::allocator<int> a;
 
  public:
-  thrw() { std::cout << "constructor\n"; }
-  void allocate_memory() {
-    x = new int[42];
-    throw std::bad_alloc();
+  thrw() : x(NULL), size(424242), a(std::allocator<int>()) {
+    std::cout << "thrw constructor\n";
+    // leaks here !
+    // allocate_memory();
   }
-  int get_x() { return *x; }
+  void allocate_memory() {
+    std::cout << "allocate_memory\n";
+    for (;;) {
+      x = a.allocate(size);
+      if (size > (a.max_size() >> 32)) throw std::bad_alloc();
+      a.deallocate(x, size);
+      size *= 2;
+    }
+  }
   ~thrw() {
-    delete x;
-    std::cout << "destructor\n";
+    std::cout << "thrw destructor\n";
+    a.deallocate(x, size);
   }
 };
 
 class thrw_child : public thrw {
  public:
   thrw_child() : thrw() {
+    std::cout << "thrw_child constructor\n";
     allocate_memory();
-    std::cout << "thrw_child\n";
   }
   ~thrw_child() { std::cout << "thrw_child destructor\n"; }
 };
 
 void raii_test() {
-  try {
-    thrw a;
-    std::cout << "a constructed...\n";
-    a.allocate_memory();
-    std::cout << a.get_x() << "\n";
-  } catch (std::exception &e) {
-    std::cout << e.what() << "\ncatch! in raii_test\n";
-  }
+  thrw a;
+  std::cout << "a constructed...\n";
+  a.allocate_memory();
 }
 
-void f1() {
-  thrw_child a;
-  std::cout << a.get_x() << "\n";
-}
-
-void raii_child_test() {
-  try {
-    f1();
-  } catch (...) {
-    std::cout << "catch f1\n";
-  }
-}
+void raii_child_test() { thrw_child a; }
 
 int main() {
   try {
     raii_test();
   } catch (std::exception &e) {
-    std::cout << e.what() << "in Main RAII TEST CATCH\n";
+    std::cout << e.what() << " in Main raii_test CATCH\n";
   }
   try {
     raii_child_test();
   } catch (std::exception &e) {
-    std::cout << e.what() << "in Main F1 TEST CATCH\n";
+    std::cout << e.what() << " in Main raii_child_test CATCH\n";
   }
-  std::vector<int> alloc;
-  size_t size = alloc.get_allocator().max_size();
-  std::cout << size << "<- size\n";
-  std::vector<int> v(size / 10, 42);
-  v.push_back(10);
-  std::cout << *(v.end() - 1);
-  system("leaks mine.out");
+  system("leaks mine.out | grep leaked");
 }
