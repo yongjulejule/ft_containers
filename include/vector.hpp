@@ -9,6 +9,7 @@
  *
  */
 
+#include <iostream>
 #include <iterator>
 #include <memory>
 
@@ -49,9 +50,6 @@ struct __vector_base {
   pointer __end_;
   pointer __end_cap_;
   allocator_type __a_;
-
-  pointer& __end_cap() FT_NOEXCEPT { return __end_cap_; }
-  const pointer& __end_cap() const FT_NOEXCEPT { return __end_cap_; }
 
   __vector_base() FT_NOEXCEPT;
   __vector_base(const allocator_type& a) FT_NOEXCEPT;
@@ -456,14 +454,7 @@ vector<_T, _Allocator>::vector(
                        _InputIterator>::type last,
     const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(size_type(), _Alloc) {
-  try {
-    for (; first == last; ++first) push_back(*first);
-  } catch (...) {
-    if (this->__begin_) {
-      clear();
-      this->__destruct_storage();
-    }
-  }
+  for (; first == last; ++first) push_back(*first);
 }
 
 template <typename _T, typename _Allocator>
@@ -579,13 +570,24 @@ void vector<_T, _Allocator>::pop_back() FT_NOEXCEPT {
 template <typename _T, typename _Allocator>
 typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::insert(
     iterator position, const value_type& val) {
+  std::cout << "iterator position, value_type\n";
   if (this->__end_ == this->__end_cap_) reserve(size_type(capacity() + 1));
+  difference_type __diff_ = position - begin();
+  pointer __p_ = this->__begin_ + __diff_;
+  this->__end_ = std::uninitialized_copy(__p_, this->__end_, __p_ + 1);
+  this->__a_.construct(__p_, val);
+  return iterator(this->__begin_ + __diff_);
 }
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::insert(iterator position, size_type n,
                                     const value_type& val) {
+  std::cout << "iterator position, size_type, value_type\n";
   if (size() + n > capacity()) reserve(size() + n);
+  difference_type __diff_ = position - begin();
+  pointer __p_ = this->__begin_ + __diff_;
+  this->end = std::uninitialized_copy(__p_, this->__end_, __p_ + n);
+  std::uninitialized_fill(__p_, __p_ + n, val);
 }
 
 template <typename _T, typename _Allocator>
@@ -594,7 +596,15 @@ void vector<_T, _Allocator>::insert(
     iterator position, _InputIterator first,
     typename enable_if<__is_input_iterator<_InputIterator>::value &&
                            !__is_forward_iterator<_InputIterator>::value,
-                       _InputIterator>::type last) {}
+                       _InputIterator>::type last) {
+  std::cout << "iterator position, inputiter first , last\n";
+  difference_type __diff_ = position - begin();
+  pointer __p_ = this->__begin_ + __diff_;
+  pointer __prev_end_ = this->__end_;
+  for (int i = 0; first != last; ++first, ++i) {
+    insert(position + i, *first);
+  }
+}
 
 template <typename _T, typename _Allocator>
 template <typename _ForwardIterator>
@@ -602,8 +612,13 @@ void vector<_T, _Allocator>::insert(
     iterator position, _ForwardIterator first,
     typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
                        _ForwardIterator>::type last) {
-  size_type __in_size_ = std::distance(first, last);
+  std::cout << "iterator position, forward first , last\n";
+  difference_type __in_size_ = std::distance(first, last);
+  pointer __p_ = this->__begin_ + (position - begin());
+  if (__in_size_ <= 0) return;
   if (__in_size_ + size() > capacity()) reserve(__in_size_ + size());
+  this->__end_ = std::uninitialized_copy(__p_, this->__end_, this->__end_);
+  std::uninitialized_copy(first, last, __p_);
 }
 
 template <typename _T, typename _Allocator>
@@ -611,13 +626,9 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
     iterator position) {
   difference_type __diff_ = position - begin();
   pointer __p_ = this->__begin_ + __diff_;
+
   this->__a_.destroy(__p_);
-  --this->__end_;
-  while (this->__end_ != __p_) {
-    this->__a_.construct(__p_, *(__p_ + 1));
-    ++__p_;
-  }
-  this->__a_.destroy(__p_);
+  this->__a_.destroy(std::uninitialized_copy(__p_ + 1, this->__end_--, __p_));
   return (iterator(this->__begin_ + __diff_));
 }
 
@@ -625,12 +636,15 @@ template <typename _T, typename _Allocator>
 typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
     iterator first, iterator last) {
   difference_type __diff_ = first - begin();
-  difference_type __diff_iter_ = last - first;
   pointer __p_ = this->__begin_ + __diff_;
+
   if (last == end()) {
     __destroy_from_end(__p_);
-    return this->__begin_ + __diff_;
+    return iterator(this->__begin_ + __diff_);
   }
+
+  difference_type __diff_iter_ = last - first;
+
   while (first != last) {
     this->__a_.destroy(__p_);
     this->__a_.construct(__p_, *(first + __diff_iter_));

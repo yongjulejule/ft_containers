@@ -54,6 +54,14 @@ void check_iterator_category() {
   my<ft::iterator<ft::random_access_iterator_tag, int> > my_rd_tag;
   lib<std::iterator<std::random_access_iterator_tag, int> > lib_rd_tag;
 
+  // bool test = ft::__is_input_iterator<
+  //     ft::iterator<std::input_iterator_tag, int> >::value;
+  // ft::__is_iterator<
+  //     ft::iterator<std::input_iterator_tag, int> >::iterator_category a;
+
+  // std::iterator_traits<int> aa;
+  ft::iterator_traits<int *> bb;
+
   std::cout << "====== input =====\n";
   std::cout << "My  ret -> " << my_in_tag << "\n";
   std::cout << "lib ret -> " << lib_in_tag << "\n";

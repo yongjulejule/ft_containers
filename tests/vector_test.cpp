@@ -64,13 +64,6 @@ void stl_vec_test() {
 }
 
 void my_vec_test() {
-  ft::__vector_iterator<ft::iterator<ft::input_iterator_tag, int> > ok;
-
-  std::cout << typeid(ok).name();
-  ft::vector<int> dd;
-  std::cout << typeid(dd.get_allocator()).name() << "\n";
-  ft::vector<int> v(10);
-  std::cout << "size is:" << v.size() << "\n";
   {
     ft::vector<int> my_v(10, 10);
     ft::vector<int>::iterator it = my_v.begin();
@@ -253,9 +246,6 @@ void erase_test() {
 
   {
     std::cout << "ft vector alloc_ed class test\n";
-    std::vector<int> b;
-    std::cout << b.capacity() << "\n";
-    std::cout << &(*b.begin()) << &(*b.end()) << "\n";
     ft::vector<int> a;
     std::cout << "push_back\n";
     a.push_back(421);
@@ -288,6 +278,42 @@ void erase_test() {
   }
 }
 
+void insert_test() {
+  {
+    typedef std::vector<int>::iterator iterator;
+    std::cout << "std vector insert()\n";
+    std::vector<int> a(10, 10);
+    iterator it = a.begin() + 1;
+    iterator it_insert = a.insert(it + 5, 42);
+    std::cout << "insert ret location is: "
+              << std::distance(a.begin(), it_insert) << "\n";
+    print_vector(a.begin(), a.end());
+    int arr[] = {4242, 4241, 4240, 420, 424242};
+    a.insert(a.end(), arr, arr + 5);
+    print_vector(a.begin(), a.end());
+  }
+
+  {
+    typedef ft::vector<int>::iterator iterator;
+    std::cout << "ft vector insert()\n";
+    ft::vector<int> a(10, 10);
+    iterator it = a.begin() + 1;
+    iterator it_insert = a.insert(it + 5, 42);
+    std::cout << "insert ret location is: "
+              << std::distance(a.begin(), it_insert) << "\n";
+    print_vector(a.begin(), a.end());
+    int arr[] = {4242, 4241, 4240, 420, 424242};
+    a.insert(a.end(), arr, arr + 5);
+    print_vector(a.begin(), a.end());
+  }
+}
+
+void inputiterator_test() {
+  std::iterator<std::input_iterator_tag, int> a;
+  std::vector<int> b(10, 10);
+  ft::vector<int> c(b.begin(), b.end());
+}
+
 int main(int argc, char **argv) {
   std::cout << std::boolalpha;
   std::cout << "===== stl_vec_test() =====\n";
@@ -298,6 +324,8 @@ int main(int argc, char **argv) {
   stl_method_test();
   perfomance_test();
   erase_test();
+  insert_test();
+  inputiterator_test();
 
   (void)argc;
   std::string leak = std::string("leaks ") + &argv[0][2];
