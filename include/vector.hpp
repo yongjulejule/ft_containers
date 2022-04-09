@@ -9,10 +9,9 @@
  *
  */
 
-#include <iostream>
-#include <iterator>
 #include <memory>
 
+#include "algorithm.hpp"
 #include "iterator.hpp"
 
 #ifndef VECTOR_HPP
@@ -378,7 +377,15 @@ class vector : private __vector_base<_T, _Allocator> {
 
   // modifiers
   template <typename _InputIterator>
-  void assign(_InputIterator first, _InputIterator last);
+  void assign(
+      _InputIterator first,
+      typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                             !__is_forward_iterator<_InputIterator>::value,
+                         _InputIterator>::type last);
+  template <typename _ForwardIterator>
+  void assign(_ForwardIterator first,
+              typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+                                 _ForwardIterator>::type last);
   void assign(size_type n, const value_type& val);
   void push_back(const value_type& val);
   void pop_back() FT_NOEXCEPT;
@@ -396,7 +403,7 @@ class vector : private __vector_base<_T, _Allocator> {
                                  _ForwardIterator>::type last);
   iterator erase(iterator position);
   iterator erase(iterator first, iterator last);
-  void swap(vector& x);
+  void swap(vector& x) { this->__swap_data(x); }
   void clear() FT_NOEXCEPT {
     if (this->__begin_) this->__a_.destroy(this->__begin_);
   }
@@ -454,7 +461,7 @@ vector<_T, _Allocator>::vector(
                        _InputIterator>::type last,
     const allocator_type& _Alloc)
     : __vector_base<_T, _Allocator>(size_type(), _Alloc) {
-  for (; first == last; ++first) push_back(*first);
+  for (; first != last; ++first) push_back(*first);
 }
 
 template <typename _T, typename _Allocator>
@@ -472,8 +479,24 @@ vector<_T, _Allocator>::vector(
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(const vector<_T, _Allocator>& other)
     : __vector_base<_T, _Allocator>(other.capacity()) {
+  clear();
   this->__end_ =
       std::uninitialized_copy(other.__begin_, other.__end_, this->__begin_);
+}
+
+template <typename _T, typename _Allocator>
+vector<_T, _Allocator>& vector<_T, _Allocator>::operator=(
+    const vector<_T, _Allocator>& other) {
+  if (this != &other) {
+    if (this->__a_ != other.__a_) {
+      clear();
+      this->__a_.deallocate(this->__begin_, capacity());
+      this->__begin_ = this->__end_ = this->__end_cap_ = NULL;
+      this->__a_ = other.__a_;
+    }
+    assign(other.__begin_, other.__end_);
+  }
+  return *this;
 }
 
 // private methods
@@ -515,16 +538,17 @@ void vector<_T, _Allocator>::reserve(size_type n) {
   if (__new_size > capacity()) {
     __reallocate(__new_size);
   }
-};
+}
+
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::resize(size_type n, value_type val) {
   if (n < size()) {
     __destroy_from_end(this->__end_ - n);
     return;
+  } else if (n > capacity()) {
+    __reallocate(n);
   }
-  // } else if (n > capacity())
-  // __reallocate(n);
-  // insert?
+  insert(end(), n, val);
 }
 
 // modifiers
@@ -543,7 +567,23 @@ void vector<_T, _Allocator>::assign(size_type n, const value_type& val) {
 
 template <typename _T, typename _Allocator>
 template <typename _InputIterator>
-void vector<_T, _Allocator>::assign(_InputIterator first, _InputIterator last) {
+void vector<_T, _Allocator>::assign(
+    _InputIterator first,
+    typename enable_if<__is_input_iterator<_InputIterator>::value &&
+                           !__is_forward_iterator<_InputIterator>::value,
+                       _InputIterator>::type last) {
+  clear();
+  for (; first != last; ++first) {
+    push_back(*first);
+  }
+}
+
+template <typename _T, typename _Allocator>
+template <typename _ForwardIterator>
+void vector<_T, _Allocator>::assign(
+    _ForwardIterator first,
+    typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
+                       _ForwardIterator>::type last) {
   size_type __new_n_ = std::distance(first, last);
   if (__new_n_ < capacity()) {
     clear();
@@ -570,9 +610,8 @@ void vector<_T, _Allocator>::pop_back() FT_NOEXCEPT {
 template <typename _T, typename _Allocator>
 typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::insert(
     iterator position, const value_type& val) {
-  std::cout << "iterator position, value_type\n";
-  if (this->__end_ == this->__end_cap_) reserve(size_type(capacity() + 1));
   difference_type __diff_ = position - begin();
+  if (this->__end_ == this->__end_cap_) reserve(size_type(capacity() + 1));
   pointer __p_ = this->__begin_ + __diff_;
   this->__end_ = std::uninitialized_copy(__p_, this->__end_, __p_ + 1);
   this->__a_.construct(__p_, val);
@@ -582,7 +621,6 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::insert(
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::insert(iterator position, size_type n,
                                     const value_type& val) {
-  std::cout << "iterator position, size_type, value_type\n";
   if (size() + n > capacity()) reserve(size() + n);
   difference_type __diff_ = position - begin();
   pointer __p_ = this->__begin_ + __diff_;
@@ -597,7 +635,6 @@ void vector<_T, _Allocator>::insert(
     typename enable_if<__is_input_iterator<_InputIterator>::value &&
                            !__is_forward_iterator<_InputIterator>::value,
                        _InputIterator>::type last) {
-  std::cout << "iterator position, inputiter first , last\n";
   difference_type __diff_ = position - begin();
   pointer __p_ = this->__begin_ + __diff_;
   pointer __prev_end_ = this->__end_;
@@ -612,13 +649,14 @@ void vector<_T, _Allocator>::insert(
     iterator position, _ForwardIterator first,
     typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
                        _ForwardIterator>::type last) {
-  std::cout << "iterator position, forward first , last\n";
   difference_type __in_size_ = std::distance(first, last);
-  pointer __p_ = this->__begin_ + (position - begin());
+  difference_type __diff_ = position - begin();
   if (__in_size_ <= 0) return;
   if (__in_size_ + size() > capacity()) reserve(__in_size_ + size());
-  this->__end_ = std::uninitialized_copy(__p_, this->__end_, this->__end_);
+  pointer __p_ = this->__begin_ + __diff_;
+  std::uninitialized_copy(__p_, this->__end_, this->__end_);
   std::uninitialized_copy(first, last, __p_);
+  this->__end_ += __in_size_;
 }
 
 template <typename _T, typename _Allocator>
@@ -659,27 +697,43 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
 // comparision operators
 
 template <typename _T, typename _Allocator>
-bool operator==(const vector<_T, _Allocator>& __lhs,
-                const vector<_T, _Allocator>& __rhs);
+bool operator==(const vector<_T, _Allocator>& lhs,
+                const vector<_T, _Allocator>& rhs) {
+  return lhs.size() == rhs.size() &&
+         ft::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
 template <typename _T, typename _Allocator>
-bool operator!=(const vector<_T, _Allocator>& __lhs,
-                const vector<_T, _Allocator>& __rhs);
+bool operator!=(const vector<_T, _Allocator>& lhs,
+                const vector<_T, _Allocator>& rhs) {
+  return !(lhs == rhs);
+}
 template <typename _T, typename _Allocator>
-bool operator<(const vector<_T, _Allocator>& __lhs,
-               const vector<_T, _Allocator>& __rhs);
+bool operator<(const vector<_T, _Allocator>& lhs,
+               const vector<_T, _Allocator>& rhs) {
+  return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
+                                     rhs.end());
+}
 template <typename _T, typename _Allocator>
-bool operator<=(const vector<_T, _Allocator>& __lhs,
-                const vector<_T, _Allocator>& __rhs);
+bool operator<=(const vector<_T, _Allocator>& lhs,
+                const vector<_T, _Allocator>& rhs) {
+  return !(lhs > rhs);
+}
 template <typename _T, typename _Allocator>
-bool operator>(const vector<_T, _Allocator>& __lhs,
-               const vector<_T, _Allocator>& __rhs);
+bool operator>(const vector<_T, _Allocator>& lhs,
+               const vector<_T, _Allocator>& rhs) {
+  return rhs < lhs;
+}
 template <typename _T, typename _Allocator>
-bool operator>=(const vector<_T, _Allocator>& __lhs,
-                const vector<_T, _Allocator>& __rhs);
+bool operator>=(const vector<_T, _Allocator>& lhs,
+                const vector<_T, _Allocator>& rhs) {
+  return !(rhs > lhs);
+}
 
 // swap
 template <typename _T, typename _Allocator>
-void swap(ft::vector<_T, _Allocator>& __x, ft::vector<_T, _Allocator>& __y);
+void swap(ft::vector<_T, _Allocator>& x, ft::vector<_T, _Allocator>& y) {
+  x.swap(y);
+}
 
 }  // namespace ft
 

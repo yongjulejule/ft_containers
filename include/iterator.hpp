@@ -15,6 +15,9 @@
 #include <cstddef>
 #include <iterator>
 
+// TODO: delete
+#include <iostream>
+
 #include "type_traits.hpp"
 
 namespace ft {
@@ -61,25 +64,24 @@ struct __has_iterator_typedefs {
     char __y;
   };
   template <typename _U>
-  static __two __test(...);
+  static __two __test(...){};
   template <typename _U>
-  static char __test(typename enable_if<_U::iterator_category>::type * = 0,
-                     typename enable_if<_U::difference_type>::type * = 0,
-                     typename enable_if<_U::value_type>::type * = 0,
-                     typename enable_if<_U::reference>::type * = 0,
-                     typename enable_if<_U::pointer>::type * = 0);
+  static char __test(
+      typename ft::void_t<typename _U::iterator_category>::type * = 0,
+      typename ft::void_t<typename _U::difference_type>::type * = 0,
+      typename ft::void_t<typename _U::value_type>::type * = 0,
+      typename ft::void_t<typename _U::reference>::type * = 0,
+      typename ft::void_t<typename _U::pointer>::type * = 0){};
 
  public:
   static const bool value = sizeof(__test<_T>(0, 0, 0, 0, 0)) == 1;
 };
 
 template <typename _Iter, bool>
-struct __iterator_traits {
-  typedef void iterator_category;
-};
+struct __iterator_traits_typedefs {};
 
 template <typename _Iter>
-struct __iterator_traits<_Iter, true> {
+struct __iterator_traits_typedefs<_Iter, true> {
   typedef typename _Iter::iterator_category iterator_category;
   typedef typename _Iter::value_type value_type;
   typedef typename _Iter::difference_type difference_type;
@@ -87,15 +89,26 @@ struct __iterator_traits<_Iter, true> {
   typedef typename _Iter::reference reference;
 };
 
+template <typename _Iter, bool>
+struct __iterator_traits {};
+
+template <typename _Iter>
+struct __iterator_traits<_Iter, true>
+    : __iterator_traits_typedefs<
+          _Iter, is_same<typename _Iter::iterator_category,
+                         input_iterator_tag>::value ||
+                     is_same<typename _Iter::iterator_category,
+                             output_iterator_tag>::value ||
+                     is_same<typename _Iter::iterator_category,
+                             forward_iterator_tag>::value ||
+                     is_same<typename _Iter::iterator_category,
+                             bidirectional_iterator_tag>::value ||
+                     is_same<typename _Iter::iterator_category,
+                             random_access_iterator_tag>::value> {};
+
 template <typename _Iter>
 struct iterator_traits
-    : __iterator_traits<_Iter, __has_iterator_typedefs<_Iter>::value> {
-  // typedef typename _Iter::iterator_category iterator_category;
-  // typedef typename _Iter::value_type value_type;
-  // typedef typename _Iter::difference_type difference_type;
-  // typedef typename _Iter::pointer pointer;
-  // typedef typename _Iter::reference reference;
-};
+    : __iterator_traits<_Iter, __has_iterator_typedefs<_Iter>::value> {};
 
 // iterator_traits specialization for pointer type
 template <typename _T>
@@ -116,6 +129,64 @@ struct iterator_traits<const _T *> {
   typedef const _T *pointer;
   typedef const _T &reference;
 };
+
+template <typename _Iter,
+          bool = __has_iterator_typedefs<iterator_traits<_Iter> >::value>
+struct __is_iterator : public false_type {
+  typedef void category;
+};
+
+template <typename _Iter>
+struct __is_iterator<_Iter, true> : public true_type {
+  typedef typename _Iter::iterator_category category;
+};
+
+template <typename _T>
+struct __is_iterator<_T *, true> : public true_type {
+  typedef typename iterator_traits<_T *>::iterator_category category;
+};
+
+template <typename _Iter>
+struct __is_input_iterator
+    : public integral_constant<bool,
+                               (is_same<typename __is_iterator<_Iter>::category,
+                                        input_iterator_tag>::value ||
+                                is_same<typename __is_iterator<_Iter>::category,
+                                        forward_iterator_tag>::value ||
+                                is_same<typename __is_iterator<_Iter>::category,
+                                        bidirectional_iterator_tag>::value ||
+                                is_same<typename __is_iterator<_Iter>::category,
+                                        random_access_iterator_tag>::value)> {};
+
+template <typename _Iter>
+struct __is_output_iterator
+    : public integral_constant<bool,
+                               is_same<typename __is_iterator<_Iter>::category,
+                                       output_iterator_tag>::value> {};
+
+template <typename _Iter>
+struct __is_forward_iterator
+    : public integral_constant<
+          bool, is_same<typename __is_iterator<_Iter>::category,
+                        forward_iterator_tag>::value ||
+                    is_same<typename __is_iterator<_Iter>::category,
+                            bidirectional_iterator_tag>::value ||
+                    is_same<typename __is_iterator<_Iter>::category,
+                            random_access_iterator_tag>::value> {};
+
+template <typename _Iter>
+struct __is_bidirectional_iterator
+    : public integral_constant<
+          bool, is_same<typename __is_iterator<_Iter>::category,
+                        bidirectional_iterator_tag>::value ||
+                    is_same<typename __is_iterator<_Iter>::category,
+                            random_access_iterator_tag>::value> {};
+
+template <typename _Iter>
+struct __is_random_access_iterator
+    : public integral_constant<bool,
+                               is_same<typename __is_iterator<_Iter>::category,
+                                       random_access_iterator_tag>::value> {};
 
 template <typename _Iter>
 class reverse_iterator
@@ -240,70 +311,6 @@ reverse_iterator<_Iter> operator+(
     const reverse_iterator<_Iter> &__it) {
   return reverse_iterator<_Iter>(__it.base() - __n);
 }
-
-// template <typename, typename _enable = void>
-// struct __is_iterator : false_type {
-//   typedef void iterator_category;
-// };
-
-// template <typename _Iter>
-// struct __is_iterator<_Iter, typename
-// enable_if<_Iter::iterator_category>::type>
-//     : public true_type {
-//   typedef typename _Iter::iterator_category iterator_category;
-// };
-
-// template <typename _T>
-// struct __is_iterator<_T *> : public true_type {
-//   typedef random_access_iterator_tag iterator_category;
-// };
-
-// template <typename _T>
-// struct __is_iterator<const _T *> : public true_type {
-//   typedef random_access_iterator_tag iterator_category;
-// };
-
-template <typename _Iter>
-struct __is_input_iterator
-    : public integral_constant<
-          bool, (is_same<typename iterator_traits<_Iter>::iterator_category,
-                         input_iterator_tag>::value ||
-                 is_same<typename iterator_traits<_Iter>::iterator_category,
-                         forward_iterator_tag>::value ||
-                 is_same<typename iterator_traits<_Iter>::iterator_category,
-                         bidirectional_iterator_tag>::value ||
-                 is_same<typename iterator_traits<_Iter>::iterator_category,
-                         random_access_iterator_tag>::value)> {};
-
-template <typename _Iter>
-struct __is_output_iterator
-    : public integral_constant<
-          bool, is_same<typename iterator_traits<_Iter>::iterator_category,
-                        output_iterator_tag>::value> {};
-
-template <typename _Iter>
-struct __is_forward_iterator
-    : public integral_constant<
-          bool, is_same<typename iterator_traits<_Iter>::iterator_category,
-                        forward_iterator_tag>::value ||
-                    is_same<typename iterator_traits<_Iter>::iterator_category,
-                            bidirectional_iterator_tag>::value ||
-                    is_same<typename iterator_traits<_Iter>::iterator_category,
-                            random_access_iterator_tag>::value> {};
-
-template <typename _Iter>
-struct __is_bidirectional_iterator
-    : public integral_constant<
-          bool, is_same<typename iterator_traits<_Iter>::iterator_category,
-                        bidirectional_iterator_tag>::value ||
-                    is_same<typename iterator_traits<_Iter>::iterator_category,
-                            random_access_iterator_tag>::value> {};
-
-template <typename _Iter>
-struct __is_random_access_iterator
-    : public integral_constant<
-          bool, is_same<typename iterator_traits<_Iter>::iterator_category,
-                        random_access_iterator_tag>::value> {};
 
 }  // namespace ft
 

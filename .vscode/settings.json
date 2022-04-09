@@ -72,7 +72,8 @@
 		"compare": "cpp",
 		"__memory": "cpp",
 		"set": "cpp",
-		"list": "cpp"
+		"list": "cpp",
+		"__cxx_version": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Enabled"
 }

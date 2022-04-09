@@ -54,8 +54,8 @@ void check_iterator_category() {
   my<ft::iterator<ft::random_access_iterator_tag, int> > my_rd_tag;
   lib<std::iterator<std::random_access_iterator_tag, int> > lib_rd_tag;
 
-  // bool test = ft::__is_input_iterator<
-  //     ft::iterator<std::input_iterator_tag, int> >::value;
+  bool test = ft::__is_input_iterator<
+      ft::iterator<std::input_iterator_tag, int> >::value;
   // ft::__is_iterator<
   //     ft::iterator<std::input_iterator_tag, int> >::iterator_category a;
 
@@ -97,12 +97,45 @@ void simple_test() {
   std::vector<int>::iterator t2;
   std::cout << typeid(t1).name() << "\n" << typeid(t2).name() << "\n";
   typedef ft::iterator<ft::input_iterator_tag, int> my_it;
-  ft::reverse_iterator<my_it> rit;
+  // ft::reverse_iterator<my_it> rit;
 }
+
+template <typename U>
+static int __test(...) {
+  std::cout << "!Q!! ... !!!\n";
+  return 2;
+}
+
+template <typename U>
+static char __test(
+    typename ft::void_t<typename U::iterator_category>::type * = 0,
+    typename ft::void_t<typename U::difference_type>::type * = 0,
+    typename ft::void_t<typename U::value_type>::type * = 0,
+    typename ft::void_t<typename U::pointer>::type * = 0,
+    typename ft::void_t<typename U::reference>::type * = 0) {
+  std::cout << "types!!!!!\n";
+  return 1;
+};
 
 void iterable_test() {
   std::iterator<std::random_access_iterator_tag, float> f_it;
+  std::__has_iterator_category<
+      ft::iterator<ft::input_iterator_tag, float> >::value;
   ft::iterator<std::input_iterator_tag, float> ft_f_it;
+  std::cout << ft::__has_iterator_typedefs<
+                   ft::iterator<std::input_iterator_tag, float> >::value
+            << "\n";
+  std::__has_iterator_typedefs<
+      ft::iterator<ft::input_iterator_tag, float> >::value;
+
+  __test<ft::iterator<ft::input_iterator_tag, float> >(0, 0, 0, 0, 0);
+  __test<int>(0, 0, 0, 0, 0);
+  std::cout << sizeof(__test<ft::iterator<ft::input_iterator_tag, float> >(
+                   0, 0, 0, 0, 0))
+            << " <- test size\n";
+  // ft::enable_if<f_it::iterator_catrgory>::type
+  // ft::__iterator_traits<
+  //     ft::iterator<std::input_iterator_tag, float>, >::difference_type a = 1;
 }
 
 int main() {

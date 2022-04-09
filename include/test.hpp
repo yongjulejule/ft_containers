@@ -1,0 +1,40 @@
+/**
+ * @file test.hpp
+ * @author yongjule (lyjshow200@gmail.com)
+ * @brief commom header for test
+ * @version 0.1
+ * @date 2022-04-09
+ *
+ * @copyright Copyright (c) 2022
+ *
+ */
+
+#ifndef TEST_HPP
+#define TEST_HPP
+
+#include <sys/time.h>
+
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <set>
+#include <stack>
+#include <type_traits>
+#include <vector>
+
+#include "iterator.hpp"
+#include "type_traits.hpp"
+#include "vector.hpp"
+
+#define L_CYAN "\033[1;96m"
+#define RESET "\033[0m"
+#define PRINT(...) std::cout, L_CYAN, __VA_ARGS__, RESET, "\n"
+
+template <typename T>
+std::ostream& operator,(std::ostream& out, const T& t) {
+  out << t;
+  return out;
+}
+
+#endif  // TEST_HPP

@@ -9,17 +9,9 @@
  *
  */
 
-#include "vector.hpp"
+#include <fstream>
 
-#include <sys/time.h>
-
-#include <iostream>
-#include <iterator>
-#include <memory>
-#include <type_traits>
-#include <vector>
-
-#include "iterator.hpp"
+#include "test.hpp"
 
 template <typename T>
 void print_vector(T it, T ite) {
@@ -31,63 +23,8 @@ void print_vector(T it, T ite) {
 }
 
 template <typename vec>
-void print_vector(vec v) {
-  std::cout << "vector info (size, capacity) : (" << v.size() << ", "
-            << v.capacity() << ")\n";
-}
-
-void stl_vec_test() {
-  // std::vector<int> thw(10, ULLONG_MAX);
-  // ft::vector<int> ft_thw(10, ULLONG_MAX);
-  int arr[] = {1, 2, 3, 4, 5};
-  std::vector<int> a(arr, arr + 5);
-  std::vector<bool> c;
-
-  c.push_back(false);
-  c.push_back(true);
-  c.push_back(false);
-  c.push_back(true);
-  c.push_back(false);
-  c.push_back(true);
-  std::vector<bool>::iterator it = c.begin();
-  std::vector<bool>::iterator ite = c.end();
-  std::vector<int>::iterator it2 = a.begin();
-  std::vector<int>::iterator ite2 = a.end();
-  for (; it != ite; ++it) std::cout << *it << ",";
-  std::cout << "\n";
-  for (; it2 != ite2; it2++) std::cout << *it2 << ",";
-  std::cout << "\n";
-  std::cout << sizeof(c) << "\n";
-  std::cout << sizeof(a) << "\n";
-  std::cout << c.size() << "\n";
-  std::cout << a.size() << "\n";
-}
-
-void my_vec_test() {
-  {
-    ft::vector<int> my_v(10, 10);
-    ft::vector<int>::iterator it = my_v.begin();
-    ft::vector<int>::iterator ite = my_v.end();
-    std::cout << "vector constructed by vector(size, value)\n";
-    for (; it != ite; it++) {
-      std::cout << *it << ", ";
-    }
-    std::cout << "\n";
-  }
-  // ft::vector<int> c_it(it, ite);
-  {
-    int arr[] = {1, 2, 3, 4, 5};
-    ft::vector<int> my_v(arr, arr + 5);
-    std::cout << "vector made by array iterator\n";
-    std::cout << my_v.size() << "\n";
-    ft::vector<int>::iterator it = my_v.begin();
-    ft::vector<int>::iterator ite = my_v.end();
-    for (; it != ite; it++) {
-      std::cout << *it << ", ";
-    }
-    std::cout << "\n";
-    ft::vector<int> my_cp_v(my_v);
-  }
+void print_vector(vec &v) {
+  PRINT("vector info (size, capacity) : (", v.size(), ", ", v.capacity(), ")");
 }
 
 void stl_method_test() {
@@ -281,30 +218,34 @@ void erase_test() {
 void insert_test() {
   {
     typedef std::vector<int>::iterator iterator;
-    std::cout << "std vector insert()\n";
+    PRINT("std vector insert()");
     std::vector<int> a(10, 10);
     iterator it = a.begin() + 1;
     iterator it_insert = a.insert(it + 5, 42);
     std::cout << "insert ret location is: "
               << std::distance(a.begin(), it_insert) << "\n";
     print_vector(a.begin(), a.end());
+    print_vector(a);
     int arr[] = {4242, 4241, 4240, 420, 424242};
     a.insert(a.end(), arr, arr + 5);
     print_vector(a.begin(), a.end());
+    print_vector(a);
   }
 
   {
     typedef ft::vector<int>::iterator iterator;
-    std::cout << "ft vector insert()\n";
+    PRINT("ft vector insert()");
     ft::vector<int> a(10, 10);
     iterator it = a.begin() + 1;
     iterator it_insert = a.insert(it + 5, 42);
     std::cout << "insert ret location is: "
               << std::distance(a.begin(), it_insert) << "\n";
     print_vector(a.begin(), a.end());
+    print_vector(a);
     int arr[] = {4242, 4241, 4240, 420, 424242};
     a.insert(a.end(), arr, arr + 5);
     print_vector(a.begin(), a.end());
+    print_vector(a);
   }
 }
 
@@ -314,22 +255,155 @@ void inputiterator_test() {
   ft::vector<int> c(b.begin(), b.end());
 }
 
+void vector_construct_test() {
+  {
+    PRINT("ft::vector<int> v(3);");
+    ft::vector<int> v(3);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+
+  {
+    PRINT("ft::vector<int> v(3, 42);");
+    ft::vector<int> v(3, 42);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+
+  {
+    int arr[] = {42, 43, 44, 45};
+    PRINT("ft::vector<int> v(arr, arr + 4);");
+    ft::vector<int> v(arr, arr + 4);
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+
+    PRINT("ft::vector<int> v_cp(v);");
+    ft::vector<int> v_cp(v);
+    print_vector(v_cp.begin(), v_cp.end());
+    print_vector(v_cp);
+    PRINT("copied memory :", &(*v_cp.begin()), "\n",
+          "origin memory :", &(*v.begin()));
+  }
+
+  {
+    PRINT(
+        "ft::vector<char> v((std::istreambuf_iterator<char>(source)), "
+        "std::istreambuf_iterator<char>()) ");
+    std::ifstream source("Makefile", std::ios::binary);
+    ft::vector<char> v((std::istreambuf_iterator<char>(source)),
+                       std::istreambuf_iterator<char>());
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+
+  {
+    ft::vector<char> v;
+    std::ifstream source("Makefile", std::ios::binary);
+    v.assign(std::istreambuf_iterator<char>(source),
+             std::istreambuf_iterator<char>());
+    print_vector(v.begin(), v.end());
+    print_vector(v);
+  }
+}
+
+void swap_test() {
+  ft::vector<std::string> x;
+  x.push_back("this");
+  x.push_back("is");
+  x.push_back("x");
+  PRINT("x");
+  PRINT(&(*x.begin()), "\n", &(*x.end()), "\n");
+  print_vector(x.begin(), x.end());
+  print_vector(x);
+  ft::vector<std::string> y;
+  y.push_back("this");
+  y.push_back("is");
+  y.push_back("y");
+  y.push_back("hahaha");
+  PRINT("Y");
+  PRINT(&(*y.begin()), "\n", &(*y.end()), "\n");
+  print_vector(y.begin(), y.end());
+  print_vector(y);
+  x.swap(y);
+  PRINT("x");
+  PRINT(&(*x.begin()), "\n", &(*x.end()), "\n");
+  print_vector(x.begin(), x.end());
+  print_vector(x);
+  PRINT("Y");
+  PRINT(&(*y.begin()), "\n", &(*y.end()), "\n");
+  print_vector(y.begin(), y.end());
+  print_vector(y);
+  ft::swap(x, y);
+  PRINT("x");
+  PRINT(&(*x.begin()), "\n", &(*x.end()), "\n");
+  print_vector(x.begin(), x.end());
+  print_vector(x);
+  PRINT("Y");
+  PRINT(&(*y.begin()), "\n", &(*y.end()), "\n");
+  print_vector(y.begin(), y.end());
+  print_vector(y);
+  PRINT("assign operator test");
+  x = y;
+  PRINT("x");
+  PRINT(&(*x.begin()), "\n", &(*x.end()), "\n");
+  print_vector(x.begin(), x.end());
+  print_vector(x);
+  PRINT("Y");
+  PRINT(&(*y.begin()), "\n", &(*y.end()), "\n");
+  print_vector(y.begin(), y.end());
+  print_vector(y);
+}
+
+void compare_test() {
+  ft::vector<double> a(10, 4.2);
+  ft::vector<double> b(9, 4.2);
+  PRINT("vector a");
+  print_vector(a.begin(), a.end());
+  PRINT("vector b");
+  print_vector(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  b.push_back(4.2);
+  PRINT("vector a");
+  print_vector(a.begin(), a.end());
+  PRINT("vector b");
+  print_vector(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  b.pop_back();
+  PRINT("vector a");
+  print_vector(a.begin(), a.end());
+  PRINT("vector b");
+  print_vector(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  b.push_back(4.3);
+  PRINT("vector a");
+  print_vector(a.begin(), a.end());
+  PRINT("vector b");
+  print_vector(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+}
+
 int main(int argc, char **argv) {
   std::cout << std::boolalpha;
-  std::cout << "===== stl_vec_test() =====\n";
-  stl_vec_test();
-  std::cout << "===== my_vec_test() =====\n";
-  my_vec_test();
+  PRINT("constructor test");
+  vector_construct_test();
   std::cout << "===== stl_method_test() =====\n";
   stl_method_test();
   perfomance_test();
   erase_test();
   insert_test();
   inputiterator_test();
+  swap_test();
+  compare_test();
 
   (void)argc;
   std::string leak = std::string("leaks ") + &argv[0][2];
   system(leak.c_str());
-  // int empty = a.front(); -> SEG_FAULT
-  // ft::vector<int, std::allocator<int> > h;
 }
