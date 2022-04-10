@@ -17,4 +17,11 @@ int main(int argc, char **argv) {
   PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
   PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
         a >= b);
+  ft::vector<ft::pair<int, std::string> > v(pr, pr + argc);
+  ft::vector<ft::pair<int, std::string> >::iterator it = v.begin();
+  ft::vector<ft::pair<int, std::string> >::iterator ite = v.end();
+  for (; it != ite; ++it) {
+    std::cout << "[" << (*it).first << ", " << (*it).second << "] ";
+  }
+  std::cout << "\n";
 }
