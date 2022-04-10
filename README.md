@@ -795,7 +795,7 @@ erase()
 
 - [x] vector
 - [ ] map
-- [ ] stack
+- [x] stack
 - [ ] set
   - [ ] Red-Black tree
 
@@ -805,9 +805,9 @@ erase()
 - [x] reverse_iterator
 - [x] enable_if
 - [x] is_integral
-- [ ] equal and lexicographical_compare
-- [ ] std::pair
-- [ ] std::make_pair
+- [x] equal and lexicographical_compare
+- [x] std::pair
+- [x] std::make_pair
 
 # Reference
 
