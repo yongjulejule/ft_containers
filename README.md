@@ -48,6 +48,7 @@ My c++ STL containers (c++98)
 		- [private method in vector](#private-method-in-vector)
 		- [exceptions](#exceptions)
 - [Stack](#stack)
+- [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
 	- [TODO](#todo)
 - [Reference](#reference)
 
@@ -748,6 +749,47 @@ container adaptor로써 LIFO형태로 작동하기 위해 고안됨.
 
 ft_container에서는 vector를 이용하여 구현. 
 
+
+# RB-Tree (base of set and map)
+
+STL의 map과 set은 sorted associative container로 탐색과 삽입, 삭제에 로그 시간의 시간복잡도를 보장하며 주로 RB-Tree로 구현됨.
+따라서 기반이 되는 RB-Tree에 대부분의 메소드가 구현되며 멤버 함수들은 RB-Tree내부의 멤버 함수를 이용하여 작동함.
+
+RB-Tree: 완전이진트리의 형태를 보장해주는 트리.
+
+RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
+
+일단 트리를 만들고, 이터레이터를 만들자...
+
+RB-tree:
+
+class들
+
+```c++
+template <typename _T, typename _Compare, typename _Allocator>
+class __tree;
+template <typename _T, typename _NodePtr, class _Difftype>
+class __tree_iterator;
+template <typename _T, typename _ConstNodePtr, class _Difftype>
+class __tree_const_iterator;
+template <typename _Ptr>
+class __tree_end_node;
+template <typename _VoidPtr>
+class __tree_node_base;
+template <typename _T, typename _VoidPtr>
+class __tree_node;
+
+template <typename _Key, typename _Value>
+struct __value_type;
+```
+
+
+```c++
+insert()
+rebalance()
+erase()
+
+```
 
 ## TODO
 
