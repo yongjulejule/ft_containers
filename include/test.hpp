@@ -20,10 +20,12 @@
 #include <memory>
 #include <set>
 #include <stack>
+#include <string>
 #include <type_traits>
 #include <vector>
 
 #include "iterator.hpp"
+#include "stack.hpp"
 #include "type_traits.hpp"
 #include "vector.hpp"
 

@@ -15,6 +15,7 @@ My c++ STL containers (c++98)
 - [Index](#index)
 - [Convention](#convention)
 - [Functional Specification](#functional-specification)
+- [About STL(Standard Template Library) containers](#about-stlstandard-template-library-containers)
 - [Keywords](#keywords)
 	- [stack unwinding](#stack-unwinding)
 	- [dynamic exception specification _(deprecated c++11, removed c++17)_](#dynamic-exception-specification-deprecated-c11-removed-c17)
@@ -46,6 +47,7 @@ My c++ STL containers (c++98)
 		- [__vector_base methods](#__vector_base-methods)
 		- [private method in vector](#private-method-in-vector)
 		- [exceptions](#exceptions)
+- [Stack](#stack)
 	- [TODO](#todo)
 - [Reference](#reference)
 
@@ -66,6 +68,11 @@ My c++ STL containers (c++98)
 - 같은 exception-safety를 보장
 - c++98로 가능한 Template Meta Programming 최대한 활용
 
+# About STL(Standard Template Library) containers
+
+- sequance container
+- associative container
+- container adapter
 
 # Keywords
 
@@ -723,9 +730,28 @@ __reconstruct(size_type __new_n_);
 
 constructor에서 할당 실패는 그냥 exception throw...! 따라서	`max_size()` 체크 안해도 됨
 
+# Stack
+
+container adaptor로써 LIFO형태로 작동하기 위해 고안됨.
+
+각 요소에 접근하는 멤버 함수를 제공하는 특정 컨테이너를 기반으로 하며 이 컨테이너의 객체를 캡슐화 해서 사용하는  container.
+
+이 기반 컨테이너는 다음과 같은 멤버 함수가 있어야 함.
+
+- empty
+- size
+- back
+- push_back
+- pop_back
+
+`vector` `deque` `list`가 이 조건을 충족하며, 표준 라이브러리에서는 deque로 구현되어 있음.
+
+ft_container에서는 vector를 이용하여 구현. 
+
+
 ## TODO
 
-- [ ] vector
+- [x] vector
 - [ ] map
 - [ ] stack
 - [ ] set

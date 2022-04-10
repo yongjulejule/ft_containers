@@ -1,7 +1,7 @@
 /**
  * @file vector.hpp
  * @author yongjule (lyjshow200@gmail.com)
- * @brief vector container declaration
+ * @brief vector container
  * @version 0.1
  * @date 2022-03-27
  *
@@ -697,41 +697,46 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
 // comparision operators
 
 template <typename _T, typename _Allocator>
-bool operator==(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs) {
+inline bool operator==(const vector<_T, _Allocator>& lhs,
+                       const vector<_T, _Allocator>& rhs) {
   return lhs.size() == rhs.size() &&
          ft::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
+
 template <typename _T, typename _Allocator>
-bool operator!=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs) {
+inline bool operator!=(const vector<_T, _Allocator>& lhs,
+                       const vector<_T, _Allocator>& rhs) {
   return !(lhs == rhs);
 }
+
 template <typename _T, typename _Allocator>
-bool operator<(const vector<_T, _Allocator>& lhs,
-               const vector<_T, _Allocator>& rhs) {
+inline bool operator<(const vector<_T, _Allocator>& lhs,
+                      const vector<_T, _Allocator>& rhs) {
   return ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(),
                                      rhs.end());
 }
+
 template <typename _T, typename _Allocator>
-bool operator<=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs) {
+inline bool operator<=(const vector<_T, _Allocator>& lhs,
+                       const vector<_T, _Allocator>& rhs) {
   return !(lhs > rhs);
 }
+
 template <typename _T, typename _Allocator>
-bool operator>(const vector<_T, _Allocator>& lhs,
-               const vector<_T, _Allocator>& rhs) {
+inline bool operator>(const vector<_T, _Allocator>& lhs,
+                      const vector<_T, _Allocator>& rhs) {
   return rhs < lhs;
 }
+
 template <typename _T, typename _Allocator>
-bool operator>=(const vector<_T, _Allocator>& lhs,
-                const vector<_T, _Allocator>& rhs) {
+inline bool operator>=(const vector<_T, _Allocator>& lhs,
+                       const vector<_T, _Allocator>& rhs) {
   return !(rhs > lhs);
 }
 
 // swap
 template <typename _T, typename _Allocator>
-void swap(ft::vector<_T, _Allocator>& x, ft::vector<_T, _Allocator>& y) {
+inline void swap(ft::vector<_T, _Allocator>& x, ft::vector<_T, _Allocator>& y) {
   x.swap(y);
 }
 
