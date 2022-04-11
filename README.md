@@ -49,6 +49,9 @@ My c++ STL containers (c++98)
 		- [exceptions](#exceptions)
 - [Stack](#stack)
 - [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
+	- [RB-tree:](#rb-tree)
+	- [class들](#class들)
+	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
 	- [TODO](#todo)
 - [Reference](#reference)
 
@@ -755,15 +758,17 @@ ft_container에서는 vector를 이용하여 구현.
 STL의 map과 set은 sorted associative container로 탐색과 삽입, 삭제에 로그 시간의 시간복잡도를 보장하며 주로 RB-Tree로 구현됨.
 따라서 기반이 되는 RB-Tree에 대부분의 메소드가 구현되며 멤버 함수들은 RB-Tree내부의 멤버 함수를 이용하여 작동함.
 
-RB-Tree: 완전이진트리의 형태를 보장해주는 트리.
-
 RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
 
 일단 트리를 만들고, 이터레이터를 만들자...
 
-RB-tree:
+## RB-tree:
 
-class들
+![rb-tree](asset/RBtree_explain.png)
+<p align='center' color='gray'> Reference: <a href='https://yongjulejule.github.io/algorithms/2021/04/26/tree-03-Red-Black-Tree.html' target='blank'> 내 블로그 </a>  </p>
+
+
+## class들
 
 ```c++
 template <typename _T, typename _Compare, typename _Allocator>
@@ -781,6 +786,83 @@ class __tree_node;
 
 template <typename _Key, typename _Value>
 struct __value_type;
+```
+
+## RB-tree Node Algorithms
+
+`__root`는 적절한 rb-tree를 가리키고 있음.
+`__root`의 `parent`는 `NULL`이 아니라, `__left_`가 `__root`를 가리키고 있는 구조.
+이러한 `__root`의 `parent`를 `end_node`라고 명명하고, `end_node->__left_`로 `__root`에 외부에서 접근 가능하며 노드의 삽입, 삭제에 의해 바뀔 수 있음.
+
+따라서 `end_node`를 제외한 트리의 모든 노드는 `__parent_`를 가짐
+
+Algorithms:
+
+```c++
+// Returns: 노드가 부모의 left child인지 아닌지에 따른 true / false
+template <typename _NodePtr>
+bool __tree_is_left_child(_NodePtr __x);
+
+// __x가 루트가 되는 subtree가 적절한 RB-tree인지 판별. 
+// 적절한 RB-tree면 black height 리턴, 그렇지 않으면 0 리턴
+template <typename _NodePtr>
+unsigned int __tree_sub_invariant(_NodePtr __x);
+
+// __root가 적절한 RB-tree인지 판별하여 true / false를 반환
+// __root == NULL이면 적절한 트리라 가정.
+template <typename _NodePtr>
+bool __tree_invariant(_NodePtr __root);
+
+// 트리의 최솟값, 즉 가장 왼쪽에 있는 노드 반환
+template <typename _NodePtr>
+_NodePtr __tree_min(_NodePtr __x);
+
+// 트리의 최댓값, 즉 가장 오른쪽에 있는 노드 반환
+template <typename _NodePtr>
+_NodePtr __tree_max(_NodePtr __x);
+
+// inorder로, __x의 다음 노드를 반환
+template <typename _NodePtr>
+_NodePtr __tree_next(_NodePtr __x);
+
+// end_node(__root의 부모) 반환 
+template <typename _EndNodePtr, typename _NodePtr>
+_EndNodePtr __tree_next_iter(_NodePtr __x);
+
+// inorder로, __x의 이전 노드 반환
+template <typename _NodePtr, typename _EndNodePtr>
+_NodePtr __tree_prev_iter(_EndNodePtr __x);
+
+// 트리의 leaf 반환
+template <typename _NodePtr>
+_NodePtr __tree_leaf(_NodePtr __x);
+
+// __x->__right_를 subtree __x의 루트로 변환.
+//  __x는 루트의 left child가 됨
+template <typename _NodePtr>
+void __tree_left_rotate(_NodePtr __x);
+
+// __x->__left_를 subtree __x의 루트로 변환.
+//  __x는 루트의 right child가 됨
+template <typename _NodePtr>
+void __tree_right_rotate(_NodePtr __x);
+
+// __x를 leaf에 넣은 뒤 __root를 rebalance
+// 전제: __root != NULL && __x != NULL
+//       __x는 children이 없고, __root와 연결되어 있음.
+// 효과: __tree_invariant(end_node->__left_) == true, __root는 바뀌어 있을 수 있음
+template <typename _NodePtr>
+void __tree_balance_after_insert(_NodePtr __root, _NodePtr __x);
+
+// __z를 __root 트리에서 제거한 뒤 rebalance
+// 전제: __root != NULL && __z != NULL
+//       __tree_invariant(__root) == true.
+//       __z 는 __root와 연결되어 있음.
+// 효과: __tree_invariant(__root) == true, __root는 바뀌어 있을 수 있음.
+//       __z는 어느 노드와도 연결되어 있지 않음.
+template <typename _NodePtr>
+void __tree_remove(_NodePtr __root, _NodePtr __z);
+
 ```
 
 
