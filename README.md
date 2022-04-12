@@ -852,7 +852,7 @@ void __tree_right_rotate(_NodePtr __x);
 //       __x는 children이 없고, __root와 연결되어 있음.
 // 효과: __tree_invariant(end_node->__left_) == true, __root는 바뀌어 있을 수 있음
 template <typename _NodePtr>
-void __tree_balance_after_insert(_NodePtr __root, _NodePtr __x);
+void __tree_insert_and_fixup(_NodePtr __root, _NodePtr __x);
 
 // __z를 __root 트리에서 제거한 뒤 rebalance
 // 전제: __root != NULL && __z != NULL
