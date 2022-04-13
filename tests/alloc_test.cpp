@@ -36,7 +36,39 @@ void my_destroy(T t) {
   ~T(t);
 }
 
+class ipad {
+ public:
+  double *model;
+  ipad() : model(new double[10]) {
+    for (int i = 0; i < 10; i++) model[i] = i;
+  }
+  ipad(double d) : model(new double[10]) {
+    for (int i = 0; i < 10; i++) model[i] = i + d;
+  }
+  ~ipad() { delete[] model; }
+};
+
+std::ostream &operator<<(std::ostream &os, ipad &pad) {
+  for (int i = 0; i < 10; i++) os << pad.model[i] << ", ";
+  return os;
+}
+
+void rebind_test() {
+  typedef std::allocator<int> _alloc;
+  _alloc::rebind<ipad>::other dalloc;
+  ipad *darr = dalloc.allocate(10);
+  for (int i = 0; i < 10; i++) dalloc.construct(darr + i, 4.242 + i);
+  for (int i = 0; i < 10; i++)
+    std::cout << i << ": "
+              << "[" << darr[i] << "] ";
+  std::cout << "\n";
+  for (int i = 0; i < 10; i++) dalloc.destroy(darr + i);
+  for (int i = 0; i < 10; i++) std::cout << "[" << darr[i] << "] ";
+  dalloc.deallocate(darr, 10);
+}
+
 int main() {
+  rebind_test();
   std::allocator<int> myAlloc;
   int *arr = myAlloc.allocate(14);
   myAlloc.construct(arr, 424242);

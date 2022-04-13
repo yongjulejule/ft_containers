@@ -205,36 +205,32 @@ __tree_node_base *__tree_erase_and_fixup(__tree_node_base *const __z,
 unsigned int __tree_black_count(const __tree_node_base *__node,
                                 const __tree_node_base *__root) FT_NOEXCPT;
 
-struct __tree_nil {
-  __tree_node_color __color = BLACK;
-};
-
 // base of node structure for rb-tree
 struct __tree_node_base {
-  typedef __tree_node_base *__base_ptr;
-  typedef const __tree_node_base *__const_base_ptr;
+  typedef __tree_node_base *_Base_ptr;
+  typedef const __tree_node_base *_Const_base_ptr;
 
   __tree_node_color __color_;
-  __base_ptr __parent_;
-  __base_ptr __left_;
-  __base_ptr __right_;
+  _Base_ptr __parent_;
+  _Base_ptr __left_;
+  _Base_ptr __right_;
 
-  static __base_ptr __tree_min(__base_ptr __x) FT_NOEXCPT {
+  static _Base_ptr __tree_min(_Base_ptr __x) FT_NOEXCPT {
     while (__x->__left_ != 0) __x = __x->__left_;
     return __x;
   }
 
-  static __const_base_ptr __tree_min(__const_base_ptr __x) FT_NOEXCPT {
+  static _Const_base_ptr __tree_min(_Const_base_ptr __x) FT_NOEXCPT {
     while (__x->__left_ != 0) __x = __x->__left_;
     return __x;
   }
 
-  static __base_ptr __tree_max(__base_ptr __x) FT_NOEXCPT {
+  static _Base_ptr __tree_max(_Base_ptr __x) FT_NOEXCPT {
     while (__x->__right_ != NULL) __x = __x->__right_;
     return __x;
   }
 
-  static __const_base_ptr __tree_max(__const_base_ptr __x) FT_NOEXCPT {
+  static _Const_base_ptr __tree_max(_Const_base_ptr __x) FT_NOEXCPT {
     while (__x->__right_ != NULL) __x = __x->__right_;
     return __x;
   }
@@ -301,14 +297,14 @@ struct __tree_iterator {
   typedef ptrdiff_t difference_type;
 
   typedef __tree_iterator<_T> iterator_type;
-  typedef __tree_node_base::__base_ptr __base_ptr;
+  typedef __tree_node_base::_Base_ptr _Base_ptr;
   typedef __tree_node<_T> *__link_type;
 
-  __base_ptr __node;
+  _Base_ptr __node;
 
   __tree_iterator() : __node() {}
 
-  explicit __tree_iterator(__base_ptr __x) : __node(__x) {}
+  explicit __tree_iterator(_Base_ptr __x) : __node(__x) {}
 
   reference operator*() const FT_NOEXCPT {
     return *static_cast<__link_type>(__node)->__valptr();
@@ -362,16 +358,16 @@ struct __tree_const_iterator {
 
   typedef __tree_iterator<_T> iterator;
   typedef __tree_const_iterator<_T> const_iterator_type;
-  typedef __tree_node_base::__base_ptr __base_ptr;
+  typedef __tree_node_base::_Base_ptr _Base_ptr;
   typedef const __tree_node<_T> *__link_type;
 
-  __base_ptr __node;
+  _Base_ptr __node;
 
   __tree_const_iterator() FT_NOEXCPT : __node() {}
-  explicit __tree_const_iterator(__base_ptr __x) FT_NOEXCPT : __node(__x) {}
+  explicit __tree_const_iterator(_Base_ptr __x) FT_NOEXCPT : __node(__x) {}
 
   iterator __remove_const() const FT_NOEXCPT {
-    return iterator(const_cast<typename iterator::__base_ptr>(__node));
+    return iterator(const_cast<typename iterator::_Base_ptr>(__node));
   }
 
   reference operator*() const FT_NOEXCPT {
@@ -415,6 +411,19 @@ bool operator!=(const __tree_const_iterator<_T> &lhs,
                 const __tree_const_iterator<_T> &rhs) FT_NOEXCPT {
   return !(lhs == rhs);
 }
+
+template <typename _Key, typename _Val, typename _KVtypes, typename _Compare,
+          typename _Alloc = std::allocator<_Val> >
+class __tree {
+ public:
+  typedef typename _Alloc::rebind<__tree_node<_Val> >::other _Node_allocator;
+
+ protected:
+  typedef __tree_node_base *_Base_ptr;
+  typedef const __tree_node_base *_Const_base_ptr;
+  typedef __tree_node<_Val> *_Link_type;
+  typedef const __tree_node<_Val> *_Const_link_type;
+};
 
 }  // namespace ft
 

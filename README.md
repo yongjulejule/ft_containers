@@ -17,6 +17,12 @@ My c++ STL containers (c++98)
 - [Functional Specification](#functional-specification)
 - [About STL(Standard Template Library) containers](#about-stlstandard-template-library-containers)
 - [Keywords](#keywords)
+	- [Functor (Function Object)](#functor-function-object)
+		- [functor의 분류](#functor의-분류)
+		- [functor vs function](#functor-vs-function)
+		- [functor vs function pointer](#functor-vs-function-pointer)
+		- [functor vs lambda expression(c++11)](#functor-vs-lambda-expressionc11)
+		- [functor를 활용하기 위한 사전 지식](#functor를-활용하기-위한-사전-지식)
 	- [stack unwinding](#stack-unwinding)
 	- [dynamic exception specification _(deprecated c++11, removed c++17)_](#dynamic-exception-specification-deprecated-c11-removed-c17)
 	- [Exception safety](#exception-safety)
@@ -65,6 +71,10 @@ My c++ STL containers (c++98)
 - 외부로 공개되지 않는 변수는 __variable_name_ 과 같은 형태로 작성
 - format는 [google style guide](https://google.github.io/styleguide/cppguide.html)에 따름
 
+- private한 클래스 __class_name
+- private한 type은 _Type_Name
+- private 멤버 변수 __variable_name_
+- private한 함수의 지역변수 __variable_name
 
 # Functional Specification
 
@@ -79,6 +89,92 @@ My c++ STL containers (c++98)
 - container adapter
 
 # Keywords
+
+## Functor (Function Object)
+
+`functon + object`를 합친 말로, 간단히 말하자면 `operator()` 오버로딩을 통하여 함수처럼 작동하는 클래스(구조체)를 만들고, 객체를 함수처럼 사용하는것.
+이러한 `functor`은 STL의 알고리즘에 많이 사용됨.
+
+```c++
+struct Add{
+	Add(int toAdd) : _toAdd(toAdd) {}
+	int operator()(int x){
+		return x + _toAdd;
+	}
+	private:
+	int _toAdd;
+};
+
+int main(){
+	Add add_42(42); // state 저장
+	Add add_13(13);
+	int result_42 = add_42(2);
+	int result_13 = add_13(2);
+	std::vector<int> v(10, 10);
+	std::transform(v.begin(), v.end(), v.begin(), add_42);
+}
+```
+
+### functor의 분류
+
+- generator: 인자 없이 사용하는 functor
+- unary: 하나의 인자를 필요로 하는 functor
+- binary: 두개의 인자를 필요로 하는 functor
+- predicate: boolean 값을 리턴하는 functor, Unary predicate, Binary predicate 등으로 혼합해서 씀.
+- operator: 연산값을 리턴하는 functor
+
+### functor vs function
+
+- functor는 객체에 () 연산자를 오버로드 한 형태로 함수처럼 작동하는 객체임.
+  - 객체이기 때문에 인자로 넘길 수 있으며 callback 형태로 사용할 수 있음.
+  - callback 형태이기 때문에 STL의 알고리즘과 호환이 잘됨.
+	- state를 저장할 수 있음
+- function은 특정 함수의 인자로 넘기기 위해서는 다른 작업을 해줘야함.(fucntion pointer or function object)
+
+### functor vs function pointer
+
+- functor는 type이 명확하게 정의됨.
+	- 따라서 템플릿의 인자로도 사용할 수 있음.
+	- 컴파일 단계에서 최적화가 가능하여 inline화 가능.
+	- state를 저장할 수 있으며 일반 멤버 변수 / 함수 또한 가질 수 있음.
+	- 코드의 양이 많음.
+- function pointer는 type만 같다면 다른 function도 들어갈 수 있음.
+	- 컴파일시 판별되는게 아니라, 런타임에서 함수가 판별되므로 오버헤드가 생기며 inline화 불가능.
+	- state를 저장할 수 없음.
+
+### functor vs lambda expression(c++11)
+
+둘 다 inline화 가능하며 lambda expression은 inline이 default임
+- lambda expression은 functor와 유사하지만 class를 define할 필요가 없어서 더 간편함. syntax sugar 같은 느낌
+
+[MS functor vs lambda expression](https://docs.microsoft.com/en-us/cpp/cpp/lambda-expression-syntax?view=msvc-170)
+
+### functor를 활용하기 위한 사전 지식
+
+- [callback](https://en.wikipedia.org/wiki/Callback_(computer_programming)): 함수에 인자로 실행 가능한 코드의 레퍼런스를 넘겨서 특정 시점에 실행되게 하는것.
+  - synchronous callback로 바로 실행 될 수 있고, asynchronous callback로 실행될 수 있음.
+  - 프로그래밍 언어마다 다른 방식으로 구현되어 있음. (c/c++에선 function pointer, c++에선 functor나 lambda)
+
+- closure: 
+
+callback, closure, function pointer와 차이점(type보장, inline 최적화, state 저장), generic, STL 호환성, + lambda expression
+
+function pointer -> type-safe x, 런타임중 찾아서 실행됨, inline 불가능, state 저장 불가
+functor -> type-safe, inline 가능(function pointer와 가장 큰 차이!), state 저장 가능, 일반적인 변수 / 함수 저장 가능,  객체를 함수처럼 사용, 코드가 길어짐, STL 알고리즘과 호환성이 좋음, 타입이므로 템플릿 인자로 사용 가능
+lambda expression -> functor처럼 작동하는데 syntax 깔끔. 근데 길어지면 가독성 떨어짐.
+
+
+
+closure -> lambda expression
+
+lambda expression
+- 임시 functor
+
+[what are c++ functors and their uses (stackoverflow 따봉 1000개)](https://stackoverflow.com/questions/356950/what-are-c-functors-and-their-uses)
+
+[about functor](https://www.bogotobogo.com/cplusplus/functors.php)
+
+[function object wikipidia](https://en.wikipedia.org/wiki/Function_object)
 
 ## stack unwinding
 
