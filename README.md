@@ -58,7 +58,8 @@ My c++ STL containers (c++98)
 	- [RB-tree:](#rb-tree)
 	- [class들](#class들)
 	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
-	- [TODO](#todo)
+- [map / set](#map--set)
+- [TODO](#todo)
 - [Reference](#reference)
 
 <small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
@@ -863,6 +864,8 @@ RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
 ![rb-tree](asset/RBtree_explain.png)
 <p align='center' color='gray'> Reference: <a href='https://yongjulejule.github.io/algorithms/2021/04/26/tree-03-Red-Black-Tree.html' target='blank'> 내 블로그 </a>  </p>
 
+`__get_insert_hint_pos()` 에서 비슷한 위치를 찾고 필요시 `__get_insert_pos()`에서 정확한 위치 얻음 
+이 `__get_insert_hint_pos()`는 `__insert_unique()`에서 호출
 
 ## class들
 
@@ -969,7 +972,13 @@ erase()
 
 ```
 
-## TODO
+# map / set
+
+`map`과 `set`은 `associative container`로써 탐색을 빠르게 진행할 수 있는 자료구조임.($O(logn)$)
+두 컨테이너 모두 unique한 `key`를 가지지만, `map`의 경우 `key-value`의 `pair`로 저장되고 `set`은 `key`만 존재함.
+
+
+# TODO
 
 - [x] vector
 - [ ] map
