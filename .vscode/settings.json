@@ -73,7 +73,8 @@
 		"__memory": "cpp",
 		"set": "cpp",
 		"list": "cpp",
-		"__cxx_version": "cpp"
+		"__cxx_version": "cpp",
+		"filesystem": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Enabled"
 }

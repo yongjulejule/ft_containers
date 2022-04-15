@@ -55,7 +55,9 @@ std::ostream &operator<<(std::ostream &os, ipad &pad) {
 
 void rebind_test() {
   typedef std::allocator<int> _alloc;
-  _alloc::rebind<ipad>::other dalloc;
+  typedef _alloc::rebind<ipad>::other ipad_alloc;
+  _alloc::rebind<ipad>::other dalloc2;
+  ipad_alloc dalloc(dalloc2);
   ipad *darr = dalloc.allocate(10);
   for (int i = 0; i < 10; i++) dalloc.construct(darr + i, 4.242 + i);
   for (int i = 0; i < 10; i++)
