@@ -499,13 +499,55 @@ class __tree {
 
   __tree_impl<_Compare> __impl_;
 
+ public:
+  // FIXME: Does this have to be public?
+  _Node_allocator &__get_Node_allocator() { return this->__impl_; }
+  const _Node_allocator &__get_Node_allocator() const { return this->__impl_; }
+
+  // TODO: move to public methods
+  allocator_type get_allocator() const {
+    return allocator_type(__get_Node_allocator());
+  }
+
  protected:
+  // SECTION: generate/delete node
+  _Link_type __allocate_node() { return get_allocator().construct(1); }
+
+  void __deallocate_node(_Link_type __p) { get_allocator().deallocate(__p, 1); }
+
+  void __construct_node(_Link_type __node, const value_type &__x) {
+    get_allocator().construct(__node->__valptr(), __x);
+  }
+
+  _Link_type __create_node(const value_type &__x) {
+    _Link_type __tmp = __alloc_node();
+    __construct_node(__tmp, __x);
+    return __tmp;
+  }
+
+  void __destroy_node(_Link_type __p) {
+    get_allocator().destroy(__p->__valptr());
+  }
+
+  // Return: new node which clone of __x's value and color
+  template <typename _NodeGenerator>
+  _Link_type __clone_node(_Link_type __x, _NodeGenerator &__node_gen) {
+    _Link_type __tmp = __node_gen(*__x->__valptr());
+    __tmp->__color_ = __x->__color_;
+    __tmp->__left_ = NULL;
+    __tmp->__right_ = NULL;
+    return __tmp;
+  }
+
+  // SECTION: get specific node
   _Base_ptr &__root() { return this->__impl_.__header_.__parent_; }
   _Const_base_ptr __root() const { return this->__impl_.__header_.__parent_; }
+
   _Base_ptr &__leftmost() { return this->__impl_.__header_.__left_; }
   _Const_base_ptr &__leftmost() const {
     return this->__impl_.__header_.__left_;
   }
+
   _Base_ptr &__rightmost() { return this->__impl_.__header_.__right_; }
   _Const_base_ptr &__rightmost() const {
     return this->__impl_.__header_.__right_;
@@ -521,7 +563,7 @@ class __tree {
   _Base_ptr __end() { return &this->__impl_.__header_; }
   _Const_base_ptr __end() const { return &this->__impl_.__header_; }
 
-  // static methods
+  // SECTION: static methods
   static const _Key &__S_key(_Const_link_type __x) {
     return _KeyOfValue()(*__x->__valptr());
   }
@@ -560,25 +602,130 @@ class __tree {
 
   // get position to insert
   ft::pair<_Base_ptr, _Base_ptr> __get_insert_unique_pos(const key_type &__k);
-  ft::pair<_Base_ptr, _Base_ptr> __get_insert_equal_pos(const key_type &__k);
+  // get hint and get position
   ft::pair<_Base_ptr, _Base_ptr> __get_insert_hint_unique_pos(
-      const_iterator __pos, const key_type &__k);
-  ft::pair<_Base_ptr, _Base_ptr> __get_insert_hint_equal_pos(
       const_iterator __pos, const key_type &__k);
 
   // insert
-  template <typename _Node_generator>
-  iterator __insert(_Base_ptr __x, _Base_ptr __p, const value_type &__v,
-                    _Node_generator &__node_gen);
-  iterator __insert_lower(_Base_ptr __y, const value_type &__v);
-  iterator __insert_equal_lower(const value_type &__v);
+  template <typename _NodeGenerator>
+  _Link_type __copy_tree(_Link_type __x, _Base_ptr __p,
+                         _NodeGenerator &__node_gen);
+  template <typename _NodeGenerator>
+  _Link_type __copy_tree(const __tree &__t, _NodeGenerator &__node_gen) {
+    // copy whole tree
+    _Link_type __root = __copy(__t.__begin(), __end(), __node_gen);
 
-  _Link_type __copy(const __tree &__x) {
-    // _Allloc_node __an(*this);
-    // _Link_type __root =
+    // update header
+    __leftmost() = __S_minimum(__root);
+    __rightmost() = __S_maximum(__root);
+    __impl_.__node_count_ = __x.__impl_.__node_count_;
+    return __root;
   }
+
+  _Link_type __copy_tree(const __tree &__x) {
+    __alloc_node __node_gen(*this);
+    return __copy_tree(__x, __node_gen);
+  }
+
+  void __erase_without_balance(_Link_type __x);
+
+ public:
+  // SECTION: constructor/destructor
+  __tree() {}
+  __tree(const _Compare &_comp, const allocator_type &__a = allocator_type())
+      : __impl_(_comp, _Node_allocator(__a)) {}
+  __tree(const __tree &other) : __impl_(other.__impl_) {
+    if (__other.__root() != NULL) __root() = __copy_data(other);
+  }
+  ~__tree() { __erase_without_balance(__begin()); }
+  __tree &operator=(const __tree &other);
+
+  // SECTION: public methods
+
+  // access to data
+
+  _Compare key_comp() const { return __impl_.__key_compare; }
+
+  iterator begin() { return iterator(__impl_.__header_.__left_); }
+  const_iterator begin() const {
+    return const_iterator(__impl_.__header_.__left_);
+  }
+
+  iterator end() { return iterator(__impl_.__header_); }
+  const_iterator end() const { return const_iterator(__impl_.__header_); }
+
+  reverse_iterator rbegin() {
+    return reverse_iterator(__impl_.__header_.__left_);
+  }
+  const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(__impl_.__header_.__left_);
+  }
+
+  reverse_iterator rend() { return reverse_iterator(__impl_.__header_); }
+  const_reverse_iterator rend() const {
+    return const_reverse_iterator(__impl_.__header_);
+  }
+
+  // capacity
+  bool empty() const { return __impl_.__node_count_ == 0; }
+  size_type max_size() const { return __get_Node_allocator().max_size(); }
+  size_type size() const { return __impl_.__node_count_; }
+  void swap(__tree &__t);
+
+  // modifiers
+
+  void erase(iterator position);
+  size_type erase(cosnt key_type &__v);
+  void erase(iterator first, iterator last);
+
+  template <typename _NodeGenerator>
+  iterator __insert(_Base_ptr __x, _Base_ptr __p, const value_type &__v,
+                    _NodeGenerator &__node_gen);
+  ft::pair<_Base_ptr, bool> __insert_unique(const value_type &__v);
+  template <typename _NodeGenerator>
+  iterator __insert_unique_with_hint(const_iterator __position,
+                                     const value_type &__v,
+                                     _NodeGenerator &__node_gen);
+  iterator __insert_unique_with_hint(const_iterator __pos,
+                                     const value_type &__x) {
+    __alloc_node __node(*this);
+    return __insert_unique_with_hint(__pos, __x, __node);
+  }
+
+  template <typename _InputIterator>
+  void __insert_range(_InputIterator __first, __InputIterator __last) {
+    __alloc_node __node(*this);
+    for (; __first != __last; ++first) {
+      __insert_unique_with_hint(end(), *__first, __node);
+    }
+  }
+
+  // operations
+  iterator find(const key_type &__k);
+  cosnt_iterator find(const key_type &__k) const;
+
+  size_type count(const key_type &__k) const;
+
+  iterator lower_bound(const key_type &__k);
+  const_iterator lower_bound(const key_type &__k) const;
+
+  iterator upper_bound(const key_type &__k);
+  const_iterator upper_bound(const key_type &__k) const;
+
+  pair<iterator, iterator> equal_range(const key_value &__k);
+  pair<const_iterator, const_iterator> equal_range(const key_value &__k) const;
 };
 
+/**
+ * @brief get unique position to insert
+ *
+ * @param __k: key to get position
+ * @return ft::pair<_Base_ptr, _Base_ptr> (ret_pair)
+ *         ret_pair.first: if not NULL, insert left else insert right
+ *         ret_pair.second: if not NULL, parent of node to insert
+ *                          if NULL, regard it as false which the node will not
+ *                          insert
+ */
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
@@ -587,10 +734,11 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_unique_pos(
     const key_type &__k) {
   typedef ft::pair<_Base_ptr, _Base_ptr> ret_pair;
 
-  _Link_type __x = __begin();
-  _Base_ptr __y = __end();
+  _Link_type __x = __begin();  // __root
+  _Base_ptr __y = __end();     // __header
   bool __comp = true;
 
+  // check left or right until meet leaf. __y gonna leaf
   while (__x != NULL) {
     __y = __x;
     __comp = __impl_.__key_compare(__k, __S_key(__x));
@@ -599,34 +747,29 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_unique_pos(
 
   iterator __j = iterator(__y);
   if (__comp) {
-    if (__j == begin())
-      return ret_pair(__x, __y);
+    if (__j == begin())           // leftmost
+      return ret_pair(__x, __y);  // (NULL, leaf)
     else
-      --__j;
+      --__j;  // decrement node
   }
 
-  if (__impl_.__key_compare(__S_key(__j.__node_), __k))
-    return ret_pair(__x, __y);
-  return ret_pair(__j.__node_, 0);
+  if (__impl_.__key_compare(__S_key(__j.__node_),
+                            __k))      // compare before leaf and __k
+    return ret_pair(__x, __y);         // return (NULL, leaf)
+  return ret_pair(__j.__node_, NULL);  // return (decremented leaf, NULL(false))
 }
 
-template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
-          typename _Alloc>
-ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
-         typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr>
-__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_equal_pos(
-    const key_type &__k) {
-  typedef ft::pair<_Base_ptr, _Base_ptr> ret_pair;
-
-  _Link_type __x = __begin();
-  _Base_ptr __y = __end();
-  while (__x != NULL) {
-    __y = __x;
-    __x = __impl_.__key_compare(__k, __S_key(__x)) ? __S_left(__x)
-                                                   : __S_right(__x);
-  }
-  return ret_pair(__x, __y);
-}
+/**
+ * @brief get unique position when hint is given
+ *
+ * @param __position: hint where __k should be inserted
+ * @param __k: key to get position
+ * @return ft::pair<_Base_ptr, _Base_ptr> (ret_pair)
+ *         ret_pair.first: if not NULL, insert left else insert right
+ *         ret_pair.second: if not NULL, parent of node to insert
+ *                          if NULL, regard it as false which the node will not
+ *                          insert
+ */
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
@@ -636,14 +779,16 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
   iterator __pos = const_cast<iterator>(__position);
   typedef ft::pair<_Base_ptr, _Base_ptr> ret_pair;
 
-  if (__pos.__node_ == __end()) {
+  if (__pos.__node_ == __end()) {  // header
     if (size() > 0 && __impl_.__key_compare(__S_key(__rightmost()), __k))
       return res_pair(NULL, __rightmost());
     else
       return __get_insert_unique_pos(__k);
-  } else if (__impl_.__key_compare(__k, __S_key(__pos.__node_))) {
+  } else if (__impl_.__key_compare(__k,
+                                   __S_key(__pos.__node_))) {  // less than pos
     iterator __before = __pos;
-    if (__pos.__node_ == __leftmost()) {  // begin()
+
+    if (__pos.__node_ == __leftmost()) {
       return ret_pair(__leftmost(), __leftmost());
     } else if (__impl_.__key_compare(__S_key((--__before).__node_), __k)) {
       if (__S_right(__before.__node_) == NULL)
@@ -653,8 +798,10 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
     } else {
       return __get_insert_unique_pos(__k);
     }
-  } else if (__impl_.__key_compare(__S_key(__pos.__node_), __k)) {
+  } else if (__impl_.__key_compare(__S_key(__pos.__node_),
+                                   __k)) {  // more than pos
     iterator __after = _pos;
+
     if (__pos.__node_ == __rightmost()) {
       return ret_pair(NULL, __rightmost());
     } else if (__impl_.__key_compare(__k, __S_key((++__after).__node_))) {
@@ -665,17 +812,17 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
     } else {
       return __get_insert_unique_pos(__k);
     }
-  } else
+  } else  // equal to pos. the key cannot be same.
     return ret_pair(__pos.__node, NULL);
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
-template <typename _Node_generator>
+template <typename _NodeGenerator>
 typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
     _Base_ptr __x, _Base_ptr __p, const value_type &__v,
-    _Node_generator &__node_gen) {
+    _NodeGenerator &__node_gen) {
   bool __insert_left = (__x != 0 || __p == __end() ||
                         __impl.__key_compare(_KeyOfValue()(__v), __S_key(__p)));
   _Link_type __z = __node_gen(__v);
@@ -684,6 +831,75 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
   return iterator(__z);
 }
 
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
+         bool>
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique(
+    const value_type &__v) {
+  typedef ft::pair<iterator, _Base_ptr> ret_pair;
+  ft::pair<_Base_ptr, _Base_ptr> __ret = __get_insert_unique_pos(
+      _KeyofValue()(__v));  // get position based key of __v
+
+  if (__res.second) {
+    __alloc_node __node(*this);
+    return ret_pair(__insert(__ret.first, __ret.second, __v, __node), true);
+  }
+  return ret_pair(iterator(__ret.first), false);
+}
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+template <typename _NodeGenerator>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique_with_hint(
+    const_iterator __position, const value_type &__v,
+    _NodeGenerator &__node_gen) {
+  ft::pair<_Base_ptr, _Base_ptr> __ret =
+      __get_insert_hint_unique_pos(__position, _KeyofValue()(__v));
+  if (__ret.second) {
+    return __insert(__ret.first, __ret.second, __v, __node_gen);
+  }
+  return iterator(__ret.first);
+}
+
+// TODO: test and add comment
+/**
+ * @brief copy tree include header of tree
+ *
+ * @param __x: root of new tree
+ * @param __p: first, header of *this and than parent of __x
+ * @param __node_gen: __alloc_node functor
+ * @return __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Link_type
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+template <typename _NodeGenerator>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Link_type
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__copy_tree(
+    _Link_type __x, _Base_ptr __p, _NodeGenerator &__node_gen) {
+  _Link_type __top =
+      __clone_node(__x, __node_gen);  // clone data of current node
+  __top->__parent_ = __p;             // link parent
+
+  if (__x->__right_) {
+    __top->__right_ = __copy_tree(__S_right(__x), __top, __node_gen);
+  }
+  __p = __top;
+  __x = __S_left(__x);
+
+  while (__x != NULL) {
+    _Link_type __y = __clone_node(__x, __node_gen);
+    __p->__left_ = __y;
+    __y->__parent_ = __p;
+    if (__x->__parent_) {
+      __y->__right_ = __copy_tree(__S_right(__x), __y, __node_gen);
+    }
+    __p = __y;
+    __x = __S_left(__x);
+  }
+  return __top;
+}
 }  // namespace ft
 
 #endif  // __TREE

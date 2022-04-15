@@ -10,6 +10,11 @@ struct Add {
   int _toAdd;
 };
 
+template <typename pair>
+struct select_first {
+  typename pair::first_type& operator()(pair& __x) const { return __x.first; }
+};
+
 int main() {
   Add add_42(42);
   Add add_13(13);
@@ -21,4 +26,9 @@ int main() {
   std::vector<int>::iterator ite = v.end();
   for (; it != ite; ++it) std::cout << "[" << *it << "]";
   std::cout << "\n";
+
+  std::pair<int, std::string> pr(1, "abc");
+  std::cout << "[" << pr.first << "] [" << pr.second << "]\n";
+  std::cout << select_first<std::pair<int, std::string> >()(pr) << "\n";
+  // std::cout << select_first<int>()(pr) << "\n";
 }
