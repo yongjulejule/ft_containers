@@ -63,7 +63,7 @@ struct __vector_base {
   }
 
   size_type __check_length(size_type __n_) {
-    if (__n_ > __a_.max_size()) __throw_langth_error("vector: size is too big");
+    if (__n_ > __a_.max_size()) __throw_length_error("vector: size is too big");
     return __n_;
   }
 
@@ -77,7 +77,7 @@ struct __vector_base {
                    pointer const& __new_end_cap_) FT_NOEXCEPT;
   void __swap_data(__vector_base& _other) FT_NOEXCEPT;
 
-  void __throw_langth_error(const char* msg) { throw std::length_error(msg); }
+  void __throw_length_error(const char* msg) { throw std::length_error(msg); }
   void __throw_out_of_range(const char* msg) { throw std::out_of_range(msg); }
 
  private:
@@ -424,7 +424,7 @@ class vector : private __vector_base<_T, _Allocator> {
   void __destroy_from_end(pointer __new_end_);
 };
 
-// consturctor
+// constructor
 
 template <typename _T, typename _Allocator>
 vector<_T, _Allocator>::vector(const allocator_type& _Alloc)

@@ -75,6 +75,13 @@ inline pair<_T1, _T2> make_pair(_T1 x, _T2 y) {
   return pair<_T1, _T2>(x, y);
 }
 
+template <typename T>
+void swap(T &x, T &y) {
+  T tmp(x);
+  x = y;
+  y = tmp;
+}
+
 }  // namespace ft
 
 #endif  // UTILITY_HPP

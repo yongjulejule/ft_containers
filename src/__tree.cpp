@@ -11,11 +11,13 @@
 
 #include "__tree.hpp"
 
+#include "utility.hpp"
+
 namespace ft {
 
 // Return: next node by in-order traverse
 static __tree_node_base *local_tree_increment(__tree_node_base *__x)
-    FT_NOEXCPT {
+    FT_NOEXCEPT {
   if (__x->__right_ != NULL) {
     __x = __x->__right_;
     while (__x->__left_ != NULL) __x = __x->__left_;
@@ -32,12 +34,12 @@ static __tree_node_base *local_tree_increment(__tree_node_base *__x)
   return __x;
 }
 
-__tree_node_base *__tree_increment(__tree_node_base *__x) FT_NOEXCPT {
+__tree_node_base *__tree_increment(__tree_node_base *__x) FT_NOEXCEPT {
   return local_tree_increment(__x);
 }
 
 const __tree_node_base *__tree_increment(const __tree_node_base *__x)
-    FT_NOEXCPT {
+    FT_NOEXCEPT {
   return local_tree_increment(const_cast<__tree_node_base *>(__x));
 }
 
@@ -63,11 +65,11 @@ static __tree_node_base *local_tree_decrement(__tree_node_base *__x) {
   return __x;
 }
 
-__tree_node_base *__tree_decrement(__tree_node_base *__x) FT_NOEXCPT {
+__tree_node_base *__tree_decrement(__tree_node_base *__x) FT_NOEXCEPT {
   return local_tree_decrement(__x);
 }
 const __tree_node_base *__tree_decrement(const __tree_node_base *__x)
-    FT_NOEXCPT {
+    FT_NOEXCEPT {
   return local_tree_decrement(const_cast<__tree_node_base *>(__x));
 }
 
@@ -111,7 +113,7 @@ void __tree_rotate_right(__tree_node_base *const __x,
 
 static void local_init_new_node(const bool __insert_left,
                                 __tree_node_base *&__x, __tree_node_base *&__p,
-                                __tree_node_base &__header) FT_NOEXCPT {
+                                __tree_node_base &__header) FT_NOEXCEPT {
   // initiate new node
   __x->__parent_ = __p;
   __x->__right_ = NULL;
@@ -149,7 +151,7 @@ static void local_init_new_node(const bool __insert_left,
  */
 void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
                              __tree_node_base *__p,
-                             __tree_node_base &__header) FT_NOEXCPT {
+                             __tree_node_base &__header) FT_NOEXCEPT {
   __tree_node_base *&__root = __header.__parent_;
 
   local_init_new_node(__insert_left, __x, __p, __header);
@@ -200,11 +202,47 @@ void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
 }
 
 __tree_node_base *__tree_erase_and_fixup(
-    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCPT {}
+    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT {
+  __tree_node_base *&__root = __header.__parent_;
+  __tree_node_base *&__leftmost = __header.__left_;
+  __tree_node_base *&__rightmost = __header.__right_;
+  __tree_node_base *__y = __z;
+  __tree_node_base *__x = NULL;
+  __tree_node_base *__x_p = NULL;
+
+  if (__y->__left_ == NULL)
+    __x = __y->__right_;
+  else if (__y->__right_ == NULL)
+    __x = __y->__left_;
+  else {
+    __y = __tree_node_base::__S_minimum(__y->__right_);  // can be error
+    __x = __y->__right_;
+  }
+  if (__y != __z) {
+    __z->__left_->__parent_ = __y;
+    __y->__left_ = __z->__left_;
+    if (__y != __z->__right_) {
+      __x_p = __y->__parent_;
+      if (__x) __x->__parent_ = __y->__parent_;
+      __y->__parent_->__left_ = __x;
+      __y->__right_ = __z->__right_;
+      __z->__right_->__parent_ = __y;
+    }
+  } else
+    __x_p = __y;
+  if (__root = __z)
+    __root = __y;
+  else if (__z->__parent_->__left_ = __z)
+    __z->__parent_->__left_ = __y;
+  else
+    __z->__parent_->__right_ = __y;
+  __y->__parent_ = __z->__parent_;
+  ft::swap(__y->__color_, __z->__color_);
+}
 
 // Return: black-hight of RB-tree
 unsigned int __tree_black_count(const __tree_node_base *__node,
-                                const __tree_node_base *__root) FT_NOEXCPT {
+                                const __tree_node_base *__root) FT_NOEXCEPT {
   unsigned int __bh = 1;  // NULL is black
   if (__node == NULL) return __bh;
   while (__node != __root) {
