@@ -85,7 +85,7 @@ My c++ STL containers (c++98)
 
 # About STL(Standard Template Library) containers
 
-- sequance container
+- sequence container
 - associative container
 - container adapter
 
@@ -93,7 +93,7 @@ My c++ STL containers (c++98)
 
 ## Functor (Function Object)
 
-`functon + object`를 합친 말로, 간단히 말하자면 `operator()` 오버로딩을 통하여 함수처럼 작동하는 클래스(구조체)를 만들고, 객체를 함수처럼 사용하는것.
+`function + object`를 합친 말로, 간단히 말하자면 `operator()` 오버로딩을 통하여 함수처럼 작동하는 클래스(구조체)를 만들고, 객체를 함수처럼 사용하는것.
 이러한 `functor`은 STL의 알고리즘에 많이 사용됨.
 
 ```c++
@@ -130,7 +130,7 @@ int main(){
   - 객체이기 때문에 인자로 넘길 수 있으며 callback 형태로 사용할 수 있음.
   - callback 형태이기 때문에 STL의 알고리즘과 호환이 잘됨.
 	- state를 저장할 수 있음
-- function은 특정 함수의 인자로 넘기기 위해서는 다른 작업을 해줘야함.(fucntion pointer or function object)
+- function은 특정 함수의 인자로 넘기기 위해서는 다른 작업을 해줘야함.(function pointer or function object)
 
 ### functor vs function pointer
 
@@ -175,7 +175,7 @@ lambda expression
 
 [about functor](https://www.bogotobogo.com/cplusplus/functors.php)
 
-[function object wikipidia](https://en.wikipedia.org/wiki/Function_object)
+[function object wikipedia](https://en.wikipedia.org/wiki/Function_object)
 
 ## stack unwinding
 
@@ -184,7 +184,7 @@ lambda expression
 ```c++
 void f3() {
 	int *c = new int[100]; // will be leak
-	std::string s = "this is stack... would be destroied";
+	std::string s = "this is stack... would be destroyed";
 	throw "exception!";
 }
 
@@ -199,7 +199,7 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
 ## dynamic exception specification _(deprecated c++11, removed c++17)_
 
 - `throw(expression)`을 통하여 특정 함수가 어떤 exception을 던지는지 설정 가능
-- 만약 expression에 없는 exception이 throw 된다면, std::unexcepted가 작동함.
+- 만약 expression에 없는 exception이 throw 된다면, std::unexpected가 작동함.
 - `throw()` 형태로 쓴다면, 해당 함수는 exception을 던지지 않는다는 의미가 됨.
 - 프로그래머의 의도를 함수에 녹여낼 수 있으며, 컴파일러 상에서 최적화도 가능해짐.
 - 하지만 [여러가지 이유](https://stackoverflow.com/questions/13841559/deprecated-throw-list-in-c11)로 삭제됨
@@ -213,7 +213,7 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
 
 - std::unexpected
 
-  - `std::unexcepted_handler`가 실행되는데, 기본 핸들러가 `std::terminate`이므로 `std::abort()`를 통해 프로그램이 종료됨
+  - `std::unexpected_handler`가 실행되는데, 기본 핸들러가 `std::terminate`이므로 `std::abort()`를 통해 프로그램이 종료됨
 
 ## Exception safety
 
@@ -230,7 +230,7 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
 </details>
 
 - The basic guarantee:
-  - 모든 객체가 유지되며 리소스가 부족한 상태에선 누수가 발생하지 않음. 특히, 빌트인 혹은 표준 라이브러리에서 the basic garantee를 보장할 땐 객체를 소멸시키거나 값을 할당할 수 있음.
+  - 모든 객체가 유지되며 리소스가 부족한 상태에선 누수가 발생하지 않음. 특히, 빌트인 혹은 표준 라이브러리에서 the basic guarantee를 보장할 땐 객체를 소멸시키거나 값을 할당할 수 있음.
 - The strong Guarantee for key operations:
   - the basic guarantee에 추가로 operation이 실패시 아무런 영향을 미치지 않음.
 - The nothrow guarantee for some operations:
@@ -250,7 +250,7 @@ exception safety를 보장하기 위한 방법중 하나.
 
 > The ‘‘resource acquisition is initialization’’ technique (§14.4) can be used to reduce the amount of
 > code needing to be written and to make the code more stylized. In this case, the key resource
-> required by the vectoris memory to hold its elements. By providing an auxiliary class to represent
+> required by the vector's memory to hold its elements. By providing an auxiliary class to represent
 > the notion of memory used by a vector, we can simplify the code and decrease the chance of accidentally forgetting to release it:
 
 ```c++
@@ -709,7 +709,7 @@ boolean값을 비트단위로 저장함... 와우...
 - 문제 발생시 적절한 에러 throw 
 
 base vector 가 필요한 이유
-- `vector`의 `consturctor`는 `strong-guarantee`여야 함! 
+- `vector`의 `constructor`는 `strong-guarantee`여야 함! 
 - 모종의 이유로 `vector`의 `constructor`가 `exception`을 던지면, `vector`의 `destructor`가 호출되지 않음.
 - 따라서 벡터 내부에서 자원을 얻고 헤제하는 과정이 `RAII`에 따라 잘 작성되었다고 하더라도, `destructor`가 호출되지 않아 리소스가 적절하게 반환되지 않을 수 있음(`strong-guarantee`를 만족하지 못함)
 - `vector_base`를 만들어서 자원을 사용하는 데이터를 이곳에 저장하고, `vector`가 이를 상속받는 구조로 `vector`를 구성한 뒤 자원의 획득과 반환을 `vector_base`에서 `RAII`구조로 처리한다면, `vector`의 `constructor`에서 `exception`이 나더라도 `vector_base`의 `destructor`는 정상적으로 호출이 되어 자원이 반납됨.
@@ -753,24 +753,24 @@ class thrw_child : public thrw {
   ~thrw_child() { std::cout << "thrw_child destructor\n"; }
 };
 
-void raii_test() {
+void RAII_test() {
   thrw a;
   std::cout << "a constructed...\n";
   a.allocate_memory();
 }
 
-void raii_child_test() { thrw_child a; }
+void RAII_child_test() { thrw_child a; }
 
 int main() {
   try {
-    raii_test();
+    RAII_test();
   } catch (std::exception &e) {
-    std::cout << e.what() << " in Main raii_test CATCH\n";
+    std::cout << e.what() << " in Main RAII_test CATCH\n";
   }
   try {
-    raii_child_test();
+    RAII_child_test();
   } catch (std::exception &e) {
-    std::cout << e.what() << " in Main raii_child_test CATCH\n";
+    std::cout << e.what() << " in Main RAII_child_test CATCH\n";
   }
   system("leaks mine.out | grep leaked");
 }
@@ -872,9 +872,9 @@ RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
 ```c++
 template <typename _T, typename _Compare, typename _Allocator>
 class __tree;
-template <typename _T, typename _NodePtr, class _Difftype>
+template <typename _T, typename _NodePtr, class _DiffType>
 class __tree_iterator;
-template <typename _T, typename _ConstNodePtr, class _Difftype>
+template <typename _T, typename _ConstNodePtr, class _DiffType>
 class __tree_const_iterator;
 template <typename _Ptr>
 class __tree_end_node;
@@ -920,7 +920,7 @@ _NodePtr __tree_min(_NodePtr __x);
 template <typename _NodePtr>
 _NodePtr __tree_max(_NodePtr __x);
 
-// inorder로, __x의 다음 노드를 반환
+// in-order로, __x의 다음 노드를 반환
 template <typename _NodePtr>
 _NodePtr __tree_next(_NodePtr __x);
 
@@ -928,7 +928,7 @@ _NodePtr __tree_next(_NodePtr __x);
 template <typename _EndNodePtr, typename _NodePtr>
 _EndNodePtr __tree_next_iter(_NodePtr __x);
 
-// inorder로, __x의 이전 노드 반환
+// in-order로, __x의 이전 노드 반환
 template <typename _NodePtr, typename _EndNodePtr>
 _NodePtr __tree_prev_iter(_EndNodePtr __x);
 
@@ -974,8 +974,9 @@ erase()
 
 # map / set
 
-`map`과 `set`은 `associative container`로써 탐색을 빠르게 진행할 수 있는 자료구조임.($O(logn)$)
+`map`과 `set`은 `associative container`로써 탐색을 빠르게 진행할 수 있는 자료구조임.($O(log(n))$)
 두 컨테이너 모두 unique한 `key`를 가지지만, `map`의 경우 `key-value`의 `pair`로 저장되고 `set`은 `key`만 존재함.
+모든 `key`는 `const`이며 `insert`와 `remove`만 가능함!
 
 
 # TODO

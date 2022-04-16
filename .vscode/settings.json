@@ -74,7 +74,20 @@
 		"set": "cpp",
 		"list": "cpp",
 		"__cxx_version": "cpp",
-		"filesystem": "cpp"
+		"filesystem": "cpp",
+		"fstream": "cpp"
 	},
-	"C_Cpp.errorSquiggles": "Enabled"
+	"C_Cpp.errorSquiggles": "Enabled",
+	"cSpell.words": [
+		"cplusplus",
+		"cppreference",
+		"crbegin",
+		"crend",
+		"deque",
+		"libcxx",
+		"NOEXCPT",
+		"rebalance",
+		"yongjule"
+	],
+	"C_Cpp.dimInactiveRegions": true
 }
