@@ -20,164 +20,6 @@
 #define FT_NOEXCEPT throw()
 
 namespace ft {
-/*************************************************
- NOTE: LLVM
- *************************************************/
-
-// template <typename _NodePtr>
-// inline bool __tree_is_left_child(_NodePtr __x) FT_NOEXCEPT {
-//   return __x == __x->__parent_->__left_;
-// }
-
-// // __x로 만들어지는 subtree가 적절한 rb-tree인지 판별.
-// // 적절하지 못하면 0, 적절하면 black-height 리턴
-// template <typename _NodePtr>
-// unsigned int __tree_sub_invariant(_NodePtr __x) {
-//   // 적절한 트리
-//   if (__x == NULL) return 1;
-
-//   // 잘못된 트리
-//   if (__x->__left_ != NULL && __x->__left_->__parent_ != __x) return 0;
-//   if (__x->__right_ != NULL && __x->__left_ != NULL) return 0;
-
-//   // red의 자식들은 black 이여야 함
-//   if (!__x->__is_black_) {
-//     if (__x->__left_ && !__x->__left_->__is_black_) return 0;
-//     if (__x->__right_ && !__x->__right_->__is_black_) return 0;
-//   }
-//   unsigned int __h = __tree_sub_invariant(__x->__left_);
-
-//   // invalid
-//   if (__h == 0) return 0;
-
-//   // subtree가 rb-tree의 조건을 충족하지 못함
-//   if (__h != __tree_sub_invariant(__x->__right_)) return 0;
-
-//   // black-height 리턴
-//   return __h + __x->__is_black;
-// }
-
-// template <typename _NodePtr>
-// inline _NodePtr __tree_min(_NodePtr __x) FT_NOEXCEPT {
-//   while (__x->__left_ != NULL) __x = __x->__left_;
-//   return __x;
-// }
-
-// template <typename _NodePtr>
-// inline _NodePtr __tree_max(_NodePtr __x) FT_NOEXCEPT {
-//   while (__x->__right_ != NULL) __x = __x->__right_;
-//   return __x;
-// }
-
-// // Return: next node by in-order traverse
-// template <typename _NodePtr>
-// _NodePtr __tree_next(_NodePtr __x) FT_NOEXCEPT {
-//   if (__x->__right_ != NULL) return __tree_min(__x->__right_);
-//   while (!__tree_is_left_child(__x)) __x = __x->__parent_unsafe();
-//   return __x->__parent_unsafe();
-// }
-
-// // Return: next node by in-order traverse as EndNodePtr
-// template <typename _EndNodePtr, typename _NodePtr>
-// _EndNodePtr __tree_next_iter(_NodePtr __x) FT_NOEXCEPT {
-//   if (__x->__right_ != NULL)
-//     return static_cast<_EndNodePtr>(__tree_min(__x->__right_));
-//   while (!__tree_is_left_child(__x)) __x = __x->__parent_unsafe();
-//   return static_cast<_EndNodePtr>(__x->__parent_unsafe());
-// }
-
-// // add prev, insert_rebalance, remove_rebalance
-
-// template <typename _Key, typename _Value>
-// struct __value_type;
-
-// template <typename _T>
-// struct __tree_key_value_types {
-//   typedef _T key_type;
-//   typedef _T __node_value_type;
-//   typedef _T __container_value_type;
-//   static const bool __is_map = false;
-
-//   static key_type const &__get_key(_T const &__v) { return __v; }
-//   static __container_value_type const &__get_value(
-//       __node_value_type const &__v) {
-//     return __v;
-//   }
-//   static __container_value_type *__get_ptr(__node_value_type &__v) {
-//     return &(__n);
-//   }
-// };
-
-// // value_type is defined in map.hpp
-// template <typename _Key, typename _T>
-// struct __tree_key_value_types<__value_type<_Key, _T> > {
-//   typedef _Key key_type;
-//   typedef _T mapped_type;
-//   typedef __value_type<_Key, _T> __node_value_type;
-//   typedef ft::pair<const _Key, _T> __container_value_type;
-//   typedef __container_value_type __map_value_type;
-//   static const bool __is_map = true;
-
-//   // NOTE: remove_cv and get key or value is needed?
-//   static key_type const &__get_key(__node_value_type const &__t) {
-//     return __t.__get_value().first;
-//   }
-
-//   static __container_value_type const &__get_value(
-//       __node_value_type const &__t) {
-//     return __t.__get_value();
-//   }
-
-//   static __container_value_type *__get_ptr(__node_value_type &__n) {
-//     return &(__n.__get_value());
-//   }
-// };
-
-// struct __tree_node_base;
-// struct __tree_end_node;
-
-// struct __tree_node_base_types {
-//   typedef __tree_node_base __node_base_type;
-//   typedef __node_base_type *__node_base_pointer;
-//   typedef __tree_end_node __end_node_type;
-//   typedef __end_node_type *__end_node_pointer;
-//   typedef __end_node_pointer;
-// };
-
-// template <typename _T, typename _KVtypes = __tree_key_value_types<_T>,
-//           bool = _KVtypes::__is_map>
-// struct __tree_map_pointer_types {};
-
-// template <typename _T, typename _KVtypes>
-// struct __tree_map_pointer_types<_T, _KVtypes, true> {
-//   typedef typename _KVtypes::__map_value_type __map_value_type;
-//   typedef __map_value_type *__map_value_type_pointer;
-// };
-
-// template <typename _T, typename _disable = void>
-// struct __tree_node_types;
-
-// template <typename _T>
-// struct __tree_node;
-
-// template <typename _T>
-// struct __tree_node_types<_T *, __tree_node<_T> >
-//     : public __tree_node_base_types,
-//       __tree_key_value_types<_T>,
-//       __tree_map_pointer_types<_T> {
-//   typedef __tree_node_base_types __base;
-//   typedef __tree_key_value_types<_T> __key_base;
-//   typedef __tree_map_pointer_types<_T> __map_pointer_base;
-
-//  public:
-//   typedef _T __node_type;
-//   typedef __node_type *_node_pointer;
-// };
-
-/*************************************************
- NOTE: GCC
- *************************************************/
-
 /*************************************************************************************
  * @brief Tree Nodes Methods
  *************************************************************************************/
@@ -276,18 +118,18 @@ struct __tree_header {
 };
 
 // FIXME: 굳이...?
-template <typename _key_compare>
+template <typename _Key_compare>
 struct __tree_key_compare {
-  _key_compare __key_comp;
+  _Key_compare __key_comp;
 
   __tree_key_compare() : __key_comp() {}
-  __tree_key_compare(const _key_compare &other) : __key_comp(other) {}
+  __tree_key_compare(const _Key_compare &other) : __key_comp(other) {}
 };
 
 // Node for rb-tree
 template <typename _Val>
 struct __tree_node : public __tree_node_base {
-  typedef __tree_node<_Val> *__link_type;
+  typedef __tree_node<_Val> *_Link_type;
 
   _Val __value_field;
 
@@ -309,7 +151,7 @@ struct __tree_iterator {
 
   typedef __tree_iterator<_T> iterator_type;
   typedef __tree_node_base::_Base_ptr _Base_ptr;
-  typedef __tree_node<_T> *__link_type;
+  typedef __tree_node<_T> *_Link_type;
 
   _Base_ptr __node_;
 
@@ -318,11 +160,11 @@ struct __tree_iterator {
   explicit __tree_iterator(_Base_ptr __x) : __node_(__x) {}
 
   reference operator*() const FT_NOEXCEPT {
-    return *static_cast<__link_type>(__node_)->__valptr();
+    return *static_cast<_Link_type>(__node_)->__valptr();
   }
 
   pointer operator->() const FT_NOEXCEPT {
-    return static_cast<__link_type>(__node_)->__valptr();
+    return static_cast<_Link_type>(__node_)->__valptr();
   }
 
   iterator_type &operator++() FT_NOEXCEPT {
@@ -370,7 +212,7 @@ struct __tree_const_iterator {
   typedef __tree_iterator<_T> iterator;
   typedef __tree_const_iterator<_T> const_iterator_type;
   typedef __tree_node_base::_Base_ptr _Base_ptr;
-  typedef const __tree_node<_T> *__link_type;
+  typedef const __tree_node<_T> *_Link_type;
 
   _Base_ptr __node_;
 
@@ -382,11 +224,11 @@ struct __tree_const_iterator {
   }
 
   reference operator*() const FT_NOEXCEPT {
-    return *static_cast<__link_type>(__node_)->__valptr();
+    return *static_cast<_Link_type>(__node_)->__valptr();
   }
 
   pointer operator->() const FT_NOEXCEPT {
-    return static_cast<__link_type>(__node_)->__valptr();
+    return static_cast<_Link_type>(__node_)->__valptr();
   }
 
   const_iterator_type &operator++() FT_NOEXCEPT {
@@ -440,7 +282,8 @@ template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc = std::allocator<_Val> >
 class __tree {
  public:
-  typedef typename _Alloc::rebind<__tree_node<_Val> >::other _Node_allocator;
+  typedef typename _Alloc::template rebind<__tree_node<_Val> >::other
+      _Node_allocator;
 
  protected:
   typedef __tree_node_base *_Base_ptr;
@@ -476,14 +319,14 @@ class __tree {
 
    private:
     __tree &__t_;
-  }
+  };
 
   // _Node_allocator: rebind of allocator
   // __tree_key_compare: key compare functor
   // __tree_header: head of tree
   template <typename _Key_compare>
   struct __tree_impl : public _Node_allocator,  // FIXME: 굳이 상속 왜받음??????
-                       public __tree_key_compare,
+                       public __tree_key_compare<_Key_compare>,
                        public __tree_header {
     typedef __tree_key_compare<_Key_compare> _Base_key_compare;
 
@@ -618,7 +461,7 @@ class __tree {
     // update header
     __leftmost() = __S_minimum(__root);
     __rightmost() = __S_maximum(__root);
-    __impl_.__node_count_ = __x.__impl_.__node_count_;
+    __impl_.__node_count_ = __t.__impl_.__node_count_;
     return __root;
   }
 
@@ -642,7 +485,7 @@ class __tree {
   __tree(const _Compare &_comp, const allocator_type &__a = allocator_type())
       : __impl_(_comp, _Node_allocator(__a)) {}
   __tree(const __tree &other) : __impl_(other.__impl_) {
-    if (__other.__root() != NULL) __root() = __copy_data(other);
+    if (other.__root() != NULL) __root() = __copy_data(other);
   }
   ~__tree() { __erase_without_balance(__begin()); }
   __tree &operator=(const __tree &other);
@@ -657,8 +500,8 @@ class __tree {
   const_iterator begin() const {
     return const_iterator(__impl_.__header_.__left_);
   }
-  iterator end() { return iterator(__impl_.__header_); }
-  const_iterator end() const { return const_iterator(__impl_.__header_); }
+  iterator end() { return iterator(&__impl_.__header_); }
+  const_iterator end() const { return const_iterator(&__impl_.__header_); }
 
   reverse_iterator rbegin() {
     return reverse_iterator(__impl_.__header_.__left_);
@@ -666,28 +509,23 @@ class __tree {
   const_reverse_iterator rbegin() const {
     return const_reverse_iterator(__impl_.__header_.__left_);
   }
-  reverse_iterator rend() { return reverse_iterator(__impl_.__header_); }
-  const_reverse_iterator rend() const {
-    return const_reverse_iterator(__impl_.__header_);
-  }
+  reverse_iterator rend() { return reverse_iterator(end()); }
+  const_reverse_iterator rend() const { return const_reverse_iterator(end()); }
 
   const_iterator cbegin() const {
     return const_iterator(__impl_.__header_.__left_);
   }
-  const_iterator cend() const { return const_iterator(__impl_.__header_); }
+  const_iterator cend() const { return const_iterator(end()); }
 
   const_reverse_iterator crbegin() const {
     return const_reverse_iterator(__impl_.__header_.__left_);
   }
-  const_reverse_iterator crend() const {
-    return const_reverse_iterator(__impl_.__header_);
-  }
+  const_reverse_iterator crend() const { return const_reverse_iterator(end()); }
 
   // capacity
   bool empty() const { return __impl_.__node_count_ == 0; }
   size_type max_size() const { return __get_Node_allocator().max_size(); }
   size_type size() const { return __impl_.__node_count_; }
-  void swap(__tree &__t);
 
   // modifiers
 
@@ -700,6 +538,13 @@ class __tree {
   void erase(const_iterator first, const_iterator last) {
     __erase_helper(first, last);
   }
+
+  void clear() {
+    __erase_without_balance(__begin());
+    __impl_.__reset();
+  }
+
+  void swap(__tree &__t);
 
   template <typename _NodeGenerator>
   iterator __insert(_Base_ptr __x, _Base_ptr __p, const value_type &__v,
@@ -716,9 +561,9 @@ class __tree {
   }
 
   template <typename _InputIterator>
-  void __insert_range(_InputIterator __first, __InputIterator __last) {
+  void __insert_range(_InputIterator __first, _InputIterator __last) {
     __alloc_node __node(*this);
-    for (; __first != __last; ++first) {
+    for (; __first != __last; ++__first) {
       __insert_unique_with_hint(end(), *__first, __node);
     }
   }
@@ -729,14 +574,32 @@ class __tree {
 
   size_type count(const key_type &__k) const;
 
-  iterator lower_bound(const key_type &__k);
-  const_iterator lower_bound(const key_type &__k) const;
+  iterator __lower_bound_helper(_Link_type __x, _Base_ptr __y,
+                                const key_type &__k);
+  const_iterator __lower_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
+                                      const key_type &__k) const;
 
-  iterator upper_bound(const key_type &__k);
-  const_iterator upper_bound(const key_type &__k) const;
+  iterator __upper_bound_helper(_Link_type __x, _Base_ptr __y,
+                                const key_type &__k);
+  const_iterator __upper_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
+                                      const key_type &__k) const;
 
-  pair<iterator, iterator> equal_range(const key_value &__k);
-  pair<const_iterator, const_iterator> equal_range(const key_value &__k) const;
+  iterator lower_bound(const key_type &__k) {
+    return __lower_bound_helper(__begin(), __end(), __k);
+  }
+  const_iterator lower_bound(const key_type &__k) const {
+    return __lower_bound_helper(__begin(), __end(), __k);
+  }
+
+  iterator upper_bound(const key_type &__k) {
+    return __upper_bound_helper(__begin(), __end(), __k);
+  }
+  const_iterator upper_bound(const key_type &__k) const {
+    return __upper_bound_helper(__begin(), __end(), __k);
+  }
+
+  pair<iterator, iterator> equal_range(const key_type &__k);
+  pair<const_iterator, const_iterator> equal_range(const key_type &__k) const;
 };
 
 /**
@@ -823,7 +686,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
     }
   } else if (__impl_.__key_compare(__S_key(__pos.__node_),
                                    __k)) {  // more than pos
-    iterator __after = _pos;
+    iterator __after = __pos;
 
     if (__pos.__node_ == __rightmost()) {
       return ret_pair(NULL, __rightmost());
@@ -846,8 +709,9 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
     _Base_ptr __x, _Base_ptr __p, const value_type &__v,
     _NodeGenerator &__node_gen) {
-  bool __insert_left = (__x != 0 || __p == __end() ||
-                        __impl.__key_compare(_KeyOfValue()(__v), __S_key(__p)));
+  bool __insert_left =
+      (__x != 0 || __p == __end() ||
+       __impl_.__key_compare(_KeyOfValue()(__v), __S_key(__p)));
   _Link_type __z = __node_gen(__v);
   __tree_insert_and_fixup(__insert_left, __z, __p, this->__impl_.__header_);
   ++__impl_.__node_count_;
@@ -864,7 +728,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique(
   ft::pair<_Base_ptr, _Base_ptr> __ret = __get_insert_unique_pos(
       _KeyOfValue()(__v));  // get position based key of __v
 
-  if (__res.second) {
+  if (__ret.second) {
     __alloc_node __node(*this);
     return ret_pair(__insert(__ret.first, __ret.second, __v, __node), true);
   }
@@ -936,10 +800,210 @@ void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__erase_without_balance(
   }
 }
 
+/**
+ * @brief helper function to erase specific node and rebalance
+ *
+ * @param __position
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__erase_helper(
+    const_iterator __position) {
+  _Link_type __y = static_cast<_Link_type>(__tree_erase_and_fixup(
+      const_cast<_Base_ptr>(__position.__node_), __impl_.__header));
+  __delete_node(__y);
+  --__impl_.__node_count_;
+}
+
+/**
+ * @brief helper function to erase nodes in range and rebalance
+ *
+ * @param __first
+ * @param __last
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__erase_helper(
+    const_iterator __first, const_iterator __last) {
+  if (__first == begin() && __last == end())
+    clear();
+  else
+    for (; __first != __last; ++__first) __erase_helper(__first);
+}
+
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::size_type
-__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::erase(const key_type &__v) {}
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::erase(const key_type &__v) {
+  ft::pair<iterator, iterator> __p = equal_range(__v);
+  const size_type __prev_size = size();
+  __erase_helper(__p.first, __p.second);
+  return __prev_size - size();
+}
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::swap(__tree &__t) {
+  if (__root() == NULL) {
+    if (__t.__root() != NULL) __impl_.__tree_move_data(__t.__impl_);
+  } else if (__t.__root() == NULL)
+    __t.__impl_.__tree_move_data(__impl_);
+  else {
+    ft::swap(__root(), __t.__root());
+    ft::swap(__leftmost(), __t.__leftmost());
+    ft::swap(__rightmost(), __t.__rightmost());
+
+    __root()->__parent_ = __end();
+    __t.__root()->__parent_ = __t.__end();
+    ft::swap(__impl_.__node_count_, __t.__impl.__node_count);
+  }
+  ft::swap(__impl_.__key_compare, __t.__impl_.__key_compare);
+  ft::swap(__get_Node_allocator(), __t.__get_Node_allocator());
+}
+
+/**
+ * @brief key보다 같거나 큰 element를 리턴
+ *
+ * @param __x: starting node
+ * @param __y: backup node
+ * @param __k: key to compare
+ * @return __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__lower_bound_helper(
+    _Link_type __x, _Base_ptr __y, const key_type &__k) {
+  while (__x != NULL) {
+    if (!__impl_.__key_compare(__S_key(__x), __k)) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {
+      __x = __S_right(__x);
+    }
+  }
+  return iterator(__y);
+}
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__lower_bound_helper(
+    _Const_link_type __x, _Const_base_ptr __y, const key_type &__k) const {
+  while (__x != NULL) {
+    if (!__impl_.__key_compare(__S_key(__x), __k)) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {
+      __x = __S_right(__x);
+    }
+  }
+  return const_iterator(__y);
+}
+
+/**
+ * @brief key보다 큰 element를 리턴
+ *
+ * @param __x: starting node
+ * @param __y: backup node
+ * @param __k: key to compare
+ * @return __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__upper_bound_helper(
+    _Link_type __x, _Base_ptr __y, const key_type &__k) {
+  while (__x != NULL) {
+    if (__impl_.__key_compare(__k, __S_key(__x))) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {
+      __x = __S_right(__x);
+    }
+  }
+  return iterator(__y);
+}
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__upper_bound_helper(
+    _Const_link_type __x, _Const_base_ptr __y, const key_type &__k) const {
+  while (__x != NULL) {
+    if (__impl_.__key_compare(__k, __S_key(__x))) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {
+      __x = __S_right(__x);
+    }
+  }
+  return const_iterator(__y);
+}
+
+/**
+ * @brief 컨테이너 안의 주어진 키를 포함하는 범위를 리턴.
+ *        first: >= key, second: > key.
+ *
+ * @param __k
+ * @return ft::pair<iterator, iterator>
+ */
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator,
+         typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator>
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
+    const key_type &__k) {
+  _Link_type __x = __begin();
+  _Base_ptr __y = __end();
+  while (__x != NULL) {
+    if (__impl_.__key_compare(__S_key(__x), __k))
+      __x = __S_right(__x);
+    else if (__impl_.__key_compare(__k, __S_key(__x))) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {  // key of __x == __k
+      _Link_type __x_up(__x);
+      _Base_ptr __y_up(__y);
+      __y = __x;
+      __x = __S_left(__x);
+      __x_up = __S_right(__x_up);
+      return ft::pair<iterator, iterator>(
+          __lower_bound_helper(__x, __y, __k),
+          __upper_bound_helper(__x_up, __y_up, __k));
+    }
+  }
+  return ft::pair<iterator, iterator>(iterator(__y), iterator(__y));
+}
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+ft::pair<
+    typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator,
+    typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator>
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
+    const key_type &__k) const {
+  _Const_link_type __x = __begin();
+  _Const_base_ptr __y = __end();
+  while (__x != NULL) {
+    if (__impl_.__key_compare(__S_key(__x), __k))
+      __x = __S_right(__x);
+    else if (__impl_.__key_compare(__k, __S_key(__x))) {
+      __y = __x;
+      __x = __S_left(__x);
+    } else {  // key of __x == __k
+      _Const_link_type __x_up(__x);
+      _Const_base_ptr __y_up(__y);
+      __y = __x;
+      __x = __S_left(__x);
+      __x_up = __S_right(__x_up);
+      return ft::pair<const_iterator, const_iterator>(
+          __lower_bound_helper(__x, __y, __k),
+          __upper_bound_helper(__x_up, __y_up, __k));
+    }
+  }
+  return ft::pair<const_iterator, const_iterator>(const_iterator(__y),
+                                                  const_iterator(__y));
+}
+
 }  // namespace ft
 
 #endif  // __TREE

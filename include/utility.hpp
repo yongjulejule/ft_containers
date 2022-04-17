@@ -82,6 +82,11 @@ void swap(T &x, T &y) {
   y = tmp;
 }
 
+template <typename pair>
+struct select_first {
+  typename pair::first_type &operator()(pair &__x) const { return __x.first; }
+};
+
 }  // namespace ft
 
 #endif  // UTILITY_HPP

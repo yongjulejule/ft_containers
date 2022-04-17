@@ -201,6 +201,7 @@ void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
   __root->__color_ = BLACK;
 }
 
+// TODO: explain logic
 __tree_node_base *__tree_erase_and_fixup(
     __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT {
   __tree_node_base *&__root = __header.__parent_;
@@ -215,7 +216,8 @@ __tree_node_base *__tree_erase_and_fixup(
   else if (__y->__right_ == NULL)
     __x = __y->__left_;
   else {
-    __y = __tree_node_base::__S_minimum(__y->__right_);  // can be error
+    __y =
+        __tree_node_base::__S_minimum(__y->__right_);  // __y: successor of __Z
     __x = __y->__right_;
   }
   if (__y != __z) {
@@ -227,17 +229,99 @@ __tree_node_base *__tree_erase_and_fixup(
       __y->__parent_->__left_ = __x;
       __y->__right_ = __z->__right_;
       __z->__right_->__parent_ = __y;
+    } else
+      __x_p = __y;
+    if (__root = __z)
+      __root = __y;
+    else if (__z->__parent_->__left_ = __z)
+      __z->__parent_->__left_ = __y;
+    else
+      __z->__parent_->__right_ = __y;
+    __y->__parent_ = __z->__parent_;
+    ft::swap(__y->__color_, __z->__color_);
+    __y = __z;  // __y points to node actually deleted
+  } else {      //__y == __z, 이게 가능...?
+    __x_p = __y->__parent_;
+    if (__x) __x->__parent_ = __y->__parent_;
+    if (__root == __z)
+      __root = __x;
+    else if (__z->__parent_->__left_ == __z)
+      __z->__parent_->__right_ = __x;
+    else
+      __z->__parent_->__right_ = __x;
+    if (__leftmost == __z) {
+      if (__z->__right_ == NULL)
+        __leftmost = __z->__parent_;
+      else
+        __leftmost = __tree_node_base::__S_minimum(__x);
     }
-  } else
-    __x_p = __y;
-  if (__root = __z)
-    __root = __y;
-  else if (__z->__parent_->__left_ = __z)
-    __z->__parent_->__left_ = __y;
-  else
-    __z->__parent_->__right_ = __y;
-  __y->__parent_ = __z->__parent_;
-  ft::swap(__y->__color_, __z->__color_);
+    if (__rightmost == __z) {
+      if (__z->__left_ == NULL)
+        __rightmost = __z->__parent_;
+      else
+        __rightmost = __tree_node_base::__S_maximum(__x);
+    }
+  }
+
+  if (__y->__color_ != RED) {
+    while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
+      if (__x == __x_p->__left_) {
+        __tree_node_base *__w = __x_p->__right_;
+        if (__w->__color_ == RED) {
+          __w->__color_ = BLACK;
+          __x_p->__color_ = RED;
+          __tree_rotate_left(__x_p, __root);
+          __w = __x_p->__right_;
+        }
+        if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
+            (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
+          __w->__color_ = RED;
+          __x = __x_p;
+          __x_p = __x_p->__parent_;
+        } else {
+          if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
+            __w->__left_->__color_ = BLACK;
+            __w->__color_ = RED;
+            __tree_rotate_right(__w, __root);
+            __w = __x_p->__right_;
+          }
+          __w->__color_ = __x_p->__color_;
+          __x_p->__color_ = BLACK;
+          if (__w->__right_) __w->__right_->__color_ = BLACK;
+          __tree_rotate_left(__x_p, __root);
+          break;
+        }
+      } else {
+        __tree_node_base *__w = __x_p->__left_;
+        if (__w->__color_ == RED) {
+          __w->__color_ = BLACK;
+          __x_p->__color_ = RED;
+          __tree_rotate_right(__x_p, __root);
+          __w = __x_p->__left_;
+        }
+        if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
+            (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
+          __w->__color_ = RED;
+          __x = __x_p;
+          __x_p = __x_p->__parent_;
+        } else {
+          if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
+            __w->__right_->__color_ = BLACK;
+            __w->__color_ = RED;
+            __tree_rotate_left(__w, __root);
+            __w = __x_p->__left_;
+          }
+          __w->__color_ = __x_p->__color_;
+          __x_p->__color_ = BLACK;
+          if (__w->__left_) __w->__left_->__color_ = BLACK;
+          __tree_rotate_right(__x_p, __root);
+          break;
+        }
+      }
+    }
+    if (__x) __x->__color_ = BLACK;
+  }
+  return __y;
 }
 
 // Return: black-hight of RB-tree

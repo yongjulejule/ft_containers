@@ -26,6 +26,7 @@
 #include <utility>
 #include <vector>
 
+#include "__tree.hpp"
 #include "iterator.hpp"
 #include "stack.hpp"
 #include "type_traits.hpp"
