@@ -12,6 +12,11 @@
 #ifndef __TREE_HPP
 #define __TREE_HPP
 
+#define R "\033[31m";
+#define B "\033[32m";
+#define RESET "\033[0m"
+
+#include <iostream>
 #include <memory>
 
 #include "iterator.hpp"
@@ -211,13 +216,14 @@ struct __tree_const_iterator {
 
   typedef __tree_iterator<_T> iterator;
   typedef __tree_const_iterator<_T> const_iterator_type;
-  typedef __tree_node_base::_Base_ptr _Base_ptr;
+  typedef __tree_node_base::_Const_base_ptr _Base_ptr;
   typedef const __tree_node<_T> *_Link_type;
 
   _Base_ptr __node_;
 
   __tree_const_iterator() FT_NOEXCEPT : __node_() {}
   explicit __tree_const_iterator(_Base_ptr __x) FT_NOEXCEPT : __node_(__x) {}
+  __tree_const_iterator(const iterator &__it) : __node_(__it.__node_) {}
 
   iterator __remove_const() const FT_NOEXCEPT {
     return iterator(const_cast<typename iterator::_Base_ptr>(__node_));
@@ -353,16 +359,19 @@ class __tree {
 
  protected:
   // SECTION: generate/delete node
-  _Link_type __allocate_node() { return get_allocator().construct(1); }
+  _Link_type __allocate_node() { return __get_Node_allocator().allocate(1); }
 
-  void __deallocate_node(_Link_type __p) { get_allocator().deallocate(__p, 1); }
+  // FIXME: does not compile
+  void __deallocate_node(_Link_type __p) {
+    __get_Node_allocator().deallocate(__p, 1);
+  }
 
   void __construct_node(_Link_type __node, const value_type &__x) {
     get_allocator().construct(__node->__valptr(), __x);
   }
 
   _Link_type __create_node(const value_type &__x) {
-    _Link_type __tmp = __alloc_node();
+    _Link_type __tmp = __allocate_node();
     __construct_node(__tmp, __x);
     return __tmp;
   }
@@ -494,7 +503,7 @@ class __tree {
 
   // access to data
 
-  _Compare key_comp() const { return __impl_.__key_compare; }
+  _Compare key_comp() const { return __impl_.__key_comp; }
 
   iterator begin() { return iterator(__impl_.__header_.__left_); }
   const_iterator begin() const {
@@ -541,7 +550,7 @@ class __tree {
 
   void clear() {
     __erase_without_balance(__begin());
-    __impl_.__reset();
+    __impl_.__tree_reset();
   }
 
   void swap(__tree &__t);
@@ -564,7 +573,7 @@ class __tree {
   void __insert_range(_InputIterator __first, _InputIterator __last) {
     __alloc_node __node(*this);
     for (; __first != __last; ++__first) {
-      __insert_unique_with_hint(end(), *__first, __node);
+      __insert_unique_with_hint(cend(), *__first, __node);
     }
   }
 
@@ -600,6 +609,22 @@ class __tree {
 
   pair<iterator, iterator> equal_range(const key_type &__k);
   pair<const_iterator, const_iterator> equal_range(const key_type &__k) const;
+
+  // my member function
+  void print_tree() { print_tree("", __begin(), false); }
+  void print_tree(const std::string &prefix, _Link_type x, bool isLeft) {
+    if (x != NULL) {
+      std::cout << prefix;
+      std::cout << (isLeft ? "├──" : "└──");
+      if (x->__color_ == RED) {
+        std::cout << R std::cout << __S_key(x) << RESET << "\n";
+      } else {
+        std::cout << B std::cout << __S_key(x) << RESET << "\n";
+      }
+      print_tree(prefix + (isLeft ? "│   " : "    "), __S_left(x), true);
+      print_tree(prefix + (isLeft ? "│   " : "    "), __S_right(x), false);
+    }
+  }
 };
 
 /**
@@ -627,7 +652,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_unique_pos(
   // check left or right until meet leaf. __y gonna leaf
   while (__x != NULL) {
     __y = __x;
-    __comp = __impl_.__key_compare(__k, __S_key(__x));
+    __comp = __impl_.__key_comp(__k, __S_key(__x));
     __x = __comp ? __S_left(__x) : __S_right(__x);
   }
 
@@ -639,8 +664,8 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_unique_pos(
       --__j;  // decrement node
   }
 
-  if (__impl_.__key_compare(__S_key(__j.__node_),
-                            __k))      // compare before leaf and __k
+  if (__impl_.__key_comp(__S_key(__j.__node_),
+                         __k))         // compare before leaf and __k
     return ret_pair(__x, __y);         // return (NULL, leaf)
   return ret_pair(__j.__node_, NULL);  // return (decremented leaf, NULL(false))
 }
@@ -662,21 +687,21 @@ ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
          typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr>
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
     const_iterator __position, const key_type &__k) {
-  iterator __pos = const_cast<iterator>(__position);
+  iterator __pos = __position.__remove_const();
   typedef ft::pair<_Base_ptr, _Base_ptr> ret_pair;
 
   if (__pos.__node_ == __end()) {  // header
-    if (size() > 0 && __impl_.__key_compare(__S_key(__rightmost()), __k))
-      return res_pair(NULL, __rightmost());
+    if (size() > 0 && __impl_.__key_comp(__S_key(__rightmost()), __k))
+      return ret_pair(NULL, __rightmost());
     else
       return __get_insert_unique_pos(__k);
-  } else if (__impl_.__key_compare(__k,
-                                   __S_key(__pos.__node_))) {  // less than pos
+  } else if (__impl_.__key_comp(__k,
+                                __S_key(__pos.__node_))) {  // less than pos
     iterator __before = __pos;
 
     if (__pos.__node_ == __leftmost()) {
       return ret_pair(__leftmost(), __leftmost());
-    } else if (__impl_.__key_compare(__S_key((--__before).__node_), __k)) {
+    } else if (__impl_.__key_comp(__S_key((--__before).__node_), __k)) {
       if (__S_right(__before.__node_) == NULL)
         return ret_pair(NULL, __before.__node_);
       else
@@ -684,13 +709,13 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
     } else {
       return __get_insert_unique_pos(__k);
     }
-  } else if (__impl_.__key_compare(__S_key(__pos.__node_),
-                                   __k)) {  // more than pos
+  } else if (__impl_.__key_comp(__S_key(__pos.__node_),
+                                __k)) {  // more than pos
     iterator __after = __pos;
 
     if (__pos.__node_ == __rightmost()) {
       return ret_pair(NULL, __rightmost());
-    } else if (__impl_.__key_compare(__k, __S_key((++__after).__node_))) {
+    } else if (__impl_.__key_comp(__k, __S_key((++__after).__node_))) {
       if (__S_right(__pos.__node_) == NULL)
         return ret_pair(NULL, __pos.__node_);
       else
@@ -699,7 +724,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
       return __get_insert_unique_pos(__k);
     }
   } else  // equal to pos. the key cannot be same.
-    return ret_pair(__pos.__node, NULL);
+    return ret_pair(__pos.__node_, NULL);
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
@@ -709,9 +734,8 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
     _Base_ptr __x, _Base_ptr __p, const value_type &__v,
     _NodeGenerator &__node_gen) {
-  bool __insert_left =
-      (__x != 0 || __p == __end() ||
-       __impl_.__key_compare(_KeyOfValue()(__v), __S_key(__p)));
+  bool __insert_left = (__x != 0 || __p == __end() ||
+                        __impl_.__key_comp(_KeyOfValue()(__v), __S_key(__p)));
   _Link_type __z = __node_gen(__v);
   __tree_insert_and_fixup(__insert_left, __z, __p, this->__impl_.__header_);
   ++__impl_.__node_count_;
@@ -810,7 +834,7 @@ template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
 void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__erase_helper(
     const_iterator __position) {
   _Link_type __y = static_cast<_Link_type>(__tree_erase_and_fixup(
-      const_cast<_Base_ptr>(__position.__node_), __impl_.__header));
+      const_cast<_Base_ptr>(__position.__node_), __impl_.__header_));
   __delete_node(__y);
   --__impl_.__node_count_;
 }
@@ -828,14 +852,14 @@ void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__erase_helper(
   if (__first == begin() && __last == end())
     clear();
   else
-    for (; __first != __last; ++__first) __erase_helper(__first);
+    while (__first != __last) __erase_helper(__first++);
 }
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::size_type
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::erase(const key_type &__v) {
-  ft::pair<iterator, iterator> __p = equal_range(__v);
+  ft::pair<const_iterator, const_iterator> __p = equal_range(__v);
   const size_type __prev_size = size();
   __erase_helper(__p.first, __p.second);
   return __prev_size - size();
@@ -857,7 +881,7 @@ void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::swap(__tree &__t) {
     __t.__root()->__parent_ = __t.__end();
     ft::swap(__impl_.__node_count_, __t.__impl.__node_count);
   }
-  ft::swap(__impl_.__key_compare, __t.__impl_.__key_compare);
+  ft::swap(__impl_.__key_comp, __t.__impl_.__key_comp);
   ft::swap(__get_Node_allocator(), __t.__get_Node_allocator());
 }
 
@@ -875,7 +899,7 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__lower_bound_helper(
     _Link_type __x, _Base_ptr __y, const key_type &__k) {
   while (__x != NULL) {
-    if (!__impl_.__key_compare(__S_key(__x), __k)) {
+    if (!__impl_.__key_comp(__S_key(__x), __k)) {
       __y = __x;
       __x = __S_left(__x);
     } else {
@@ -890,7 +914,7 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__lower_bound_helper(
     _Const_link_type __x, _Const_base_ptr __y, const key_type &__k) const {
   while (__x != NULL) {
-    if (!__impl_.__key_compare(__S_key(__x), __k)) {
+    if (!__impl_.__key_comp(__S_key(__x), __k)) {
       __y = __x;
       __x = __S_left(__x);
     } else {
@@ -914,7 +938,7 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__upper_bound_helper(
     _Link_type __x, _Base_ptr __y, const key_type &__k) {
   while (__x != NULL) {
-    if (__impl_.__key_compare(__k, __S_key(__x))) {
+    if (__impl_.__key_comp(__k, __S_key(__x))) {
       __y = __x;
       __x = __S_left(__x);
     } else {
@@ -929,7 +953,7 @@ typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::const_iterator
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__upper_bound_helper(
     _Const_link_type __x, _Const_base_ptr __y, const key_type &__k) const {
   while (__x != NULL) {
-    if (__impl_.__key_compare(__k, __S_key(__x))) {
+    if (__impl_.__key_comp(__k, __S_key(__x))) {
       __y = __x;
       __x = __S_left(__x);
     } else {
@@ -955,9 +979,9 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
   _Link_type __x = __begin();
   _Base_ptr __y = __end();
   while (__x != NULL) {
-    if (__impl_.__key_compare(__S_key(__x), __k))
+    if (__impl_.__key_comp(__S_key(__x), __k))
       __x = __S_right(__x);
-    else if (__impl_.__key_compare(__k, __S_key(__x))) {
+    else if (__impl_.__key_comp(__k, __S_key(__x))) {
       __y = __x;
       __x = __S_left(__x);
     } else {  // key of __x == __k
@@ -984,9 +1008,9 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
   _Const_link_type __x = __begin();
   _Const_base_ptr __y = __end();
   while (__x != NULL) {
-    if (__impl_.__key_compare(__S_key(__x), __k))
+    if (__impl_.__key_comp(__S_key(__x), __k))
       __x = __S_right(__x);
-    else if (__impl_.__key_compare(__k, __S_key(__x))) {
+    else if (__impl_.__key_comp(__k, __S_key(__x))) {
       __y = __x;
       __x = __S_left(__x);
     } else {  // key of __x == __k

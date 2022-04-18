@@ -5,7 +5,7 @@ ifdef DEBUG
 else ifdef LEAKS
 	CXXFLAGS = --std=c++98 -g
 else ifdef TEST
-	CXXFLAGS = -g --std=c++98 
+	CXXFLAGS = -g --std=c++98  #-fsanitize=address
 else
 	CXXFLAGS	= --std=c++98 -Wall -Wextra -Werror
 endif
@@ -23,6 +23,7 @@ SRCS_DIR	= ./src/
 TEST_DIR	= ./tests/
 
 SRCS			= $(addprefix $(SRCS_DIR), \
+						__tree.cpp\
 				)
 
 ifdef TEST

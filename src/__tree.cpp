@@ -56,7 +56,7 @@ static __tree_node_base *local_tree_decrement(__tree_node_base *__x) {
     // left가 존재하지 않으면, 부모 노드가 조부모 노드의 left여야함.
   } else {
     __tree_node_base *__y = __x->__left_;
-    while (__x = __y->__left_) {
+    while (__x == __y->__left_) {
       __x = __y;
       __y = __y->__parent_;
     }
@@ -216,10 +216,12 @@ __tree_node_base *__tree_erase_and_fixup(
   else if (__y->__right_ == NULL)
     __x = __y->__left_;
   else {
-    __y =
-        __tree_node_base::__S_minimum(__y->__right_);  // __y: successor of __Z
+    __y = __y->__right_;
+    // __tree_node_base::__S_minimum(__y->__right_);  // __y: successor of __Z
+    while (__y->__left_ != NULL) __y = __y->__left_;
     __x = __y->__right_;
   }
+
   if (__y != __z) {
     __z->__left_->__parent_ = __y;
     __y->__left_ = __z->__left_;
@@ -231,9 +233,9 @@ __tree_node_base *__tree_erase_and_fixup(
       __z->__right_->__parent_ = __y;
     } else
       __x_p = __y;
-    if (__root = __z)
+    if (__root == __z)
       __root = __y;
-    else if (__z->__parent_->__left_ = __z)
+    else if (__z->__parent_->__left_ == __z)
       __z->__parent_->__left_ = __y;
     else
       __z->__parent_->__right_ = __y;
@@ -246,7 +248,7 @@ __tree_node_base *__tree_erase_and_fixup(
     if (__root == __z)
       __root = __x;
     else if (__z->__parent_->__left_ == __z)
-      __z->__parent_->__right_ = __x;
+      __z->__parent_->__left_ = __x;
     else
       __z->__parent_->__right_ = __x;
     if (__leftmost == __z) {
@@ -321,6 +323,9 @@ __tree_node_base *__tree_erase_and_fixup(
     }
     if (__x) __x->__color_ = BLACK;
   }
+  // if (__y) {
+  //   __y->__left_ = __y->__right_ = __y->__parent_ = NULL;
+  // }
   return __y;
 }
 

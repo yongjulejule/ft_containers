@@ -4,36 +4,50 @@
 	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
 	"version": "0.2.0",
 	"configurations": [
-	{
-		"name": "(lldb) Launch",
-		"type": "lldb",
-		"request": "launch",
-		"program": "${workspaceFolder}/containers",
-		"args": [],
-		"stopAtEntry": false,
-		"cwd": "${fileDirname}",
-		"environment": [],
-		"externalConsole": false,
-		"MIMode": "lldb",
-		"preLaunchTask": "Use Makefile"
-	},
-	{
-		"name": "(lldb) Launch tests",
-		"type": "lldb",
-		"request": "launch",
-		"program": "${workspaceFolder}/mine.out",
-		"args": [],
-		"stopAtEntry": false,
-		"cwd": "${fileDirname}",
-		"environment": [],
-		"externalConsole": false,
-		"MIMode": "lldb",
-	}
-	],
-	"inputs":[
 		{
-			"id" : "filename", "description" : "put filename from workspaceFolder", "default" : "", "type" : "promptString"
+			"name": "(lldb) Launch",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${workspaceFolder}/containers",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${fileDirname}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "lldb",
+			"preLaunchTask": "Use Makefile"
 		},
-		{"id" : "argv", "description" : "put argv", "default" : "", "type" : "promptString"},
+		{
+			"name": "(lldb) Launch tests",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${workspaceFolder}/mine.out",
+			"args": [
+				"asbc",
+				"aff",
+				"v",
+				"ghdfg",
+				"dsfgdfhdfh",
+			],
+			"stopAtEntry": false,
+			"cwd": "${fileDirname}",
+			"environment": [],
+			"externalConsole": false,
+			"MIMode": "lldb",
+		}
+	],
+	"inputs": [
+		{
+			"id": "filename",
+			"description": "put filename from workspaceFolder",
+			"default": "",
+			"type": "promptString"
+		},
+		{
+			"id": "argv",
+			"description": "put argv",
+			"default": "",
+			"type": "promptString"
+		},
 	]
 }
