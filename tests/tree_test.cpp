@@ -22,28 +22,30 @@ void tree_test(int argc, char **argv) {
   ft::pair<int, std::string> test[argc];
   for (int i = 0; i < argc; ++i) {
     test[i] = ft::make_pair(i, std::string(argv[0]));
+    if (i == 10) test[i] = ft::make_pair(i, std::string("HI Im Val"));
   }
   {
+    typedef ft::__tree<
+        int, ft::pair<int, std::string>,
+        ft::select_first<ft::pair<int, std::string> >, std::less<int>,
+        std::allocator<ft::pair<int, std::string> > >::iterator iterator;
     ft::__tree<int, ft::pair<int, std::string>,
                ft::select_first<ft::pair<int, std::string> >, std::less<int>,
                std::allocator<ft::pair<int, std::string> > >
         tree;
     tree.__insert_range(test, test + argc);
     tree.print_tree();
-    // tree.erase(3);
-    // tree.print_tree();
-    // std::cout << "after delete 3\n";
-    for (int i = 1; i < argc / 10; i++) {
+    std::cout << "tree size is: " << tree.size() << "\n";
+    std::cout << "delete random [" << argc / 3 << "] numbers of node\n";
+    for (int i = 1; i < (argc / 3); i++) {
       tree.erase(generateRandomNumber(std::make_pair(0, argc)));
     }
     tree.print_tree();
-    std::cout << "after delete 2\n";
-  }
-  {
-    ft::__tree_iterator<ft::pair<int, std::string> > a;
-    // *a = _Val(4242, "abc");
-    // std::cout << (*a).first << "\n";
-    std::cout << typeid(*a).name();
+    std::cout << "tree size is: " << tree.size() << "\n";
+    iterator it = tree.find(10);
+    if (it != tree.end()) std::cout << (*it).first << ":" << it->second << "\n";
+    it = tree.find(9);
+    if (it != tree.end()) std::cout << (*it).first << ":" << it->second << "\n";
   }
   {
     ft::__tree_node_base *basis = new ft::__tree_node_base[10];
@@ -52,7 +54,7 @@ void tree_test(int argc, char **argv) {
         basis[i].__color_ = ft::BLACK;
       else
         basis[i].__color_ = ft::RED;
-      std::cout << basis[i].__color_ << "\n";
+      // std::cout << basis[i].__color_ << "\n";
     }
     delete[] basis;
   }
@@ -61,8 +63,8 @@ void tree_test(int argc, char **argv) {
     int *val_ptr = test->__valptr();
     *val_ptr = 42;
     // std::cout << &test.__value_field << "\n";
-    std::cout << test->__valptr() << "\n";
-    std::cout << test->__value_field << "\n";
+    // std::cout << test->__valptr() << "\n";
+    // std::cout << test->__value_field << "\n";
     delete test;
   }
 
@@ -108,7 +110,7 @@ void alloc_test() {
   std::allocator<value> no = a.get_node_alloc();
   value *pr = no.allocate(1);
   no.construct(pr, value(42, "42"));
-  std::cout << typeid(no).name() << "\n";
+  // std::cout << typeid(no).name() << "\n";
   no.deallocate(pr, 1);
 }
 
@@ -116,5 +118,5 @@ int main(int argc, char **argv) {
   tree_test(argc, argv);
   alloc_test();
   // std::string leak = std::string("leaks ") + std::string(argv[0]);
-  system("leaks mine.out");
+  system("leaks mine.out 1>/dev/null");
 }

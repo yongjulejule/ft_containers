@@ -578,10 +578,23 @@ class __tree {
   }
 
   // operations
-  iterator find(const key_type &__k);
-  const_iterator find(const key_type &__k) const;
+  iterator find(const key_type &__k) {
+    iterator __found = __lower_bound_helper(__begin(), __end(), __k);
+    if (__impl_.__key_comp(__k, __S_key(__found.__node_)) || __found == end())
+      return end();
+    return __found;
+  }
+  const_iterator find(const key_type &__k) const {
+    const_iterator __found = __lower_bound_helper(__begin(), __end(), __k);
+    if (__impl_.__key_comp(__k, __S_key(__found.__node_)) || __found == cend())
+      return cend();
+    return __found;
+  }
 
-  size_type count(const key_type &__k) const;
+  size_type count(const key_type &__k) const {
+    ft::pair<const_iterator, const_iterator> __range = equal_range(__k);
+    return std::distance(__range.first, __range.second);
+  }
 
   iterator __lower_bound_helper(_Link_type __x, _Base_ptr __y,
                                 const key_type &__k);
