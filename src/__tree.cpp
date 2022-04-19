@@ -73,6 +73,12 @@ const __tree_node_base *__tree_decrement(const __tree_node_base *__x)
   return local_tree_decrement(const_cast<__tree_node_base *>(__x));
 }
 
+/**
+ * @brief Tree rotate left
+ *
+ * @param __x: node to rotate
+ * @param __root: root of tree
+ */
 void __tree_rotate_left(__tree_node_base *const __x,
                         __tree_node_base *&__root) {
   __tree_node_base *const __y = __x->__right_;
@@ -92,6 +98,12 @@ void __tree_rotate_left(__tree_node_base *const __x,
   __x->__parent_ = __y;
 }
 
+/**
+ * @brief Tree rotate right
+ *
+ * @param __x: node to rotate
+ * @param __root: root of tree
+ */
 void __tree_rotate_right(__tree_node_base *const __x,
                          __tree_node_base *&__root) {
   __tree_node_base *const __y = __x->__left_;
@@ -105,7 +117,7 @@ void __tree_rotate_right(__tree_node_base *const __x,
   } else if (__x == __x->__parent_->__right_) {
     __x->__parent_->__right_ = __y;
   } else {
-    __x->__parent_->__right_ = __y;
+    __x->__parent_->__left_ = __y;
   }
   __y->__right_ = __x;
   __x->__parent_ = __y;
