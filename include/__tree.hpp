@@ -147,7 +147,7 @@ struct __tree_node : public __tree_node_base {
  *************************************************************************************/
 
 template <typename _T>
-struct __tree_iterator {
+struct __tree_iterator : public iterator<bidirectional_iterator_tag, _T> {
   typedef _T value_type;
   typedef _T &reference;
   typedef _T *pointer;
@@ -207,7 +207,7 @@ struct __tree_iterator {
 };
 
 template <typename _T>
-struct __tree_const_iterator {
+struct __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> {
   typedef _T value_type;
   typedef const _T *pointer;
   typedef const _T &reference;

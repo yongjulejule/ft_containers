@@ -11,6 +11,7 @@
 
 #ifndef UTILITY_HPP
 #define UTILITY_HPP
+#include <functional>
 
 namespace ft {
 

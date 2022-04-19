@@ -1,5 +1,3 @@
-#include "iterator.hpp"
-
 #include <deque>
 #include <iostream>
 #include <iterator>
@@ -7,6 +5,8 @@
 #include <map>
 #include <set>
 #include <vector>
+
+#include "test.hpp"
 
 template <typename tag>
 struct my {
@@ -145,6 +145,22 @@ int main() {
   iterable_test();
   std::cout << "==== check_iterator_category =====\n";
   check_iterator_category();
+
+  {
+    // ft::iterator_traits<ft::__tree_const_iterator<int> >::value_type a;
+    ft::__tree_const_iterator<int>::value_type a;
+    ft::__tree_const_iterator<int>::difference_type b;
+    ft::__tree_const_iterator<int>::iterator_catergory c;
+    ft::__tree_const_iterator<int>::pointer d;
+    ft::__tree_const_iterator<int>::reference f = 10;
+    std::cout << typeid(a).name() << ", " << typeid(b).name() << ", "
+              << typeid(c).name() << ", " << typeid(d).name() << ", "
+              << typeid(f).name() << ", \n";
+  }
+  __test<ft::vector<int>::iterator>(0, 0, 0, 0, 0);
+  __test<ft::__tree_iterator<int> >(0, 0, 0, 0, 0);
+  __test<ft::iterator_traits<ft::__tree_const_iterator<int> > >(0, 0, 0, 0, 0);
+  // ft::iterator_traits<ft::__tree_const_iterator<int> >::value_type val;
 
   // std::cout << rit[5];
 }
