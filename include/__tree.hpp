@@ -26,7 +26,7 @@
 
 namespace ft {
 /*************************************************************************************
- * @brief Tree Nodes Methods
+ * @brief Tree Nodes member function
  *************************************************************************************/
 
 enum __tree_node_color { RED = false, BLACK = true };
@@ -162,6 +162,8 @@ struct __tree_iterator {
 
   __tree_iterator() : __node_() {}
 
+  __tree_iterator(const __tree_iterator &other) : __node_(other.__node_) {}
+
   explicit __tree_iterator(_Base_ptr __x) : __node_(__x) {}
 
   reference operator*() const FT_NOEXCEPT {
@@ -198,13 +200,11 @@ struct __tree_iterator {
                          const iterator_type &rhs) FT_NOEXCEPT {
     return lhs.__node_ == rhs.__node_;
   }
+  friend bool operator!=(const iterator_type &lhs,
+                         const iterator_type &rhs) FT_NOEXCEPT {
+    return lhs.__node_ != rhs.__node_;
+  }
 };
-
-template <typename _T>
-bool operator!=(const __tree_iterator<_T> &lhs,
-                const __tree_iterator<_T> &rhs) FT_NOEXCEPT {
-  return !(lhs == rhs);
-}
 
 template <typename _T>
 struct __tree_const_iterator {
@@ -223,6 +223,8 @@ struct __tree_const_iterator {
 
   __tree_const_iterator() FT_NOEXCEPT : __node_() {}
   explicit __tree_const_iterator(_Base_ptr __x) FT_NOEXCEPT : __node_(__x) {}
+  __tree_const_iterator(const __tree_const_iterator &other)
+      : __node_(other.__node_) {}
   __tree_const_iterator(const iterator &__it) : __node_(__it.__node_) {}
 
   iterator __remove_const() const FT_NOEXCEPT {
@@ -263,13 +265,11 @@ struct __tree_const_iterator {
                          const const_iterator_type &rhs) FT_NOEXCEPT {
     return lhs.__node_ == rhs.__node_;
   }
+  friend bool operator!=(const const_iterator_type &lhs,
+                         const const_iterator_type &rhs) FT_NOEXCEPT {
+    return lhs.__node_ != rhs.__node_;
+  }
 };
-
-template <typename _T>
-bool operator!=(const __tree_const_iterator<_T> &lhs,
-                const __tree_const_iterator<_T> &rhs) FT_NOEXCEPT {
-  return !(lhs == rhs);
-}
 
 /*************************************************************************************
  * @brief Tree
@@ -284,7 +284,8 @@ bool operator!=(const __tree_const_iterator<_T> &lhs,
  * @tparam _Compare: Comparing functor
  * @tparam _Alloc: allocator (default: std::allocator<_Val>)
  */
-template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+template <typename _Key, typename _Val, typename _KeyOfValue,
+          typename _Compare = std::less<_Key>,
           typename _Alloc = std::allocator<_Val> >
 class __tree {
  public:
@@ -339,7 +340,7 @@ class __tree {
     __tree_impl() : _Node_allocator() {}
     __tree_impl(const __tree_impl &other)
         : _Node_allocator(other),
-          _Base_key_compare(other._Base_key_compare),
+          _Base_key_compare(other.__key_comp),
           __tree_header() {}
     __tree_impl(const _Key_compare &__comp, const _Node_allocator &__a)
         : _Node_allocator(__a), _Base_key_compare(__comp) {}
@@ -352,7 +353,7 @@ class __tree {
   _Node_allocator &__get_Node_allocator() { return this->__impl_; }
   const _Node_allocator &__get_Node_allocator() const { return this->__impl_; }
 
-  // TODO: move to public methods
+  // TODO: move to public member function
   allocator_type get_allocator() const {
     return allocator_type(__get_Node_allocator());
   }
@@ -414,7 +415,7 @@ class __tree {
   _Base_ptr __end() { return &this->__impl_.__header_; }
   _Const_base_ptr __end() const { return &this->__impl_.__header_; }
 
-  // SECTION: static methods
+  // SECTION: static member function
   static const _Key &__S_key(_Const_link_type __x) {
     return _KeyOfValue()(*__x->__valptr());
   }
@@ -451,7 +452,7 @@ class __tree {
     return __tree_node_base::__S_maximum(__x);
   }
 
-  // SECTION: helper for public methods
+  // SECTION: helper for public member function
 
   // get position to insert
   ft::pair<_Base_ptr, _Base_ptr> __get_insert_unique_pos(const key_type &__k);
@@ -465,7 +466,8 @@ class __tree {
   template <typename _NodeGenerator>
   _Link_type __copy_tree(const __tree &__t, _NodeGenerator &__node_gen) {
     // copy whole tree
-    _Link_type __root = __copy(__t.__begin(), __end(), __node_gen);
+    _Link_type __root =
+        __copy_tree(const_cast<_Link_type>(__t.__begin()), __end(), __node_gen);
 
     // update header
     __leftmost() = __S_minimum(__root);
@@ -488,18 +490,37 @@ class __tree {
   void __erase_helper(const_iterator __position);
   void __erase_helper(const_iterator __first, const_iterator __last);
 
+  iterator __lower_bound_helper(_Link_type __x, _Base_ptr __y,
+                                const key_type &__k);
+  const_iterator __lower_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
+                                      const key_type &__k) const;
+
+  iterator __upper_bound_helper(_Link_type __x, _Base_ptr __y,
+                                const key_type &__k);
+  const_iterator __upper_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
+                                      const key_type &__k) const;
+
  public:
   // SECTION: constructor/destructor
   __tree() {}
   __tree(const _Compare &_comp, const allocator_type &__a = allocator_type())
       : __impl_(_comp, _Node_allocator(__a)) {}
   __tree(const __tree &other) : __impl_(other.__impl_) {
-    if (other.__root() != NULL) __root() = __copy_data(other);
+    if (other.__root() != NULL) __root() = __copy_tree(other);
   }
   ~__tree() { __erase_without_balance(__begin()); }
-  __tree &operator=(const __tree &other);
+  __tree &operator=(const __tree &other) {
+    if (this != &other) {
+      __alloc_node __node(*this);
+      this->clear();
+      // __impl_.__tree_reset();
+      __impl_.__key_comp = other.__impl_.__key_comp;
+      if (other.__root() != NULL) __root() = __copy_tree(other, __node);
+    }
+    return *this;
+  }
 
-  // SECTION: public methods
+  // SECTION: public member function
 
   // access to data
 
@@ -512,22 +533,18 @@ class __tree {
   iterator end() { return iterator(&__impl_.__header_); }
   const_iterator end() const { return const_iterator(&__impl_.__header_); }
 
-  reverse_iterator rbegin() {
-    return reverse_iterator(__impl_.__header_.__left_);
-  }
+  reverse_iterator rbegin() { return reverse_iterator(begin()); }
   const_reverse_iterator rbegin() const {
-    return const_reverse_iterator(__impl_.__header_.__left_);
+    return const_reverse_iterator(begin());
   }
   reverse_iterator rend() { return reverse_iterator(end()); }
   const_reverse_iterator rend() const { return const_reverse_iterator(end()); }
 
-  const_iterator cbegin() const {
-    return const_iterator(__impl_.__header_.__left_);
-  }
+  const_iterator cbegin() const { return const_iterator(begin()); }
   const_iterator cend() const { return const_iterator(end()); }
 
   const_reverse_iterator crbegin() const {
-    return const_reverse_iterator(__impl_.__header_.__left_);
+    return const_reverse_iterator(begin());
   }
   const_reverse_iterator crend() const { return const_reverse_iterator(end()); }
 
@@ -558,11 +575,13 @@ class __tree {
   template <typename _NodeGenerator>
   iterator __insert(_Base_ptr __x, _Base_ptr __p, const value_type &__v,
                     _NodeGenerator &__node_gen);
-  ft::pair<_Base_ptr, bool> __insert_unique(const value_type &__v);
+  ft::pair<iterator, bool> __insert_unique(const value_type &__v);
+
   template <typename _NodeGenerator>
   iterator __insert_unique_with_hint(const_iterator __position,
                                      const value_type &__v,
                                      _NodeGenerator &__node_gen);
+
   iterator __insert_unique_with_hint(const_iterator __pos,
                                      const value_type &__x) {
     __alloc_node __node(*this);
@@ -592,19 +611,9 @@ class __tree {
   }
 
   size_type count(const key_type &__k) const {
-    ft::pair<const_iterator, const_iterator> __range = equal_range(__k);
-    return std::distance(__range.first, __range.second);
+    const_iterator __found = find(__k);
+    return __found == end() ? 0 : 1;
   }
-
-  iterator __lower_bound_helper(_Link_type __x, _Base_ptr __y,
-                                const key_type &__k);
-  const_iterator __lower_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
-                                      const key_type &__k) const;
-
-  iterator __upper_bound_helper(_Link_type __x, _Base_ptr __y,
-                                const key_type &__k);
-  const_iterator __upper_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
-                                      const key_type &__k) const;
 
   iterator lower_bound(const key_type &__k) {
     return __lower_bound_helper(__begin(), __end(), __k);
@@ -623,21 +632,9 @@ class __tree {
   pair<iterator, iterator> equal_range(const key_type &__k);
   pair<const_iterator, const_iterator> equal_range(const key_type &__k) const;
 
-  // my member function
-  void print_tree() { print_tree("", __begin(), false); }
-  void print_tree(const std::string &prefix, _Link_type x, bool isLeft) {
-    if (x != NULL) {
-      std::cout << prefix;
-      std::cout << (isLeft ? "├──" : "└──");
-      if (x->__color_ == RED) {
-        std::cout << R std::cout << __S_key(x) << RESET << "\n";
-      } else {
-        std::cout << B std::cout << __S_key(x) << RESET << "\n";
-      }
-      print_tree(prefix + (isLeft ? "│   " : "    "), __S_left(x), true);
-      print_tree(prefix + (isLeft ? "│   " : "    "), __S_right(x), false);
-    }
-  }
+  // NOTE: print tree
+  void print_tree();
+  void print_tree(const std::string &prefix, _Link_type x, bool isLeft);
 };
 
 /**
@@ -757,11 +754,11 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
-ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Base_ptr,
+ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator,
          bool>
 __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique(
     const value_type &__v) {
-  typedef ft::pair<iterator, _Base_ptr> ret_pair;
+  typedef ft::pair<iterator, bool> ret_pair;
   ft::pair<_Base_ptr, _Base_ptr> __ret = __get_insert_unique_pos(
       _KeyOfValue()(__v));  // get position based key of __v
 
@@ -816,7 +813,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__copy_tree(
     _Link_type __y = __clone_node(__x, __node_gen);
     __p->__left_ = __y;
     __y->__parent_ = __p;
-    if (__x->__parent_) {
+    if (__x->__right_) {
       __y->__right_ = __copy_tree(__S_right(__x), __y, __node_gen);
     }
     __p = __y;
@@ -892,7 +889,7 @@ void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::swap(__tree &__t) {
 
     __root()->__parent_ = __end();
     __t.__root()->__parent_ = __t.__end();
-    ft::swap(__impl_.__node_count_, __t.__impl.__node_count);
+    ft::swap(__impl_.__node_count_, __t.__impl_.__node_count_);
   }
   ft::swap(__impl_.__key_comp, __t.__impl_.__key_comp);
   ft::swap(__get_Node_allocator(), __t.__get_Node_allocator());
@@ -1039,6 +1036,343 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
   }
   return ft::pair<const_iterator, const_iterator>(const_iterator(__y),
                                                   const_iterator(__y));
+}
+
+static __tree_node_base *local_tree_increment(__tree_node_base *__x)
+    FT_NOEXCEPT {
+  if (__x->__right_ != NULL) {
+    __x = __x->__right_;
+    while (__x->__left_ != NULL) __x = __x->__left_;
+  } else {
+    __tree_node_base *__y = __x->__parent_;
+    while (__x == __y->__right_) {
+      __x = __y;
+      __y = __y->__parent_;
+    }
+    if (__x->__right_ != __y) {
+      __x = __y;
+    }
+  }
+  return __x;
+}
+
+__tree_node_base *__tree_increment(__tree_node_base *__x) FT_NOEXCEPT {
+  return local_tree_increment(__x);
+}
+
+const __tree_node_base *__tree_increment(const __tree_node_base *__x)
+    FT_NOEXCEPT {
+  return local_tree_increment(const_cast<__tree_node_base *>(__x));
+}
+
+// Return: prev node by in-order traverse
+static __tree_node_base *local_tree_decrement(__tree_node_base *__x) {
+  // if __x is head of RB-tree
+  if (__x->__color_ == RED && __x->__parent_->__parent_ == __x) {
+    __x = __x->__right_;
+    // left가 존재하면, left노드의 right-most
+  } else if (__x->__left_ != NULL) {
+    __tree_node_base *__y = __x->__left_;
+    while (__y->__right_ != 0) __y = __y->__right_;
+    __x = __y;
+    // left가 존재하지 않으면, 부모 노드가 조부모 노드의 left여야함.
+  } else {
+    __tree_node_base *__y = __x->__parent_;
+    while (__x == __y->__left_) {
+      __x = __y;
+      __y = __y->__parent_;
+    }
+    __x = __y;
+  }
+  return __x;
+}
+
+__tree_node_base *__tree_decrement(__tree_node_base *__x) FT_NOEXCEPT {
+  return local_tree_decrement(__x);
+}
+const __tree_node_base *__tree_decrement(const __tree_node_base *__x)
+    FT_NOEXCEPT {
+  return local_tree_decrement(const_cast<__tree_node_base *>(__x));
+}
+
+/**
+ * @brief Tree rotate left
+ *
+ * @param __x: node to rotate
+ * @param __root: root of tree
+ */
+void __tree_rotate_left(__tree_node_base *const __x,
+                        __tree_node_base *&__root) {
+  __tree_node_base *const __y = __x->__right_;
+
+  __x->__right_ = __y->__left_;
+  if (__y->__left_ != NULL) __y->__left_->__parent_ = __x;
+  __y->__parent_ = __x->__parent_;
+
+  if (__x == __root) {
+    __root = __y;
+  } else if (__x == __x->__parent_->__left_) {
+    __x->__parent_->__left_ = __y;
+  } else {
+    __x->__parent_->__right_ = __y;
+  }
+  __y->__left_ = __x;
+  __x->__parent_ = __y;
+}
+
+/**
+ * @brief Tree rotate right
+ *
+ * @param __x: node to rotate
+ * @param __root: root of tree
+ */
+void __tree_rotate_right(__tree_node_base *const __x,
+                         __tree_node_base *&__root) {
+  __tree_node_base *const __y = __x->__left_;
+
+  __x->__left_ = __y->__right_;
+  if (__y->__right_ != NULL) __y->__right_->__parent_ = __x;
+  __y->__parent_ = __x->__parent_;
+
+  if (__x == __root) {
+    __root = __y;
+  } else if (__x == __x->__parent_->__right_) {
+    __x->__parent_->__right_ = __y;
+  } else {
+    __x->__parent_->__left_ = __y;
+  }
+  __y->__right_ = __x;
+  __x->__parent_ = __y;
+}
+
+static void local_init_new_node(const bool __insert_left,
+                                __tree_node_base *&__x, __tree_node_base *&__p,
+                                __tree_node_base &__header) FT_NOEXCEPT {
+  // initiate new node
+  __x->__parent_ = __p;
+  __x->__right_ = NULL;
+  __x->__left_ = NULL;
+  __x->__color_ = RED;
+
+  // __p의 left에 __x를 삽입
+  if (__insert_left) {
+    __p->__left_ = __x;  // __p가 __header여도 leftmost = __x 유지
+
+    // 트리에 노드가 하나도 없는 경우
+    if (__p == &__header) {
+      __header.__parent_ = __x;
+      __header.__right_ = __x;
+    } else if (__p == __header.__left_) {
+      __header.__left_ = __x;  // __p가 leftmost인 경우 __x가 leftmost
+    }
+  } else {  // __p의 right에 __x 삽입
+    __p->__right_ = __x;
+    if (__p == __header.__right_)
+      __header.__right_ = __x;  // __p가 rightmost인 경우 __x가 rightmost
+  }
+}
+
+/**
+ * @brief Insert new node in tree and rebalance.
+ *        __x와 __p가 들어갈 위치는 찾아서 들어온다고 가정.
+ *        __x가 처음 insert 된다면, left에 insert (__p가 header이므로)
+ *        header의 root, leftmost, rightmost를 잘 저장
+ *
+ * @param __insert_left : insert left or not
+ * @param __x : Node to insert
+ * @param __p : Parent Node
+ * @param __header : head of rb-tree
+ */
+void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
+                             __tree_node_base *__p,
+                             __tree_node_base &__header) FT_NOEXCEPT {
+  __tree_node_base *&__root = __header.__parent_;
+
+  local_init_new_node(__insert_left, __x, __p, __header);
+
+  // rebalance
+  // __x가 root까지 올라오거나,
+  // 부모가 red가 아닐때까지 (자식을 red로 넣었으므로!)
+  while (__x != __root && __x->__parent_->__color_ == RED) {
+    __tree_node_base *const __xpp = __x->__parent_->__parent_;
+
+    if (__x->__parent_ == __xpp->__left_) {
+      __tree_node_base *const __y = __xpp->__right_;
+
+      if (__y && __y->__color_ == RED) {  // __x의 uncle 노드가 RED
+        __x->__parent_->__color_ = BLACK;
+        __y->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __x = __xpp;
+      } else {  // __x의 uncle 노드가 black
+        if (__x == __x->__parent_->__right_) {
+          __x = __x->__parent_;
+          __tree_rotate_left(__x, __root);
+        }
+        __x->__parent_->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __tree_rotate_right(__xpp, __root);
+      }
+    } else {
+      __tree_node_base *const __y = __xpp->__left_;
+
+      if (__y && __y->__color_ == RED) {
+        __x->__parent_->__color_ = BLACK;
+        __y->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __x = __xpp;
+      } else {
+        if (__x == __x->__parent_->__left_) {
+          __x = __x->__parent_;
+          __tree_rotate_right(__x, __root);
+        }
+        __x->__parent_->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __tree_rotate_left(__xpp, __root);
+      }
+    }
+  }
+  __root->__color_ = BLACK;
+}
+
+// TODO: explain logic
+__tree_node_base *__tree_erase_and_fixup(
+    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT {
+  __tree_node_base *&__root = __header.__parent_;
+  __tree_node_base *&__leftmost = __header.__left_;
+  __tree_node_base *&__rightmost = __header.__right_;
+  __tree_node_base *__y = __z;
+  __tree_node_base *__x = NULL;
+  __tree_node_base *__x_p = NULL;
+
+  if (__y->__left_ == NULL)
+    __x = __y->__right_;
+  else if (__y->__right_ == NULL)
+    __x = __y->__left_;
+  else {
+    __y = __y->__right_;
+    // __tree_node_base::__S_minimum(__y->__right_);  // __y: successor of __Z
+    while (__y->__left_ != NULL) __y = __y->__left_;
+    __x = __y->__right_;
+  }
+
+  if (__y != __z) {
+    __z->__left_->__parent_ = __y;
+    __y->__left_ = __z->__left_;
+    if (__y != __z->__right_) {
+      __x_p = __y->__parent_;
+      if (__x) __x->__parent_ = __y->__parent_;
+      __y->__parent_->__left_ = __x;
+      __y->__right_ = __z->__right_;
+      __z->__right_->__parent_ = __y;
+    } else
+      __x_p = __y;
+    if (__root == __z)
+      __root = __y;
+    else if (__z->__parent_->__left_ == __z)
+      __z->__parent_->__left_ = __y;
+    else
+      __z->__parent_->__right_ = __y;
+    __y->__parent_ = __z->__parent_;
+    ft::swap(__y->__color_, __z->__color_);
+    __y = __z;  // __y points to node actually deleted
+  } else {
+    __x_p = __y->__parent_;
+    if (__x) __x->__parent_ = __y->__parent_;
+    if (__root == __z)
+      __root = __x;
+    else if (__z->__parent_->__left_ == __z)
+      __z->__parent_->__left_ = __x;
+    else
+      __z->__parent_->__right_ = __x;
+    if (__leftmost == __z) {
+      if (__z->__right_ == NULL)
+        __leftmost = __z->__parent_;
+      else
+        __leftmost = __tree_node_base::__S_minimum(__x);
+    }
+    if (__rightmost == __z) {
+      if (__z->__left_ == NULL)
+        __rightmost = __z->__parent_;
+      else
+        __rightmost = __tree_node_base::__S_maximum(__x);
+    }
+  }
+
+  if (__y->__color_ != RED) {
+    while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
+      if (__x == __x_p->__left_) {
+        __tree_node_base *__w = __x_p->__right_;
+        if (__w->__color_ == RED) {
+          __w->__color_ = BLACK;
+          __x_p->__color_ = RED;
+          __tree_rotate_left(__x_p, __root);
+          __w = __x_p->__right_;
+        }
+        if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
+            (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
+          __w->__color_ = RED;
+          __x = __x_p;
+          __x_p = __x_p->__parent_;
+        } else {
+          if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
+            __w->__left_->__color_ = BLACK;
+            __w->__color_ = RED;
+            __tree_rotate_right(__w, __root);
+            __w = __x_p->__right_;
+          }
+          __w->__color_ = __x_p->__color_;
+          __x_p->__color_ = BLACK;
+          if (__w->__right_) __w->__right_->__color_ = BLACK;
+          __tree_rotate_left(__x_p, __root);
+          break;
+        }
+      } else {
+        __tree_node_base *__w = __x_p->__left_;
+        if (__w->__color_ == RED) {
+          __w->__color_ = BLACK;
+          __x_p->__color_ = RED;
+          __tree_rotate_right(__x_p, __root);
+          __w = __x_p->__left_;
+        }
+        if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
+            (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
+          __w->__color_ = RED;
+          __x = __x_p;
+          __x_p = __x_p->__parent_;
+        } else {
+          if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
+            __w->__right_->__color_ = BLACK;
+            __w->__color_ = RED;
+            __tree_rotate_left(__w, __root);
+            __w = __x_p->__left_;
+          }
+          __w->__color_ = __x_p->__color_;
+          __x_p->__color_ = BLACK;
+          if (__w->__left_) __w->__left_->__color_ = BLACK;
+          __tree_rotate_right(__x_p, __root);
+          break;
+        }
+      }
+    }
+    if (__x) __x->__color_ = BLACK;
+  }
+  // if (__y) {
+  //   __y->__left_ = __y->__right_ = __y->__parent_ = NULL;
+  // }
+  return __y;
+}
+
+// Return: black-hight of RB-tree
+unsigned int __tree_black_count(const __tree_node_base *__node,
+                                const __tree_node_base *__root) FT_NOEXCEPT {
+  unsigned int __bh = 1;  // NULL is black
+  if (__node == NULL) return __bh;
+  while (__node != __root) {
+    if (__node->__color_ == BLACK) ++__bh;
+    __node = __node->__parent_;
+  }
+  return __bh;
 }
 
 }  // namespace ft

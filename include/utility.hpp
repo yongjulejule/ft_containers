@@ -90,6 +90,12 @@ struct select_first {
   }
 };
 
+template <typename T>
+struct identity {
+  T &operator()(T &__x) const { return __x; }
+  const T &operator()(const T &__x) const { return __x; }
+};
+
 }  // namespace ft
 
 #endif  // UTILITY_HPP

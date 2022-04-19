@@ -2,6 +2,38 @@
 #include "__tree.hpp"
 #include "test.hpp"
 
+typedef ft::__tree<
+    int, ft::pair<int, std::string>,
+    ft::select_first<ft::pair<int, std::string> >, std::less<int>,
+    std::allocator<ft::pair<int, std::string> > >::iterator iterator;
+typedef ft::__tree<int, ft::pair<int, std::string>,
+                   ft::select_first<ft::pair<int, std::string> >,
+                   std::less<int>, std::allocator<ft::pair<int, std::string> > >
+    my_tree;
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+void ft::__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::print_tree() {
+  print_tree("", __begin(), false);
+}
+
+template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
+          typename _Alloc>
+void ft::__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::print_tree(
+    const std::string &prefix, _Link_type x, bool isLeft) {
+  if (x != NULL) {
+    std::cout << prefix;
+    std::cout << (isLeft ? "├──" : "└──");
+    if (x->__color_ == RED) {
+      std::cout << R std::cout << __S_key(x) << RESET << "\n";
+    } else {
+      std::cout << B std::cout << __S_key(x) << RESET << "\n";
+    }
+    print_tree(prefix + (isLeft ? "│   " : "    "), __S_left(x), true);
+    print_tree(prefix + (isLeft ? "│   " : "    "), __S_right(x), false);
+  }
+}
+
 int generateRandomNumber(std::pair<int, int> range) {
   static bool first = true;
   if (first) {
@@ -25,15 +57,12 @@ void tree_test(int argc, char **argv) {
     if (i == 10) test[i] = ft::make_pair(i, std::string("HI Im Val"));
   }
   {
-    typedef ft::__tree<
-        int, ft::pair<int, std::string>,
-        ft::select_first<ft::pair<int, std::string> >, std::less<int>,
-        std::allocator<ft::pair<int, std::string> > >::iterator iterator;
-    ft::__tree<int, ft::pair<int, std::string>,
-               ft::select_first<ft::pair<int, std::string> >, std::less<int>,
-               std::allocator<ft::pair<int, std::string> > >
-        tree;
+    my_tree tree;
     tree.__insert_range(test, test + argc);
+    my_tree cptree(tree);
+    my_tree atr;
+    atr = tree;
+
     tree.print_tree();
     std::cout << "tree size is: " << tree.size() << "\n";
     std::cout << "delete random [" << argc / 3 << "] numbers of node\n";
@@ -44,6 +73,8 @@ void tree_test(int argc, char **argv) {
       tree.erase(num);
     }
     tree.print_tree();
+    cptree.print_tree();
+    atr.print_tree();
     std::cout << "tree size is: " << tree.size() << "\n";
     iterator it = tree.find(10);
     if (it != tree.end()) std::cout << (*it).first << ":" << it->second << "\n";
@@ -171,5 +202,5 @@ int main(int argc, char **argv) {
   // int c = static_test().increment();
   //
   // std::string leak = std::string("leaks ") + std::string(argv[0]);
-  // system("leaks mine.out 1>/dev/null");
+  system("leaks mine.out 1>/dev/null");
 }

@@ -55,7 +55,7 @@ static __tree_node_base *local_tree_decrement(__tree_node_base *__x) {
     __x = __y;
     // left가 존재하지 않으면, 부모 노드가 조부모 노드의 left여야함.
   } else {
-    __tree_node_base *__y = __x->__left_;
+    __tree_node_base *__y = __x->__parent_;
     while (__x == __y->__left_) {
       __x = __y;
       __y = __y->__parent_;
@@ -254,7 +254,7 @@ __tree_node_base *__tree_erase_and_fixup(
     __y->__parent_ = __z->__parent_;
     ft::swap(__y->__color_, __z->__color_);
     __y = __z;  // __y points to node actually deleted
-  } else {      //__y == __z, 이게 가능...?
+  } else {
     __x_p = __y->__parent_;
     if (__x) __x->__parent_ = __y->__parent_;
     if (__root == __z)

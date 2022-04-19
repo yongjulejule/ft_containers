@@ -29,6 +29,7 @@
 
 #include "__tree.hpp"
 #include "iterator.hpp"
+#include "map.hpp"
 #include "stack.hpp"
 #include "type_traits.hpp"
 #include "utility.hpp"
