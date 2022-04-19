@@ -104,7 +104,7 @@ void std_vec_method_test() {
   }
 }
 
-void perfomance_test() {
+void performance_test() {
   struct timeval tv;
   std::cout << "===== my_vec_method_test() =====\n";
   gettimeofday(&tv, NULL);
@@ -147,7 +147,7 @@ void erase_test() {
     v.push_back(42);
     std::cout << "erase from end -> seg fault\n";
     std::vector<int>::iterator it = v.begin();
-    std::cout << "befre erase: capacity :" << v.capacity() << "\n";
+    std::cout << "before erase: capacity :" << v.capacity() << "\n";
     v.erase(v.begin() + 5);
     std::cout << "after erase: capacity :" << v.capacity() << "\n";
     std::cout << "erased\n";
@@ -161,7 +161,7 @@ void erase_test() {
     v.push_back(42);
     std::cout << "erase from end -> seg fault\n";
     ft::vector<int>::iterator it = v.begin();
-    std::cout << "befre erase: capacity :" << v.capacity() << "\n";
+    std::cout << "before erase: capacity :" << v.capacity() << "\n";
     v.erase(v.begin() + 5);
     std::cout << "after erase: capacity :" << v.capacity() << "\n";
     std::cout << "erased\n";
@@ -204,12 +204,12 @@ void erase_test() {
     print_vector(v);
   }
   {
-    std::cout << "std vector range erase test\n";
+    std::cout << "ft vector range erase test\n";
     std::string a[10] = {"a", "b", "c", "d", "e", "f"};
     ft::vector<std::string> v(a, a + 5);
     print_vector(v.begin(), v.end());
     print_vector(v);
-    v.erase(v.begin() + 1, v.end());
+    v.erase(v.begin() + 1, v.end() - 1);
     print_vector(v.begin(), v.end());
     print_vector(v);
   }
@@ -221,7 +221,7 @@ void insert_test() {
     PRINT("std vector insert()");
     std::vector<int> a(10, 10);
     iterator it = a.begin() + 1;
-    iterator it_insert = a.insert(it + 5, 42);
+    iterator it_insert = a.insert(it + 5, 10, 42);
     std::cout << "insert ret location is: "
               << std::distance(a.begin(), it_insert) << "\n";
     print_vector(a.begin(), a.end());
@@ -236,23 +236,39 @@ void insert_test() {
     typedef ft::vector<int>::iterator iterator;
     PRINT("ft vector insert()");
     ft::vector<int> a(10, 10);
-    iterator it = a.begin() + 1;
-    iterator it_insert = a.insert(it + 5, 42);
-    std::cout << "insert ret location is: "
-              << std::distance(a.begin(), it_insert) << "\n";
+    // a.insert(a.begin() + 2, a.begin(), a.end());
+    print_vector(a.begin(), a.end());
+    a.insert(a.end(), 424242);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+    a.insert(a.begin(), 42424211);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+    a.insert(a.begin() + 2, 424211);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+    a.insert(a.begin(), 2, 212121);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+    a.insert(a.end() - 2, 4242);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+    a.insert(a.end(), 2, 8484);
+    print_vector(a.begin(), a.end());
+    print_vector(a);
+
+    a.insert(a.begin() + 2, a.begin(), a.end());
     print_vector(a.begin(), a.end());
     print_vector(a);
     int arr[] = {4242, 4241, 4240, 420, 424242};
     a.insert(a.end(), arr, arr + 5);
     print_vector(a.begin(), a.end());
     print_vector(a);
-  }
-}
 
-void inputiterator_test() {
-  std::iterator<std::input_iterator_tag, int> a;
-  std::vector<int> b(10, 10);
-  ft::vector<int> c(b.begin(), b.end());
+    ft::vector<int> v2(5, 42);
+    a.insert(a.begin() + 2, v2.begin(), v2.end());
+    print_vector(a.begin(), a.end());
+  }
 }
 
 void vector_construct_test() {
@@ -290,19 +306,19 @@ void vector_construct_test() {
         "ft::vector<char> v((std::istreambuf_iterator<char>(source)), "
         "std::istreambuf_iterator<char>()) ");
     std::ifstream source("Makefile", std::ios::binary);
-    ft::vector<char> v((std::istreambuf_iterator<char>(source)),
-                       std::istreambuf_iterator<char>());
-    print_vector(v.begin(), v.end());
-    print_vector(v);
+    // ft::vector<char> v((std::istreambuf_iterator<char>(source)),
+    //                    std::istreambuf_iterator<char>());
+    // print_vector(v.begin(), v.end());
+    // print_vector(v);
   }
 
   {
     ft::vector<char> v;
     std::ifstream source("Makefile", std::ios::binary);
-    v.assign(std::istreambuf_iterator<char>(source),
-             std::istreambuf_iterator<char>());
-    print_vector(v.begin(), v.end());
-    print_vector(v);
+    // v.assign(std::istreambuf_iterator<char>(source),
+    //          std::istreambuf_iterator<char>());
+    // print_vector(v.begin(), v.end());
+    // print_vector(v);
   }
 }
 
@@ -396,13 +412,13 @@ int main(int argc, char **argv) {
   vector_construct_test();
   std::cout << "===== stl_method_test() =====\n";
   stl_method_test();
-  perfomance_test();
+  performance_test();
   erase_test();
   insert_test();
-  inputiterator_test();
   swap_test();
   compare_test();
 
+  // std::cout << std::distance(v.begin(), v.end()) << "\n";
   (void)argc;
   std::string leak = std::string("leaks ") + &argv[0][2];
   system(leak.c_str());

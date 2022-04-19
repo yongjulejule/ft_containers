@@ -75,7 +75,8 @@
 		"list": "cpp",
 		"__cxx_version": "cpp",
 		"filesystem": "cpp",
-		"fstream": "cpp"
+		"fstream": "cpp",
+		"queue": "cpp"
 	},
 	"C_Cpp.errorSquiggles": "Enabled",
 	"cSpell.words": [

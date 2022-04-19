@@ -77,8 +77,12 @@ struct __vector_base {
                    pointer const& __new_end_cap_) FT_NOEXCEPT;
   void __swap_data(__vector_base& _other) FT_NOEXCEPT;
 
-  void __throw_length_error(const char* msg) { throw std::length_error(msg); }
-  void __throw_out_of_range(const char* msg) { throw std::out_of_range(msg); }
+  void __throw_length_error(const char* msg) const {
+    throw std::length_error(msg);
+  }
+  void __throw_out_of_range(const char* msg) const {
+    throw std::out_of_range(msg);
+  }
 
  private:
   __vector_base(const __vector_base& other) { (void)other; }
@@ -161,7 +165,8 @@ template <typename _Iter>
 class __vector_iterator {
  public:
   typedef _Iter iterator_type;
-  typedef typename ft::random_access_iterator_tag iterator_category;
+  typedef typename ft::iterator_traits<iterator_type>::iterator_category
+      iterator_category;
   typedef typename ft::iterator_traits<iterator_type>::value_type value_type;
   typedef typename ft::iterator_traits<iterator_type>::difference_type
       difference_type;
@@ -209,7 +214,7 @@ class __vector_iterator {
     __it += __n;
     return *this;
   }
-  __vector_iterator operator+(difference_type __n) {
+  __vector_iterator operator+(difference_type __n) const {
     __vector_iterator __w(*this);
     __w += __n;
     return __w;
@@ -218,7 +223,7 @@ class __vector_iterator {
     __it -= __n;
     return *this;
   }
-  __vector_iterator operator-(difference_type __n) {
+  __vector_iterator operator-(difference_type __n) const {
     __vector_iterator __w(*this);
     __w -= __n;
     return __w;
@@ -363,12 +368,12 @@ class vector : private __vector_base<_T, _Allocator> {
     return const_reference(*(this->__begin_ + n));
   }
   reference at(size_type n) {
-    if (n > this->size()) this->__throw_out_of_range();
-    return this->__begin_ + n;
+    if (n > this->size()) this->__throw_out_of_range("vector: out of range");
+    return *(this->__begin_ + n);
   }
   const_reference at(size_type n) const {
-    if (n > this->size()) this->__throw_out_of_range();
-    return this->__begin_ + n;
+    if (n > this->size()) this->__throw_out_of_range("vector: out of range");
+    return *(this->__begin_ + n);
   }
   reference front() { return *this->__begin_; }
   const_reference front() const { return *this->__begin_; }
@@ -405,7 +410,7 @@ class vector : private __vector_base<_T, _Allocator> {
   iterator erase(iterator first, iterator last);
   void swap(vector& x) { this->__swap_data(x); }
   void clear() FT_NOEXCEPT {
-    if (this->__begin_) this->__a_.destroy(this->__begin_);
+    if (this->__begin_) __destroy_from_end(this->__begin_);
   }
 
   // Allocator
@@ -499,7 +504,7 @@ vector<_T, _Allocator>& vector<_T, _Allocator>::operator=(
   return *this;
 }
 
-// private methods
+// private member function
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::__reconstruct_push_back(const value_type& val) {
@@ -524,11 +529,14 @@ void vector<_T, _Allocator>::__reallocate(size_type __n_) {
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::__destroy_from_end(pointer __new_end_) {
   pointer __be_end_ = this->__end_;
-  while (__new_end_ != __be_end_) this->__a_.destroy(--__be_end_);
+  while (__new_end_ != __be_end_) {
+    --__be_end_;
+    this->__a_.destroy(__be_end_);
+  }
   this->__end_ = __new_end_;
 }
 
-// public methods
+// public member function
 
 // capacity
 
@@ -543,7 +551,7 @@ void vector<_T, _Allocator>::reserve(size_type n) {
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::resize(size_type n, value_type val) {
   if (n < size()) {
-    __destroy_from_end(this->__end_ - n);
+    __destroy_from_end(this->__begin_ + n);
     return;
   } else if (n > capacity()) {
     __reallocate(n);
@@ -613,19 +621,32 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::insert(
   difference_type __diff_ = position - begin();
   if (this->__end_ == this->__end_cap_) reserve(size_type(capacity() + 1));
   pointer __p_ = this->__begin_ + __diff_;
-  this->__end_ = std::uninitialized_copy(__p_, this->__end_, __p_ + 1);
+  pointer __old_end = this->__end_;
+  while (__old_end != __p_) {
+    --__old_end;
+    this->__a_.construct(__old_end + 1, *(__old_end));
+    this->__a_.destroy(__old_end);
+  }
+  // this->__end_ = std::uninitialized_copy(__p_, this->__end_, __p_ + 1);
   this->__a_.construct(__p_, val);
+  ++this->__end_;
   return iterator(this->__begin_ + __diff_);
 }
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::insert(iterator position, size_type n,
                                     const value_type& val) {
-  if (size() + n > capacity()) reserve(size() + n);
   difference_type __diff_ = position - begin();
+  if (size() + n > capacity()) reserve(size() + n);
   pointer __p_ = this->__begin_ + __diff_;
-  this->end = std::uninitialized_copy(__p_, this->__end_, __p_ + n);
+  pointer __old_end = this->__end_;
+  while (__old_end != __p_) {
+    --__old_end;
+    this->__a_.construct(__old_end + n, *(__old_end));
+    this->__a_.destroy(__old_end);
+  }
   std::uninitialized_fill(__p_, __p_ + n, val);
+  this->__end_ += n;
 }
 
 template <typename _T, typename _Allocator>
@@ -649,14 +670,19 @@ void vector<_T, _Allocator>::insert(
     iterator position, _ForwardIterator first,
     typename enable_if<__is_forward_iterator<_ForwardIterator>::value,
                        _ForwardIterator>::type last) {
-  difference_type __in_size_ = std::distance(first, last);
+  difference_type __in_size = std::distance(first, last);
   difference_type __diff_ = position - begin();
-  if (__in_size_ <= 0) return;
-  if (__in_size_ + size() > capacity()) reserve(__in_size_ + size());
+  if (__in_size <= 0) return;
+  if (__in_size + size() > capacity()) reserve(__in_size + size());
   pointer __p_ = this->__begin_ + __diff_;
-  std::uninitialized_copy(__p_, this->__end_, this->__end_);
+  pointer __old_end = this->__end_;
+  while (__old_end != __p_) {
+    --__old_end;
+    this->__a_.construct(__old_end + __in_size, *(__old_end));
+    this->__a_.destroy(__old_end);
+  }
   std::uninitialized_copy(first, last, __p_);
-  this->__end_ += __in_size_;
+  this->__end_ += __in_size;
 }
 
 template <typename _T, typename _Allocator>
@@ -681,14 +707,15 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
     return iterator(this->__begin_ + __diff_);
   }
 
-  difference_type __diff_iter_ = last - first;
+  difference_type __gap = last - first;
+  pointer __new_end = this->__end_ - __gap;
 
-  while (first != last) {
-    this->__a_.destroy(__p_);
-    this->__a_.construct(__p_, *(first + __diff_iter_));
-    ++__p_, ++first;
+  while (first != --last) {
+    --__gap;
+    this->__a_.destroy(__p_ + __gap);
+    this->__a_.construct(__p_ + __gap, *(__p_));
   }
-  __destroy_from_end(__p_);
+  __destroy_from_end(__new_end);
   return (iterator(this->__begin_ + __diff_));
 }
 
