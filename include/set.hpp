@@ -36,9 +36,9 @@ class set {
   typedef __tree<_T, _T, ft::identity<_T>, key_compare, allocator_type> __base;
 
  public:
-  typedef typename __base::iterator iterator;
+  typedef typename __base::const_iterator iterator;
   typedef typename __base::const_iterator const_iterator;
-  typedef typename __base::reverse_iterator reverse_iterator;
+  typedef typename __base::const_reverse_iterator reverse_iterator;
   typedef typename __base::const_reverse_iterator const_reverse_iterator;
   typedef typename __base::difference_type difference_type;
   typedef typename __base::size_type size_type;
@@ -126,20 +126,22 @@ class set {
   value_compare value_comp() const { return value_compare(__tree_.key_comp()); }
 
   // operations
-  iterator find(const key_type& k) { return __tree_.find(k); }
-  size_type count(const key_type& k) const { return __tree_.count(k); }
-  iterator lower_bound(const key_type& k) { return __tree_.lower_bound(k); }
-  const_iterator lower_bound(const key_type& k) const {
+  iterator find(const value_type& k) const {
+    return __tree_.find(k).__remove_const();
+  }
+  size_type count(const value_type& k) const { return __tree_.count(k); }
+  iterator lower_bound(const value_type& k) { return __tree_.lower_bound(k); }
+  const_iterator lower_bound(const value_type& k) const {
     return __tree_.lower_bound(k);
   }
-  iterator upper_bound(const key_type& k) { return __tree_.upper_bound(k); }
-  const_iterator upper_bound(const key_type& k) const {
+  iterator upper_bound(const value_type& k) { return __tree_.upper_bound(k); }
+  const_iterator upper_bound(const value_type& k) const {
     return __tree_.upper_bound(k);
   }
-  pair<iterator, iterator> equal_range(const key_type& k) {
+  pair<iterator, iterator> equal_range(const value_type& k) {
     return __tree_.equal_range(k);
   }
-  pair<const_iterator, const_iterator> equal_range(const key_type& k) const {
+  pair<const_iterator, const_iterator> equal_range(const value_type& k) const {
     return __tree_.equal_range(k);
   }
   allocator_type get_allocator() const { __tree_.get_allocator(); }

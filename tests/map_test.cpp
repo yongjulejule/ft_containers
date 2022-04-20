@@ -47,5 +47,9 @@ int main(int argc, char **argv) {
   std::cout << my_map.size() << ", " << my_map.max_size() << "\n";
   std::cout << my_map.max_size() << ", " << std_map.max_size() << "\n";
   max_size_test();
+  std::cout << sizeof(my_map) << "," << sizeof(std_map) << "\n";
+  std::cout << sizeof(ft::__tree<int, int, ft::select_first<int> >) << "\n";
+  std::cout << sizeof(std::__tree<int, std::less<int>, std::allocator<int> >)
+            << "\n";
   // system("leaks mine.out");
 }

@@ -205,11 +205,11 @@ void erase_test() {
   }
   {
     std::cout << "ft vector range erase test\n";
-    std::string a[10] = {"a", "b", "c", "d", "e", "f"};
-    ft::vector<std::string> v(a, a + 5);
+    std::string a[10] = {"a", "b", "c", "d", "e", "f", "g"};
+    ft::vector<std::string> v(a, a + 7);
     print_vector(v.begin(), v.end());
     print_vector(v);
-    v.erase(v.begin() + 1, v.end() - 1);
+    v.erase(v.begin(), v.begin() + 3);
     print_vector(v.begin(), v.end());
     print_vector(v);
   }

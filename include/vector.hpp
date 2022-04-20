@@ -525,7 +525,7 @@ template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::__reallocate(size_type __n_) {
   vector<_T, _Allocator> tmp(__n_);
   std::uninitialized_copy(this->__begin_, this->__end_, tmp.__begin_);
-  tmp.__end_ = tmp.__begin_ + this->size();
+  tmp.__end_ = tmp.__begin_ + size();
   this->__swap_data(tmp);
 }
 
@@ -710,13 +710,14 @@ typename vector<_T, _Allocator>::iterator vector<_T, _Allocator>::erase(
     return iterator(this->__begin_ + __diff_);
   }
 
-  difference_type __gap = last - first;
-  pointer __new_end = this->__end_ - __gap;
+  difference_type __range = last - first;
+  pointer __p_last = __p_ + __range;
+  pointer __new_end = this->__end_ - __range;
 
-  while (first != --last) {
-    --__gap;
-    this->__a_.destroy(__p_ + __gap);
-    this->__a_.construct(__p_ + __gap, *(__p_));
+  for (difference_type i = 0; i <= __range; ++i) {
+    this->__a_.destroy(__p_ + i);
+    if (i <= this->__end_ - __p_last)
+      this->__a_.construct(__p_ + i, *(__p_last + i));
   }
   __destroy_from_end(__new_end);
   return (iterator(this->__begin_ + __diff_));
