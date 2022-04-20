@@ -46,7 +46,7 @@ class map {
   typedef typename __base::iterator iterator;
   typedef typename __base::const_iterator const_iterator;
   typedef typename __base::reverse_iterator reverse_iterator;
-  typedef typename __base::reverse_iterator const_reverse_iterator;
+  typedef typename __base::const_reverse_iterator const_reverse_iterator;
   typedef typename __base::difference_type difference_type;
   typedef typename __base::size_type size_type;
 
@@ -179,7 +179,9 @@ class map {
     return __tree_.equal_range(k);
   }
 
-  allocator_type get_allocator() const { __tree_.get_allocator(); }
+  allocator_type get_allocator() const {
+    return allocator_type(__tree_.get_allocator());
+  }
 
   template <typename _K1, typename _T1, typename _C1, typename _A1>
   friend bool operator==(const map& lhs, const map& rhs);

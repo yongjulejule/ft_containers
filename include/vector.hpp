@@ -356,7 +356,10 @@ class vector : private __vector_base<_T, _Allocator> {
 
   // capacity
   size_type size() const { return std::distance(this->__begin_, this->__end_); }
-  size_type max_size() const { return this->__a_.max_size(); }
+  size_type max_size() const {
+    return std::min<size_type>(this->__a_.max_size(),
+                               std::numeric_limits<difference_type>::max());
+  }
   void resize(size_type n, value_type val = value_type());
   size_type capacity() const { return this->__capacity(); }
   bool empty() const { return this->__begin_ == this->__end_; }

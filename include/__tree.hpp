@@ -225,7 +225,7 @@ struct __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> {
   explicit __tree_const_iterator(_Base_ptr __x) FT_NOEXCEPT : __node_(__x) {}
   __tree_const_iterator(const __tree_const_iterator &other)
       : __node_(other.__node_) {}
-  __tree_const_iterator(const iterator &__it) : __node_(__it.__node_) {}
+  __tree_const_iterator(iterator __it) : __node_(__it.__node_) {}
 
   iterator __remove_const() const FT_NOEXCEPT {
     return iterator(const_cast<typename iterator::_Base_ptr>(__node_));
@@ -533,24 +533,31 @@ class __tree {
   iterator end() { return iterator(&__impl_.__header_); }
   const_iterator end() const { return const_iterator(&__impl_.__header_); }
 
-  reverse_iterator rbegin() { return reverse_iterator(begin()); }
+  reverse_iterator rbegin() { return reverse_iterator(end()); }
   const_reverse_iterator rbegin() const {
+    return const_reverse_iterator(end());
+  }
+  reverse_iterator rend() { return reverse_iterator(begin()); }
+  const_reverse_iterator rend() const {
     return const_reverse_iterator(begin());
   }
-  reverse_iterator rend() { return reverse_iterator(end()); }
-  const_reverse_iterator rend() const { return const_reverse_iterator(end()); }
 
   const_iterator cbegin() const { return const_iterator(begin()); }
   const_iterator cend() const { return const_iterator(end()); }
 
   const_reverse_iterator crbegin() const {
+    return const_reverse_iterator(end());
+  }
+  const_reverse_iterator crend() const {
     return const_reverse_iterator(begin());
   }
-  const_reverse_iterator crend() const { return const_reverse_iterator(end()); }
 
   // capacity
   bool empty() const { return __impl_.__node_count_ == 0; }
-  size_type max_size() const { return __get_Node_allocator().max_size(); }
+  size_type max_size() const {
+    return std::min<size_type>(__get_Node_allocator().max_size(),
+                               std::numeric_limits<difference_type>::max());
+  }
   size_type size() const { return __impl_.__node_count_; }
 
   // modifiers

@@ -119,14 +119,14 @@ static char __test(
 
 void iterable_test() {
   std::iterator<std::random_access_iterator_tag, float> f_it;
-  std::__has_iterator_category<
-      ft::iterator<ft::input_iterator_tag, float> >::value;
+  // std::__has_iterator_category<
+  //     ft::iterator<ft::input_iterator_tag, float> >::value;
   ft::iterator<std::input_iterator_tag, float> ft_f_it;
   std::cout << ft::__has_iterator_typedefs<
                    ft::iterator<std::input_iterator_tag, float> >::value
             << "\n";
-  std::__has_iterator_typedefs<
-      ft::iterator<ft::input_iterator_tag, float> >::value;
+  // std::__has_iterator_typedefs<
+  //     ft::iterator<ft::input_iterator_tag, float> >::value;
 
   __test<ft::iterator<ft::input_iterator_tag, float> >(0, 0, 0, 0, 0);
   __test<int>(0, 0, 0, 0, 0);
@@ -148,18 +148,39 @@ int main() {
 
   {
     // ft::iterator_traits<ft::__tree_const_iterator<int> >::value_type a;
-    ft::__tree_const_iterator<int>::value_type a;
-    ft::__tree_const_iterator<int>::difference_type b;
-    ft::__tree_const_iterator<int>::iterator_catergory c;
-    ft::__tree_const_iterator<int>::pointer d;
-    ft::__tree_const_iterator<int>::reference f = 10;
-    std::cout << typeid(a).name() << ", " << typeid(b).name() << ", "
-              << typeid(c).name() << ", " << typeid(d).name() << ", "
-              << typeid(f).name() << ", \n";
+    // ft::__tree_const_iterator<int>::value_type a;
+    // ft::__tree_const_iterator<int>::difference_type b;
+    // ft::__tree_const_iterator<int>::iterator_catergory c;
+    // ft::__tree_const_iterator<int>::pointer d;
+    // ft::__tree_const_iterator<int>::reference f = 10;
+    // std::cout << typeid(a).name() << ", " << typeid(b).name() << ", "
+    //           << typeid(c).name() << ", " << typeid(d).name() << ", "
+    //           << typeid(f).name() << ", \n";
   }
   __test<ft::vector<int>::iterator>(0, 0, 0, 0, 0);
-  __test<ft::__tree_iterator<int> >(0, 0, 0, 0, 0);
+  __test<ft::__tree_const_iterator<int> >(0, 0, 0, 0, 0);
   __test<ft::iterator_traits<ft::__tree_const_iterator<int> > >(0, 0, 0, 0, 0);
+  int arr[5] = {1, 2, 5, 4, 3};
+  ft::pair<int, int> b[5];
+  std::pair<int, int> c[5];
+  for (int i = 0; i < 5; i++) {
+    b[i] = ft::make_pair(arr[i], arr[i]);
+    c[i] = std::make_pair(arr[i], arr[i]);
+  }
+  ft::map<int, int> mp(b, b + 5);
+  std::map<int, int> smp(c, c + 5);
+  ft::map<int, int>::iterator it = mp.begin();
+  std::map<int, int>::iterator sit = smp.begin();
+  // ft::map<int, int>::const_iterator cit = mp.begin();
+  // std::map<int, int>::const_iterator scit = smp.begin();
+  // *sit = std::make_pair(42, 42);
+  // *it = ft::make_pair(42, 42);
+  __test<ft::map<int, int>::const_iterator>(0, 0, 0, 0, 0);
+  __test<ft::map<int, int>::const_reverse_iterator>(0, 0, 0, 0, 0);
+  __test<ft::map<int, int>::reverse_iterator>(0, 0, 0, 0, 0);
+  ft::map<int, int>::reverse_iterator rit(it);
+  ft::map<int, int>::const_reverse_iterator crit(rit);
+  // ft::map<int, int>::const_reverse_iterator crit_2(cit);
   // ft::iterator_traits<ft::__tree_const_iterator<int> >::value_type val;
 
   // std::cout << rit[5];

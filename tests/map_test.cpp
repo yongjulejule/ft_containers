@@ -7,12 +7,37 @@ struct print {
   }
 };
 
+void max_size_test() {
+  ft::map<int, ft::vector<int> > my_map;
+  size_t map_max = my_map.max_size();
+  std::cout << "ft max_size: " << map_max << "\n";
+  try {
+    // for (size_t i = 0; i < map_max; ++i) {
+    //   my_map.insert(ft::make_pair(i, i));
+    // }
+    my_map.get_allocator().allocate(map_max - 1);
+  } catch (std::exception &e) {
+    std::cout << "exception occur" << e.what() << "\n";
+  }
+
+  std::map<int, ft::vector<int> > std_map;
+  size_t std_map_max = std_map.max_size();
+  std::cout << "STD max_size: " << std_map_max << "\n";
+  try {
+    std_map.get_allocator().allocate(std_map_max / 2);
+  } catch (std::exception &e) {
+    std::cout << "exception occur" << e.what() << "\n";
+  }
+  std::cout << ft::set<int>().max_size() << "\n";
+  std::cout << std::set<int>().max_size() << "\n";
+}
+
 int main(int argc, char **argv) {
   ft::map<char, int> my_map;
   std::map<char, int> std_map;
   for (int i = 0; argv[0][i]; ++i) {
     my_map.insert(ft::make_pair(argv[0][i], i));
-    std_map.insert(std::make_pair(argv[0][i], i));
+    // std_map.insert(std::make_pair(argv[0][i], i));
   }
   std::cout << (my_map.find('/'))->second << "\n";
   ft::map<char, int>::iterator it = my_map.begin();
@@ -21,4 +46,6 @@ int main(int argc, char **argv) {
   std::for_each(std_map.begin(), std_map.end(), print());
   std::cout << my_map.size() << ", " << my_map.max_size() << "\n";
   std::cout << my_map.max_size() << ", " << std_map.max_size() << "\n";
+  max_size_test();
+  // system("leaks mine.out");
 }
