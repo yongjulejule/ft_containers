@@ -70,12 +70,12 @@ struct __tree_node_base {
   _Base_ptr __right_;
 
   static _Base_ptr __S_minimum(_Base_ptr __x) FT_NOEXCEPT {
-    while (__x->__left_ != 0) __x = __x->__left_;
+    while (__x->__left_ != NULL) __x = __x->__left_;
     return __x;
   }
 
   static _Const_base_ptr __S_minimum(_Const_base_ptr __x) FT_NOEXCEPT {
-    while (__x->__left_ != 0) __x = __x->__left_;
+    while (__x->__left_ != NULL) __x = __x->__left_;
     return __x;
   }
 
@@ -271,6 +271,26 @@ struct __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> {
   }
 };
 
+template <typename _Key, typename _Val, typename _KeyOfVal, typename _Compare,
+          typename _Alloc>
+class __tree;
+
+// template <typename _Key, typename _Val, typename _KeyOfVal, typename
+// _Compare,
+//           typename _Alloc>
+// struct __alloc_node {
+//   typedef __tree_node<_Val> *_Link_type;
+//   __alloc_node(__tree<_Key, _Val, _KeyOfVal, _Compare, _Alloc> &__t)
+//       : __t_(__t) {}
+
+//   template <typename _Arg>
+//   _Link_type operator()(const _Arg &__arg) const {
+//     return __t_.__create_node(__arg);
+//   }
+
+//  private:
+//   __tree<_Key, _Val, _KeyOfVal, _Compare, _Alloc> &__t_;
+// };
 /*************************************************************************************
  * @brief Tree
  *************************************************************************************/
@@ -313,6 +333,8 @@ class __tree {
   typedef __tree_const_iterator<value_type> const_iterator;
   typedef ft::reverse_iterator<iterator> reverse_iterator;
   typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
+  // typedef __alloc_node<_Key, _Val, _KeyOfValue, _Compare, _Alloc>
+  // __alloc_node;
 
  private:
   // functor allocate node
@@ -371,12 +393,14 @@ class __tree {
     get_allocator().construct(__node->__valptr(), __x);
   }
 
+ public:
   _Link_type __create_node(const value_type &__x) {
     _Link_type __tmp = __allocate_node();
     __construct_node(__tmp, __x);
     return __tmp;
   }
 
+ protected:
   void __destroy_node(_Link_type __p) {
     get_allocator().destroy(__p->__valptr());
   }

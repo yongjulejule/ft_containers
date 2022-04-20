@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
   std::map<char, int> std_map;
   for (int i = 0; argv[0][i]; ++i) {
     my_map.insert(ft::make_pair(argv[0][i], i));
-    // std_map.insert(std::make_pair(argv[0][i], i));
+    std_map.insert(std::make_pair(argv[0][i], i));
   }
   std::cout << (my_map.find('/'))->second << "\n";
   ft::map<char, int>::iterator it = my_map.begin();

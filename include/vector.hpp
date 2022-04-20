@@ -553,13 +553,14 @@ void vector<_T, _Allocator>::reserve(size_type n) {
 
 template <typename _T, typename _Allocator>
 void vector<_T, _Allocator>::resize(size_type n, value_type val) {
-  if (n < size()) {
+  size_type __prev_size = size();
+  if (n < __prev_size) {
     __destroy_from_end(this->__begin_ + n);
     return;
   } else if (n > capacity()) {
     __reallocate(n);
   }
-  insert(end(), n, val);
+  insert(end(), n - __prev_size, val);
 }
 
 // modifiers
