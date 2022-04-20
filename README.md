@@ -22,7 +22,6 @@ My c++ STL containers (c++98)
 		- [functor vs function](#functor-vs-function)
 		- [functor vs function pointer](#functor-vs-function-pointer)
 		- [functor vs lambda expression(c++11)](#functor-vs-lambda-expressionc11)
-		- [functor를 활용하기 위한 사전 지식](#functor를-활용하기-위한-사전-지식)
 	- [stack unwinding](#stack-unwinding)
 	- [dynamic exception specification _(deprecated c++11, removed c++17)_](#dynamic-exception-specification-deprecated-c11-removed-c17)
 	- [Exception safety](#exception-safety)
@@ -87,6 +86,7 @@ My c++ STL containers (c++98)
 
 - sequence container
 - associative container
+- unordered associative container
 - container adapter
 
 # Keywords
@@ -149,27 +149,6 @@ int main(){
 - lambda expression은 functor와 유사하지만 class를 define할 필요가 없어서 더 간편함. syntax sugar 같은 느낌
 
 [MS functor vs lambda expression](https://docs.microsoft.com/en-us/cpp/cpp/lambda-expression-syntax?view=msvc-170)
-
-### functor를 활용하기 위한 사전 지식
-
-- [callback](https://en.wikipedia.org/wiki/Callback_(computer_programming)): 함수에 인자로 실행 가능한 코드의 레퍼런스를 넘겨서 특정 시점에 실행되게 하는것.
-  - synchronous callback로 바로 실행 될 수 있고, asynchronous callback로 실행될 수 있음.
-  - 프로그래밍 언어마다 다른 방식으로 구현되어 있음. (c/c++에선 function pointer, c++에선 functor나 lambda)
-
-- closure: 
-
-callback, closure, function pointer와 차이점(type보장, inline 최적화, state 저장), generic, STL 호환성, + lambda expression
-
-function pointer -> type-safe x, 런타임중 찾아서 실행됨, inline 불가능, state 저장 불가
-functor -> type-safe, inline 가능(function pointer와 가장 큰 차이!), state 저장 가능, 일반적인 변수 / 함수 저장 가능,  객체를 함수처럼 사용, 코드가 길어짐, STL 알고리즘과 호환성이 좋음, 타입이므로 템플릿 인자로 사용 가능
-lambda expression -> functor처럼 작동하는데 syntax 깔끔. 근데 길어지면 가독성 떨어짐.
-
-
-
-closure -> lambda expression
-
-lambda expression
-- 임시 functor
 
 [what are c++ functors and their uses (stackoverflow 따봉 1000개)](https://stackoverflow.com/questions/356950/what-are-c-functors-and-their-uses)
 
@@ -976,16 +955,16 @@ erase()
 
 `map`과 `set`은 `associative container`로써 탐색을 빠르게 진행할 수 있는 자료구조임.($O(log(n))$)
 두 컨테이너 모두 unique한 `key`를 가지지만, `map`의 경우 `key-value`의 `pair`로 저장되고 `set`은 `key`만 존재함.
-모든 `key`는 `const`이며 `insert`와 `remove`만 가능함!
+모든 `key`는 `const`이며 `insert`와 `remove`만 가능함! 또한, `set`은 `key`만 갖고 있으므로 모든 `iterator`가 `const_iterator`임.
 
 
 # TODO
 
 - [x] vector
-- [ ] map
+- [x] map
 - [x] stack
-- [ ] set
-  - [ ] Red-Black tree
+- [x] set
+  - [x] Red-Black tree
 
 ---
 
@@ -996,6 +975,11 @@ erase()
 - [x] equal and lexicographical_compare
 - [x] std::pair
 - [x] std::make_pair
+
+- vector처럼 map, set, stack 문서화
+- rb-tree 문서화
+- rb-tree ppt 만들기
+- rb-tree `cpp` 파일에서 `hpp` 파일로 옮기기
 
 # Reference
 
