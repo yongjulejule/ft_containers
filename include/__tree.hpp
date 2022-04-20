@@ -52,9 +52,6 @@ void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
 __tree_node_base *__tree_erase_and_fixup(
     __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT;
 
-unsigned int __tree_black_count(const __tree_node_base *__node,
-                                const __tree_node_base *__root) FT_NOEXCEPT;
-
 /*************************************************************************************
  * @brief Tree Nodes
  *************************************************************************************/
@@ -1392,18 +1389,6 @@ __tree_node_base *__tree_erase_and_fixup(
   //   __y->__left_ = __y->__right_ = __y->__parent_ = NULL;
   // }
   return __y;
-}
-
-// Return: black-hight of RB-tree
-unsigned int __tree_black_count(const __tree_node_base *__node,
-                                const __tree_node_base *__root) FT_NOEXCEPT {
-  unsigned int __bh = 1;  // NULL is black
-  if (__node == NULL) return __bh;
-  while (__node != __root) {
-    if (__node->__color_ == BLACK) ++__bh;
-    __node = __node->__parent_;
-  }
-  return __bh;
 }
 
 }  // namespace ft
