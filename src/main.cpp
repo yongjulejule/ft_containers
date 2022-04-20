@@ -1,13 +1,15 @@
 #include <deque>
 #include <iostream>
 #include <string>
-#if 0  // CREATE A REAL STL EXAMPLE
+#if 1  // CREATE A REAL STL EXAMPLE
 #include <map>
+#include <set>
 #include <stack>
 #include <vector>
 namespace ft = std;
 #else
 #include <map.hpp>
+#include <set.hpp>
 #include <stack.hpp>
 #include <vector.hpp>
 #endif
@@ -56,6 +58,7 @@ int main(int argc, char** argv) {
   ft::vector<Buffer> vector_buffer;
   ft::stack<Buffer, std::deque<Buffer> > stack_deq_buffer;
   ft::map<int, int> map_int;
+  ft::set<int> set_int;
 
   for (int i = 0; i < COUNT; i++) {
     vector_buffer.push_back(Buffer());
@@ -89,6 +92,13 @@ int main(int argc, char** argv) {
   std::cout << "should be constant with the same seed: " << sum << std::endl;
 
   { ft::map<int, int> copy = map_int; }
+
+  for (int i = 0; i < COUNT; ++i) {
+    set_int.insert(rand());
+  }
+
+  { ft::set<int> copy = set_int; }
+
   MutantStack<char> iterable_stack;
   for (char letter = 'a'; letter <= 'z'; letter++) iterable_stack.push(letter);
   for (MutantStack<char>::iterator it = iterable_stack.begin();
