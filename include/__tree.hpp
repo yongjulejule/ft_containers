@@ -268,26 +268,6 @@ struct __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> {
   }
 };
 
-template <typename _Key, typename _Val, typename _KeyOfVal, typename _Compare,
-          typename _Alloc>
-class __tree;
-
-// template <typename _Key, typename _Val, typename _KeyOfVal, typename
-// _Compare,
-//           typename _Alloc>
-// struct __alloc_node {
-//   typedef __tree_node<_Val> *_Link_type;
-//   __alloc_node(__tree<_Key, _Val, _KeyOfVal, _Compare, _Alloc> &__t)
-//       : __t_(__t) {}
-
-//   template <typename _Arg>
-//   _Link_type operator()(const _Arg &__arg) const {
-//     return __t_.__create_node(__arg);
-//   }
-
-//  private:
-//   __tree<_Key, _Val, _KeyOfVal, _Compare, _Alloc> &__t_;
-// };
 /*************************************************************************************
  * @brief Tree
  *************************************************************************************/
@@ -330,8 +310,6 @@ class __tree {
   typedef __tree_const_iterator<value_type> const_iterator;
   typedef ft::reverse_iterator<iterator> reverse_iterator;
   typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
-  // typedef __alloc_node<_Key, _Val, _KeyOfValue, _Compare, _Alloc>
-  // __alloc_node;
 
  private:
   // functor allocate node
@@ -374,6 +352,12 @@ class __tree {
 
   // TODO: move to public member function
   allocator_type get_allocator() const {
+    // std::cout << "impl size:" << sizeof(__impl_)
+    //           << "node allocator: " << sizeof(__get_Node_allocator())
+    //           << "comp :" << sizeof(__impl_.__key_comp)
+    //           << "header:" << sizeof(__impl_.__header_) << "???"
+    //           << sizeof(__impl_.__node_count_)
+    //           << "alloc_node size :" << sizeof(__alloc_node) << "\n";
     return allocator_type(__get_Node_allocator());
   }
 
@@ -405,7 +389,9 @@ class __tree {
   // Return: new node which clone of __x's value and color
   template <typename _NodeGenerator>
   _Link_type __clone_node(_Link_type __x, _NodeGenerator &__node_gen) {
-    _Link_type __tmp = __node_gen(*__x->__valptr());
+    (void)__node_gen;
+    // _Link_type __tmp = __node_gen(*__x->__valptr());
+    _Link_type __tmp = this->__create_node(*__x->__valptr());
     __tmp->__color_ = __x->__color_;
     __tmp->__left_ = NULL;
     __tmp->__right_ = NULL;

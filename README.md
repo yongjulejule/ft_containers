@@ -849,21 +849,27 @@ RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
 ## class들
 
 ```c++
-template <typename _T, typename _Compare, typename _Allocator>
-class __tree;
-template <typename _T, typename _NodePtr, class _DiffType>
-class __tree_iterator;
-template <typename _T, typename _ConstNodePtr, class _DiffType>
-class __tree_const_iterator;
-template <typename _Ptr>
-class __tree_end_node;
-template <typename _VoidPtr>
-class __tree_node_base;
-template <typename _T, typename _VoidPtr>
-class __tree_node;
+struct __tree_node_base;
+struct __tree_node;
+struct __tree_header;
 
-template <typename _Key, typename _Value>
-struct __value_type;
+template <typename _Key_compare>
+struct __tree_key_compare;
+ 
+template <typename _T>
+class __tree_iterator : public iterator<bidirectional_iterator_tag, _T> ;
+
+template <typename _T>
+class __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> ;
+
+template <typename _Key, typename _Val, typename _KeyOfVal, 
+          typename _Compare = std::less<_Key>,
+          typename _Alloc = std::allocator<_Val> >
+class __tree{
+	struct __alloc_node;
+	struct __tree_impl : public _Node_allocator, public __tree_key_compare, public __tree_header;
+};
+
 ```
 
 ## RB-tree Node Algorithms

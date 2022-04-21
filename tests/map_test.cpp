@@ -51,5 +51,7 @@ int main(int argc, char **argv) {
   std::cout << sizeof(ft::__tree<int, int, ft::select_first<int> >) << "\n";
   std::cout << sizeof(std::__tree<int, std::less<int>, std::allocator<int> >)
             << "\n";
+  ft::__tree_key_compare<std::less<int> > key_cmp;
+  std::cout << "key comp : " << sizeof(key_cmp.__key_comp) << "\n";
   // system("leaks mine.out");
 }
