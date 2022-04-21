@@ -32,7 +32,7 @@ void max_size_test() {
   std::cout << std::set<int>().max_size() << "\n";
 }
 
-int main(int argc, char **argv) {
+void map_test(int argc, char **argv) {
   ft::map<char, int> my_map;
   std::map<char, int> std_map;
   for (int i = 0; argv[0][i]; ++i) {
@@ -46,12 +46,16 @@ int main(int argc, char **argv) {
   std::for_each(std_map.begin(), std_map.end(), print());
   std::cout << my_map.size() << ", " << my_map.max_size() << "\n";
   std::cout << my_map.max_size() << ", " << std_map.max_size() << "\n";
-  max_size_test();
   std::cout << sizeof(my_map) << "," << sizeof(std_map) << "\n";
   std::cout << sizeof(ft::__tree<int, int, ft::select_first<int> >) << "\n";
   std::cout << sizeof(std::__tree<int, std::less<int>, std::allocator<int> >)
             << "\n";
   ft::__tree_key_compare<std::less<int> > key_cmp;
   std::cout << "key comp : " << sizeof(key_cmp.__key_comp) << "\n";
-  // system("leaks mine.out");
+}
+
+int main(int argc, char **argv) {
+  max_size_test();
+  map_test(argc, argv);
+  system("leaks mine.out");
 }

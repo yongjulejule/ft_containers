@@ -144,7 +144,9 @@ class set {
   pair<const_iterator, const_iterator> equal_range(const value_type& k) const {
     return __tree_.equal_range(k);
   }
-  allocator_type get_allocator() const { __tree_.get_allocator(); }
+  allocator_type get_allocator() const {
+    return allocator_type(__tree_.get_allocator());
+  }
   template <typename _T1, typename _C1, typename _A1>
   friend bool operator==(const set& lhs, const set& rhs);
   template <typename _T1, typename _C1, typename _A1>

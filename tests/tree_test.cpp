@@ -2,6 +2,10 @@
 #include "__tree.hpp"
 #include "test.hpp"
 
+#define R "\033[31m";
+#define B "\033[32m";
+#define RESET "\033[0m"
+
 typedef ft::__tree<
     int, ft::pair<int, std::string>,
     ft::select_first<ft::pair<int, std::string> >, std::less<int>,
@@ -62,6 +66,12 @@ void tree_test(int argc, char **argv) {
     my_tree cptree(tree);
     my_tree atr;
     atr = tree;
+    iterator it_test = tree.begin();
+    iterator ite_test = tree.end();
+    for (; it_test != ite_test; ++it_test) {
+      std::cout << (*it_test).first << ", " << (*it_test).second << "\n";
+    }
+    std::cout << "\n";
 
     tree.print_tree();
     std::cout << "tree size is: " << tree.size() << "\n";

@@ -128,8 +128,8 @@ int main(){
 
 - functor는 객체에 () 연산자를 오버로드 한 형태로 함수처럼 작동하는 객체임.
   - 객체이기 때문에 인자로 넘길 수 있으며 callback 형태로 사용할 수 있음.
-  - callback 형태이기 때문에 STL의 알고리즘과 호환이 잘됨.
-	- state를 저장할 수 있음
+- callback 형태이기 때문에 STL의 알고리즘과 호환이 잘됨.
+- state를 저장할 수 있음
 - function은 특정 함수의 인자로 넘기기 위해서는 다른 작업을 해줘야함.(function pointer or function object)
 
 ### functor vs function pointer
@@ -138,7 +138,7 @@ int main(){
 	- 따라서 템플릿의 인자로도 사용할 수 있음.
 	- 컴파일 단계에서 최적화가 가능하여 inline화 가능.
 	- state를 저장할 수 있으며 일반 멤버 변수 / 함수 또한 가질 수 있음.
-	- 코드의 양이 많음.
+	- structure나 class를 만들어야 해서 코드의 양이 많음.
 - function pointer는 type만 같다면 다른 function도 들어갈 수 있음.
 	- 컴파일시 판별되는게 아니라, 런타임에서 함수가 판별되므로 오버헤드가 생기며 inline화 불가능.
 	- state를 저장할 수 없음.
@@ -479,7 +479,7 @@ vector (InputIterator first, InputIterator last,
 vector (const vector& other);
 ```
 
-template specialization for consturctor: 
+template specialization for constructor: 
 ```c++
 // InputIterator는 uninitialized_* 을 사용할 수 없어서 하나씩 push_back를 해야함!
 template <typename _T, typename _Allocator>
@@ -826,25 +826,23 @@ container adaptor로써 LIFO형태로 작동하기 위해 고안됨.
 
 `vector` `deque` `list`가 이 조건을 충족하며, 표준 라이브러리에서는 deque로 구현되어 있음.
 
-ft_container에서는 vector를 이용하여 구현. 
+`ft_container`에서는 `vector`를 이용하여 구현. 
+
+`stack`의 멤버 함수들 역시 `vector`의 멤버 함수를 통하여 구현되기 때문에, 같은 level의 `exception-safety`를 지님!
 
 
 # RB-Tree (base of set and map)
 
 STL의 map과 set은 sorted associative container로 탐색과 삽입, 삭제에 로그 시간의 시간복잡도를 보장하며 주로 RB-Tree로 구현됨.
-따라서 기반이 되는 RB-Tree에 대부분의 메소드가 구현되며 멤버 함수들은 RB-Tree내부의 멤버 함수를 이용하여 작동함.
-
-RB-Tree에서 삽입, 삭제, 이터레이터 등이 구현되어야함.
-
-일단 트리를 만들고, 이터레이터를 만들자...
+따라서 기반이 되는 RB-Tree에 대부분의 멤버 함수가 구현되며 멤버 함수들은 RB-Tree내부의 멤버 함수를 이용하여 작동함.
 
 ## RB-tree:
 
-![rb-tree](asset/RBtree_explain.png)
-<p align='center' color='gray'> Reference: <a href='https://yongjulejule.github.io/algorithms/2021/04/26/tree-03-Red-Black-Tree.html' target='blank'> 내 블로그 </a>  </p>
-
-`__get_insert_hint_pos()` 에서 비슷한 위치를 찾고 필요시 `__get_insert_pos()`에서 정확한 위치 얻음 
-이 `__get_insert_hint_pos()`는 `__insert_unique()`에서 호출
+1. 모든 노드는 `red` 이거나 `black` 이다.
+2. `root` 노드는 `black` 이다.
+3. 모든 `leaf`(NULL) 는 `black`이다.
+4. 만약 한 노드가 `red` 이면 자식 노드(들)은 `black` 이다.
+5. 각각 노드에서, 그 노드로부터 `leaves` 까지의 `simple path`들은 같은 수의 `black` 노드를 지난다. (`root` 노드에서 가장 아래 까지(`leaf` 노드들 까지) 어느 경로로 내려가도 같은 수의 `black` 노드를 만나며, 꼭 `root` 노드일 필요 없이 어떤 노드를 선택해도 그 노드로부터 끝까지 내려가면서 만나는 `black` 의 수는 같다. )
 
 ## class들
 
@@ -857,17 +855,19 @@ template <typename _Key_compare>
 struct __tree_key_compare;
  
 template <typename _T>
-class __tree_iterator : public iterator<bidirectional_iterator_tag, _T> ;
+class __tree_iterator : public iterator<bidirectional_iterator_tag, _T>;
 
 template <typename _T>
-class __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T> ;
+class __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T>;
 
 template <typename _Key, typename _Val, typename _KeyOfVal, 
           typename _Compare = std::less<_Key>,
           typename _Alloc = std::allocator<_Val> >
 class __tree{
 	struct __alloc_node;
-	struct __tree_impl : public _Node_allocator, public __tree_key_compare, public __tree_header;
+	struct __tree_impl : public _Node_allocator,
+                       public __tree_key_compare,
+											 public __tree_header;
 };
 
 ```
