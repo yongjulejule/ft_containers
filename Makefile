@@ -23,6 +23,7 @@ SRCS_DIR	= ./src/
 TEST_DIR	= ./tests/
 
 SRCS			= $(addprefix $(SRCS_DIR), \
+						__tree.cpp \
 				)
 
 ifdef TEST

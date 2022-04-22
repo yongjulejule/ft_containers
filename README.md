@@ -55,7 +55,7 @@ My c++ STL containers (c++98)
 - [Stack](#stack)
 - [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
 	- [RB-tree:](#rb-tree)
-	- [class들](#class들)
+	- [구조](#구조)
 	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
 - [map / set](#map--set)
 - [TODO](#todo)
@@ -844,10 +844,13 @@ STL의 map과 set은 sorted associative container로 탐색과 삽입, 삭제에
 4. 만약 한 노드가 `red` 이면 자식 노드(들)은 `black` 이다.
 5. 각각 노드에서, 그 노드로부터 `leaves` 까지의 `simple path`들은 같은 수의 `black` 노드를 지난다. (`root` 노드에서 가장 아래 까지(`leaf` 노드들 까지) 어느 경로로 내려가도 같은 수의 `black` 노드를 만나며, 꼭 `root` 노드일 필요 없이 어떤 노드를 선택해도 그 노드로부터 끝까지 내려가면서 만나는 `black` 의 수는 같다. )
 
-## class들
+[이미지 삽입]
+
+## 구조
 
 ```c++
 struct __tree_node_base;
+
 struct __tree_node;
 struct __tree_header;
 
@@ -863,64 +866,23 @@ class __tree_const_iterator : public iterator<bidirectional_iterator_tag, _T>;
 template <typename _Key, typename _Val, typename _KeyOfVal, 
           typename _Compare = std::less<_Key>,
           typename _Alloc = std::allocator<_Val> >
-class __tree{
-	struct __alloc_node;
+class __tree {
 	struct __tree_impl : public _Node_allocator,
                        public __tree_key_compare,
 											 public __tree_header;
 };
-
 ```
 
+![RBtree class](./asset/rbt_class.png)
+
+트리 노드의 베이스가 되는 `color`, `parent`, `left`, `right` 를 `__tree_node_base`에 저장하고, 컨테이너에 따라 달라지는 `value`는 `__tree_node`에 저장.
+그리고 `__tree_header`를 만들어 `parent`에 `root`, `left`에 `leftmost`, `right`에 `rightmost`를 저장하여 특정 값들에 빠르게 접근하게 해줌.
+
 ## RB-tree Node Algorithms
-
-`__root`는 적절한 rb-tree를 가리키고 있음.
-`__root`의 `parent`는 `NULL`이 아니라, `__left_`가 `__root`를 가리키고 있는 구조.
-이러한 `__root`의 `parent`를 `end_node`라고 명명하고, `end_node->__left_`로 `__root`에 외부에서 접근 가능하며 노드의 삽입, 삭제에 의해 바뀔 수 있음.
-
-따라서 `end_node`를 제외한 트리의 모든 노드는 `__parent_`를 가짐
 
 Algorithms:
 
 ```c++
-// Returns: 노드가 부모의 left child인지 아닌지에 따른 true / false
-template <typename _NodePtr>
-bool __tree_is_left_child(_NodePtr __x);
-
-// __x가 루트가 되는 subtree가 적절한 RB-tree인지 판별. 
-// 적절한 RB-tree면 black height 리턴, 그렇지 않으면 0 리턴
-template <typename _NodePtr>
-unsigned int __tree_sub_invariant(_NodePtr __x);
-
-// __root가 적절한 RB-tree인지 판별하여 true / false를 반환
-// __root == NULL이면 적절한 트리라 가정.
-template <typename _NodePtr>
-bool __tree_invariant(_NodePtr __root);
-
-// 트리의 최솟값, 즉 가장 왼쪽에 있는 노드 반환
-template <typename _NodePtr>
-_NodePtr __tree_min(_NodePtr __x);
-
-// 트리의 최댓값, 즉 가장 오른쪽에 있는 노드 반환
-template <typename _NodePtr>
-_NodePtr __tree_max(_NodePtr __x);
-
-// in-order로, __x의 다음 노드를 반환
-template <typename _NodePtr>
-_NodePtr __tree_next(_NodePtr __x);
-
-// end_node(__root의 부모) 반환 
-template <typename _EndNodePtr, typename _NodePtr>
-_EndNodePtr __tree_next_iter(_NodePtr __x);
-
-// in-order로, __x의 이전 노드 반환
-template <typename _NodePtr, typename _EndNodePtr>
-_NodePtr __tree_prev_iter(_EndNodePtr __x);
-
-// 트리의 leaf 반환
-template <typename _NodePtr>
-_NodePtr __tree_leaf(_NodePtr __x);
-
 // __x->__right_를 subtree __x의 루트로 변환.
 //  __x는 루트의 left child가 됨
 template <typename _NodePtr>
@@ -945,7 +907,7 @@ void __tree_insert_and_fixup(_NodePtr __root, _NodePtr __x);
 // 효과: __tree_invariant(__root) == true, __root는 바뀌어 있을 수 있음.
 //       __z는 어느 노드와도 연결되어 있지 않음.
 template <typename _NodePtr>
-void __tree_remove(_NodePtr __root, _NodePtr __z);
+void __tree_erase_and_fixup(_NodePtr __root, _NodePtr __z);
 
 ```
 
