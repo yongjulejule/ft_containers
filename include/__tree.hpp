@@ -459,6 +459,7 @@ class __tree {
                                 const key_type &__k);
   const_iterator __upper_bound_helper(_Const_link_type __x, _Const_base_ptr __y,
                                       const key_type &__k) const;
+  iterator __insert_helper(_Base_ptr __x, _Base_ptr __p, const value_type &__v);
 
  public:
   // SECTION: constructor/destructor
@@ -538,16 +539,15 @@ class __tree {
 
   void swap(__tree &__t);
 
-  iterator __insert(_Base_ptr __x, _Base_ptr __p, const value_type &__v);
-  ft::pair<iterator, bool> __insert_unique(const value_type &__v);
+  ft::pair<iterator, bool> insert_unique(const value_type &__v);
 
-  iterator __insert_unique_with_hint(const_iterator __position,
-                                     const value_type &__v);
+  iterator insert_unique_with_hint(const_iterator __position,
+                                   const value_type &__v);
 
   template <typename _InputIterator>
-  void __insert_range(_InputIterator __first, _InputIterator __last) {
+  void insert_range(_InputIterator __first, _InputIterator __last) {
     for (; __first != __last; ++__first) {
-      __insert_unique_with_hint(cend(), *__first);
+      insert_unique_with_hint(cend(), *__first);
     }
   }
 
@@ -698,7 +698,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
-__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert(
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_helper(
     _Base_ptr __x, _Base_ptr __p, const value_type &__v) {
   bool __insert_left = (__x != 0 || __p == __end() ||
                         __impl_.__key_comp(_KeyOfValue()(__v), __S_key(__p)));
@@ -712,14 +712,14 @@ template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 ft::pair<typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator,
          bool>
-__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique(
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::insert_unique(
     const value_type &__v) {
   typedef ft::pair<iterator, bool> ret_pair;
   ft::pair<_Base_ptr, _Base_ptr> __ret = __get_insert_unique_pos(
       _KeyOfValue()(__v));  // get position based key of __v
 
   if (__ret.second) {
-    return ret_pair(__insert(__ret.first, __ret.second, __v), true);
+    return ret_pair(__insert_helper(__ret.first, __ret.second, __v), true);
   }
   return ret_pair(iterator(__ret.first), false);
 }
@@ -727,12 +727,12 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique(
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 typename __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::iterator
-__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__insert_unique_with_hint(
+__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::insert_unique_with_hint(
     const_iterator __position, const value_type &__v) {
   ft::pair<_Base_ptr, _Base_ptr> __ret =
       __get_insert_hint_unique_pos(__position, _KeyOfValue()(__v));
   if (__ret.second) {
-    return __insert(__ret.first, __ret.second, __v);
+    return __insert_helper(__ret.first, __ret.second, __v);
   }
   return iterator(__ret.first);
 }
@@ -987,6 +987,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
   return ft::pair<const_iterator, const_iterator>(const_iterator(__y),
                                                   const_iterator(__y));
 }
+
 }  // namespace ft
 
 #endif  // __TREE

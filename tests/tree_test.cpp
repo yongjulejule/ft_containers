@@ -62,7 +62,7 @@ void tree_test(int argc, char **argv) {
   }
   {
     my_tree tree;
-    tree.__insert_range(test, test + argc);
+    tree.insert_range(test, test + argc);
     my_tree cptree(tree);
     my_tree atr;
     atr = tree;
@@ -121,7 +121,7 @@ void tree_test(int argc, char **argv) {
     // _Node_alloc().deallocate(p, 10);
   }
 
-  // tree.__insert_range(test, test + argc);
+  // tree.insert_range(test, test + argc);
 }
 
 class why {

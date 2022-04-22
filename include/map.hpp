@@ -79,7 +79,7 @@ class map {
       const key_compare& comp = key_compare(),
       const allocator_type& alloc = allocator_type())
       : __tree_(comp, alloc) {
-    __tree_.__insert_range(first, last);
+    __tree_.insert_range(first, last);
   }
 
   map(const map& other) : __tree_(other.__tree_) {}
@@ -134,14 +134,14 @@ class map {
 
   // modifiers
   pair<iterator, bool> insert(const value_type& val) {
-    return __tree_.__insert_unique(val);
+    return __tree_.insert_unique(val);
   }
   iterator insert(iterator position, const value_type& val) {
-    return __tree_.__insert_unique_with_hint(position, val);
+    return __tree_.insert_unique_with_hint(position, val);
   }
   template <typename _InputIterator>
   void insert(_InputIterator first, _InputIterator last) {
-    __tree_.__insert_range(first, last);
+    __tree_.insert_range(first, last);
   }
 
   void erase(iterator position) { __tree_.erase(position); }

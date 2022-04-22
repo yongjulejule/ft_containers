@@ -229,8 +229,7 @@ __tree_node_base *__tree_erase_and_fixup(
     __x = __y->__left_;
   else {
     __y = __y->__right_;
-    // __tree_node_base::__S_minimum(__y->__right_);  // __y: successor of __Z
-    while (__y->__left_ != NULL) __y = __y->__left_;
+    __tree_node_base::__S_minimum(__y);  // __y: successor of __Z
     __x = __y->__right_;
   }
 
