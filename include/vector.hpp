@@ -345,14 +345,6 @@ class vector : private __vector_base<_T, _Allocator> {
   const_reverse_iterator rend() const {
     return const_reverse_iterator(begin());
   }
-  const_iterator cbegin() const { return const_iterator(begin()); }
-  const_iterator cend() const { return const_iterator(begin()); }
-  const_reverse_iterator crbegin() const {
-    return const_reverse_iterator(end());
-  }
-  const_reverse_iterator crend() const {
-    return const_reverse_iterator(begin());
-  }
 
   // capacity
   size_type size() const { return std::distance(this->__begin_, this->__end_); }

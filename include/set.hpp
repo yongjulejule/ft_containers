@@ -82,19 +82,10 @@ class set {
   const_iterator end() const FT_NOEXCEPT {
     return const_iterator(__tree_.end());
   }
-
-  const_iterator cbegin() const FT_NOEXCEPT { return __tree_.cbegin(); }
-  const_iterator cend() const FT_NOEXCEPT { return __tree_.cend(); }
-
   reverse_iterator rbegin() FT_NOEXCEPT { return __tree_.rbegin(); }
   const_reverse_iterator rbegin() const FT_NOEXCEPT { return __tree_.rbegin(); }
   reverse_iterator rend() FT_NOEXCEPT { return __tree_.rend(); }
   const_reverse_iterator rend() const FT_NOEXCEPT { return __tree_.rend(); }
-
-  const_reverse_iterator crbegin() const FT_NOEXCEPT {
-    return __tree_.crbegin();
-  }
-  const_reverse_iterator crend() const FT_NOEXCEPT { return __tree_.crend(); }
 
   // capacity
   bool empty() const FT_NOEXCEPT { return __tree_.empty(); }
