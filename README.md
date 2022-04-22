@@ -869,7 +869,7 @@ template <typename _Key, typename _Val, typename _KeyOfVal,
 class __tree {
 	struct __tree_impl : public _Node_allocator,
                        public __tree_key_compare,
-											 public __tree_header;
+                       public __tree_header;
 };
 ```
 
