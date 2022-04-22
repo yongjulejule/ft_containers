@@ -46,18 +46,47 @@ My c++ STL containers (c++98)
 		- [Modifiers:](#modifiers)
 		- [Allocator:](#allocator-1)
 		- [Non-member functions:](#non-member-functions)
-		- [Template specializations:](#template-specializations)
-	- [private things to implement vector](#private-things-to-implement-vector)
 		- [__vector_base](#__vector_base)
 		- [__vector_base methods](#__vector_base-methods)
-		- [private method in vector](#private-method-in-vector)
+		- [private member function in vector](#private-member-function-in-vector)
 		- [exceptions](#exceptions)
 - [Stack](#stack)
 - [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
 	- [RB-tree:](#rb-tree)
 	- [구조](#구조)
+		- [tree iterator](#tree-iterator)
 	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
+	- [member types:](#member-types-1)
+	- [member functions:](#member-functions-1)
+	- [member functions:](#member-functions-2)
+	- [private member functions:](#private-member-functions)
 - [map / set](#map--set)
+	- [prototype](#prototype-1)
+	- [member types](#member-types-2)
+	- [Member functions](#member-functions-3)
+		- [Iterators:](#iterators-1)
+		- [Capacity:](#capacity-1)
+		- [Element access:](#element-access-1)
+		- [Modifiers:](#modifiers-1)
+		- [Allocator:](#allocator-2)
+		- [Observers:](#observers)
+		- [Non-member functions:](#non-member-functions-1)
+- [TODO](#todo)
+- [Reference](#reference)
+	 in vector](#private-member function
+	-in-vector)
+		- [exceptions](#exceptions)
+- [Stack](#stack)
+- [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
+	- [RB-tree:](#rb-tree)
+	- [구조](#구조)
+		- [tree iterator](#tree-iterator)
+	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
+	- [member types:](#member-types-1)
+	- [member functions:](#member-functions-1)
+- [map / set](#map--set)
+	- [member types](#member-types-2)
+	- [member functions](#member-functions-2)
 - [TODO](#todo)
 - [Reference](#reference)
 
@@ -529,10 +558,6 @@ iterator begin() FT_NOEXCEPT;
 iterator end() FT_NOEXCEPT;
 reverse_iterator rbegin() FT_NOEXCEPT;
 reverse_iterator rend() FT_NOEXCEPT;
-const iterator cbegin() const FT_NOEXCEPT;
-const iterator cend() const FT_NOEXCEPT;
-const reverse_iterator crbegin() const FT_NOEXCEPT;
-const reverse_iterator crend() const FT_NOEXCEPT;
 ```
 
 ### Capacity:
@@ -624,7 +649,7 @@ void pop_back();
 // iterator를 반환하는 경우, insert된 위치의 iterator 반환
 iterator insert(iterator position, const value_type& val); // single element
 void insert(iterator position, size_type n, const value_type& val); // fill
-// inputiterator면 하나씩 삽입해야 해서 logN의 시간복잡도가 나옴
+// inputIterator면 하나씩 삽입해야 해서 logN의 시간복잡도가 나옴
 template <typename _InputIterator>
 void insert(iterator position, _InputIterator first, _InputIterator last); // range
 
@@ -670,13 +695,6 @@ template <class T, class Alloc>
 void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 ```
 
-### Template specializations:
-
-boolean값을 비트단위로 저장함... 와우... 
-
-`vector<bool>`
-
-## private things to implement vector
 
 ### __vector_base
 
@@ -789,7 +807,7 @@ size_type __capacity() const;
 size_type __check_size(size_type __n_);
 ```
 
-### private method in vector
+### private member function in vector
 
 ```c++
 // push data to end of vector. (not allocate memory)
@@ -878,27 +896,47 @@ class __tree {
 트리 노드의 베이스가 되는 `color`, `parent`, `left`, `right` 를 `__tree_node_base`에 저장하고, 컨테이너에 따라 달라지는 `value`는 `__tree_node`에 저장.
 그리고 `__tree_header`를 만들어 `parent`에 `root`, `left`에 `leftmost`, `right`에 `rightmost`를 저장하여 특정 값들에 빠르게 접근하게 해줌.
 
+트리를 구성하는 데이터들 (`allocator`, `key_compare`, `header`)은 __`tree`의 nested-struct인  `__tree_impl`에 저장하여 관리.
+
+### tree iterator
+
+트리의 `iterator`는 `map`, `set`의 규칙에 따라 `bidirectional_iterator`이며 `iterator`규칙에 따라 가장 작은 값부터 차레대로 순회할 수 있어야함.
+따라서, `begin`은 `leftmost`가 되어야 하며, `end`는 `rightmost`의 다음 값으로 접근 할 수 있는 빈 노드여야 하고 `increment`/`decrement`시 `in-order traverse`를 통한 이전 / 다음 값이면 됨.
+
+이때 `map`과 `set`의 주요한 차이점은 `set`은 `const`인 `key`값만 갖고 있기 때문에 `iterator`와 `const_iterator` 모두 `const`여야 함.
+
 ## RB-tree Node Algorithms
 
 Algorithms:
 
 ```c++
-// __x->__right_를 subtree __x의 루트로 변환.
-//  __x는 루트의 left child가 됨
-template <typename _NodePtr>
-void __tree_left_rotate(_NodePtr __x);
+// in-order 로 다음 노드 반환
+__tree_node_base *__tree_increment(__tree_node_base *__x) FT_NOEXCEPT;
 
-// __x->__left_를 subtree __x의 루트로 변환.
-//  __x는 루트의 right child가 됨
-template <typename _NodePtr>
-void __tree_right_rotate(_NodePtr __x);
+// in-order 로 이전 노드 반환
+__tree_node_base *__tree_decrement(__tree_node_base *__x) FT_NOEXCEPT;
 
+// 해당 노드로부터 subtree의 leftmost값 반환
+__tree_node_base *__minimum(__tree_node_base *__x) FT_NOEXCEPT;
+
+// 해당 노드로부터 subtree의 rightmost값 반환
+__tree_node_base *__maximum(__tree_node_base *__x) FT_NOEXCEPT;
+
+// __x 노드 기준으로 left-rotate
+void __tree_rotate_left(__tree_node_base *const __x, __tree_node_base *&__root);
+
+// __x 노드 기준으로 right-rotate
+void __tree_rotate_right(__tree_node_base *const __x,
+                         __tree_node_base *&__root);
+
+// FIXME: insert and delete
 // __x를 leaf에 넣은 뒤 __root를 rebalance
 // 전제: __root != NULL && __x != NULL
 //       __x는 children이 없고, __root와 연결되어 있음.
 // 효과: __tree_invariant(end_node->__left_) == true, __root는 바뀌어 있을 수 있음
-template <typename _NodePtr>
-void __tree_insert_and_fixup(_NodePtr __root, _NodePtr __x);
+void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
+                             __tree_node_base *__p,
+                             __tree_node_base &__header) FT_NOEXCEPT;
 
 // __z를 __root 트리에서 제거한 뒤 rebalance
 // 전제: __root != NULL && __z != NULL
@@ -906,18 +944,58 @@ void __tree_insert_and_fixup(_NodePtr __root, _NodePtr __x);
 //       __z 는 __root와 연결되어 있음.
 // 효과: __tree_invariant(__root) == true, __root는 바뀌어 있을 수 있음.
 //       __z는 어느 노드와도 연결되어 있지 않음.
-template <typename _NodePtr>
-void __tree_erase_and_fixup(_NodePtr __root, _NodePtr __z);
+__tree_node_base *__tree_erase_and_fixup(
+    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT;
 
 ```
 
+## member types:
+
+TODO
+
+## member functions:
+
+트리의 member function을 기반으로 `map`, `set`의 member function이 작동하기 때문에, 각 컨테이너가 갖고 있는 기능들을 구현해야 함.
+
+대부분의 멤버 함수가 `map`, `set`과 겹치기 때문에, 다른 멤버 함수만 기술함.
+
+## member functions:
+
+constructor: 
+
+`map`, `set`에 따라 `strong-guarantee`를 보장해야함. 필요한 데이터는 모두 `impl`에 저장되어 있으므로, `impl`을 잘 설정해주면 됨.
 
 ```c++
-insert()
-rebalance()
-erase()
-
+private:
+   __tree () {}; // can't construct without suitable arguments
+public:
+   __tree (const _Compare& comp, const allocator_type& alloc = allocator_type())
+       : __impl_(comp, alloc) {};
+   __tree (const __tree& other) : __impl_(other.__impl_) { __copy_tree(other);};
 ```
+
+insert:
+
+TODO 
+
+```c++
+ft::pair<_Base_ptr, _Base_ptr> __get_insert_unique_pos(const key_type &__k);
+ft::pair<_Base_ptr, _Base_ptr> __get_insert_hint_unique_pos(
+   const_iterator __pos, const key_type &__k);
+ft::pair<iterator, bool> insert_unique(const value_type &__v); // strong-guarantee
+iterator insert_unique_with_hint(const_iterator __position, // strong-guarantee
+                                const value_type &__v);
+template <typename _InputIterator>
+void insert_range(_InputIterator __first, _InputIterator __last); // basic_guarantee
+```
+
+## private member functions:
+
+TODO
+
+```c++
+```
+
 
 # map / set
 
@@ -925,6 +1003,111 @@ erase()
 두 컨테이너 모두 unique한 `key`를 가지지만, `map`의 경우 `key-value`의 `pair`로 저장되고 `set`은 `key`만 존재함.
 모든 `key`는 `const`이며 `insert`와 `remove`만 가능함! 또한, `set`은 `key`만 갖고 있으므로 모든 `iterator`가 `const_iterator`임.
 
+## prototype
+
+```c++
+template < class _Key,                                              // map::key_type
+           class _T,                                                // map::mapped_type
+           class _Compare = std::less<Key>,                         // map::key_compare
+           class _Alloc = std::allocator<ft::pair<const Key,T> >    // map::allocator_type
+           > class map;
+
+template < class _Key,                             // set::key_type/value_type
+           class _Compare = std::less<T>,        // set::key_compare/value_compare
+           class _Alloc = std::allocator<T>      // set::allocator_type
+           > class set;
+```
+
+## member types
+
+```c++
+public:
+   typedef _Key key_type;
+	 typedef _Key value_type; // for set
+   typedef _T mapped_type; // for map
+   typedef _Compare key_compare;
+	 typedef _Compare value_compare; /// for set
+   typedef _Alloc allocator_type;
+   typedef ft::pair<const key_type, mapped_type> value_type;
+
+private:
+   typedef __tree<key_type, value_type, ft::select_first<value_type>,
+                 key_compare, allocator_type> // for map
+   typedef __tree<key_type, key_type, ft::select_first<value_type>,
+                 key_compare, allocator_type> // for set
+      __base;
+
+public:
+   typedef typename allocator_type::reference reference;
+   typedef typename allocator_type::const_reference const_reference;
+   typedef typename allocator_type::pointer pointer;
+   typedef typename allocator_type::const_pointer const_pointer;
+
+   typedef typename __base::iterator iterator;
+   typedef typename __base::const_iterator iterator; // for set
+   typedef typename __base::const_iterator const_iterator; // for map
+   typedef typename __base::reverse_iterator reverse_iterator;
+   typedef typename __base::const_reverse_iterator reverse_iterator; // for set
+   typedef typename __base::const_reverse_iterator const_reverse_iterator; // for map
+   typedef typename __base::difference_type difference_type;
+   typedef typename __base::size_type size_type;
+   class value_compare // for map
+      : public std::binary_function<value_type, value_type, bool> {
+    friend class map<_Key, _T, _Compare, _Alloc>;
+
+   protected:
+    _Compare comp;
+    value_compare(_Compare c) : comp(c) {}
+
+   public:
+    bool operator()(const value_type& x, const value_type& y) const {
+      return comp(x.first, y.first);
+    }
+   };
+```
+
+## Member functions
+
+constructor:
+
+destructor:
+
+operator=:
+
+### Iterators:
+
+- exception-safety: No-throw
+- return corresponding iterator
+
+```c++
+iterator begin() FT_NOEXCEPT;
+iterator end() FT_NOEXCEPT;
+reverse_iterator rbegin() FT_NOEXCEPT;
+reverse_iterator rend() FT_NOEXCEPT;
+```
+
+### Capacity:
+
+```c++
+// 컨테이너에 저장된 elements의 수를 반환
+size_type size() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너에 할당할 수 있는 최대 메모리를 반환
+size_type max_size() const FT_NOEXCEPT; // No-throw
+
+// 컨테이너가 비었는지 여부를 boolean으로 반환
+bool empty() const FT_NOEXCEPT; // No-throw
+```
+
+### Element access:
+
+### Modifiers:
+
+### Allocator:
+
+### Observers:
+
+### Non-member functions:
 
 # TODO
 

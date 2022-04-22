@@ -87,7 +87,9 @@
 		"crend",
 		"deque",
 		"libcxx",
+		"NOEXCEPT",
 		"NOEXCPT",
+		"rbegin",
 		"rebalance",
 		"yongjule"
 	],
