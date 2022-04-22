@@ -335,9 +335,6 @@ __tree_node_base *__tree_erase_and_fixup(
     }
     if (__x) __x->__color_ = BLACK;
   }
-  // if (__y) {
-  //   __y->__left_ = __y->__right_ = __y->__parent_ = NULL;
-  // }
   return __y;
 }
 
