@@ -47,6 +47,11 @@ void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
 __tree_node_base *__tree_erase_and_fixup(
     __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT;
 
+__tree_node_base *__minimum(__tree_node_base *__x) FT_NOEXCEPT;
+const __tree_node_base *__minimum(const __tree_node_base *__x) FT_NOEXCEPT;
+__tree_node_base *__maximum(__tree_node_base *__x) FT_NOEXCEPT;
+const __tree_node_base *__maximum(const __tree_node_base *__x) FT_NOEXCEPT;
+
 /*************************************************************************************
  * @brief Tree Nodes
  *************************************************************************************/
@@ -60,26 +65,6 @@ struct __tree_node_base {
   _Base_ptr __parent_;
   _Base_ptr __left_;
   _Base_ptr __right_;
-
-  static _Base_ptr __S_minimum(_Base_ptr __x) FT_NOEXCEPT {
-    while (__x->__left_ != NULL) __x = __x->__left_;
-    return __x;
-  }
-
-  static _Const_base_ptr __S_minimum(_Const_base_ptr __x) FT_NOEXCEPT {
-    while (__x->__left_ != NULL) __x = __x->__left_;
-    return __x;
-  }
-
-  static _Base_ptr __S_maximum(_Base_ptr __x) FT_NOEXCEPT {
-    while (__x->__right_ != NULL) __x = __x->__right_;
-    return __x;
-  }
-
-  static _Const_base_ptr __S_maximum(_Const_base_ptr __x) FT_NOEXCEPT {
-    while (__x->__right_ != NULL) __x = __x->__right_;
-    return __x;
-  }
 };
 
 // tree header
@@ -95,23 +80,8 @@ struct __tree_header {
     __tree_reset();
   }
 
-  void __tree_reset() {
-    __header_.__parent_ = NULL;
-    __header_.__left_ = &__header_;
-    __header_.__right_ = &__header_;
-    __node_count_ = 0;
-  }
-
-  void __tree_move_data(__tree_header &other) {
-    __header_.__color_ = other.__header_.__color_;
-    __header_.__parent_ = other.__header_.__parent_;
-    __header_.__left_ = other.__header_.__left_;
-    __header_.__right_ = other.__header_.__right_;
-    __header_.__parent_->__parent_ = &__header_;
-    __node_count_ = other.__node_count_;
-
-    other.__tree_reset();
-  }
+  void __tree_reset();
+  void __tree_move_data(__tree_header &other);
 };
 
 template <typename _Key_compare>
@@ -406,18 +376,14 @@ class __tree {
     return static_cast<_Link_type>(__x->__right_);
   }
 
-  static _Base_ptr __S_minimum(_Base_ptr __x) {
-    return __tree_node_base::__S_minimum(__x);
-  }
+  static _Base_ptr __S_minimum(_Base_ptr __x) { return __minimum(__x); }
   static _Const_base_ptr __S_minimum(_Const_base_ptr __x) {
-    return __tree_node_base::__S_minimum(__x);
+    return __minimum(__x);
   }
 
-  static _Base_ptr __S_maximum(_Base_ptr __x) {
-    return __tree_node_base::__S_maximum(__x);
-  }
+  static _Base_ptr __S_maximum(_Base_ptr __x) { return __maximum(__x); }
   static _Const_base_ptr __S_maximum(_Const_base_ptr __x) {
-    return __tree_node_base::__S_maximum(__x);
+    return __maximum(__x);
   }
 
   // SECTION: helper for public member function
@@ -547,7 +513,7 @@ class __tree {
   template <typename _InputIterator>
   void insert_range(_InputIterator __first, _InputIterator __last) {
     for (; __first != __last; ++__first) {
-      insert_unique_with_hint(cend(), *__first);
+      insert_unique_with_hint(end(), *__first);
     }
   }
 
@@ -560,8 +526,8 @@ class __tree {
   }
   const_iterator find(const key_type &__k) const {
     const_iterator __found = __lower_bound_helper(__begin(), __end(), __k);
-    if (__impl_.__key_comp(__k, __S_key(__found.__node_)) || __found == cend())
-      return cend();
+    if (__impl_.__key_comp(__k, __S_key(__found.__node_)) || __found == end())
+      return end();
     return __found;
   }
 
@@ -590,6 +556,7 @@ class __tree {
   allocator_type get_allocator() const {
     return allocator_type(__get_Node_allocator());
   }
+
   // NOTE: print tree
   void print_tree();
   void print_tree(const std::string &prefix, _Link_type x, bool isLeft);
@@ -737,7 +704,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::insert_unique_with_hint(
   return iterator(__ret.first);
 }
 
-// TODO: test and add comment
+// TODO: add comment
 /**
  * @brief copy tree include header of tree
  *

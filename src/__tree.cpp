@@ -15,6 +15,26 @@
 
 namespace ft {
 
+__tree_node_base *__minimum(__tree_node_base *__x) FT_NOEXCEPT {
+  while (__x->__left_ != NULL) __x = __x->__left_;
+  return __x;
+}
+
+const __tree_node_base *__minimum(const __tree_node_base *__x) FT_NOEXCEPT {
+  while (__x->__left_ != NULL) __x = __x->__left_;
+  return __x;
+}
+
+__tree_node_base *__maximum(__tree_node_base *__x) FT_NOEXCEPT {
+  while (__x->__right_ != NULL) __x = __x->__right_;
+  return __x;
+}
+
+const __tree_node_base *__maximum(const __tree_node_base *__x) FT_NOEXCEPT {
+  while (__x->__right_ != NULL) __x = __x->__right_;
+  return __x;
+}
+
 // Return: next node by in-order traverse
 static __tree_node_base *local_tree_increment(__tree_node_base *__x)
     FT_NOEXCEPT {
@@ -228,8 +248,8 @@ __tree_node_base *__tree_erase_and_fixup(
   else if (__y->__right_ == NULL)
     __x = __y->__left_;
   else {
-    __y = __y->__right_;
-    __tree_node_base::__S_minimum(__y);  // __y: successor of __Z
+    // __y = __y->__right_;
+    __y = __minimum(__y->__right_);  // __y: successor of __Z
     __x = __y->__right_;
   }
 
@@ -266,13 +286,13 @@ __tree_node_base *__tree_erase_and_fixup(
       if (__z->__right_ == NULL)
         __leftmost = __z->__parent_;
       else
-        __leftmost = __tree_node_base::__S_minimum(__x);
+        __leftmost = __minimum(__x);
     }
     if (__rightmost == __z) {
       if (__z->__left_ == NULL)
         __rightmost = __z->__parent_;
       else
-        __rightmost = __tree_node_base::__S_maximum(__x);
+        __rightmost = __maximum(__x);
     }
   }
 
@@ -337,16 +357,22 @@ __tree_node_base *__tree_erase_and_fixup(
   return __y;
 }
 
-// Return: black-hight of RB-tree
-unsigned int __tree_black_count(const __tree_node_base *__node,
-                                const __tree_node_base *__root) FT_NOEXCEPT {
-  unsigned int __bh = 1;  // NULL is black
-  if (__node == NULL) return __bh;
-  while (__node != __root) {
-    if (__node->__color_ == BLACK) ++__bh;
-    __node = __node->__parent_;
-  }
-  return __bh;
+void __tree_header::__tree_reset() {
+  __header_.__parent_ = NULL;
+  __header_.__left_ = &__header_;
+  __header_.__right_ = &__header_;
+  __node_count_ = 0;
+}
+
+void __tree_header::__tree_move_data(__tree_header &other) {
+  __header_.__color_ = other.__header_.__color_;
+  __header_.__parent_ = other.__header_.__parent_;
+  __header_.__left_ = other.__header_.__left_;
+  __header_.__right_ = other.__header_.__right_;
+  __header_.__parent_->__parent_ = &__header_;
+  __node_count_ = other.__node_count_;
+
+  other.__tree_reset();
 }
 
 }  // namespace ft
