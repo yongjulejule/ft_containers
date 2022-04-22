@@ -429,7 +429,10 @@ class __tree {
 
  public:
   // SECTION: constructor/destructor
-  __tree() {}
+ private:
+  __tree() {}  // can't construct without suitable arguments
+
+ public:
   __tree(const _Compare &_comp, const allocator_type &__a = allocator_type())
       : __impl_(_comp, _Node_allocator(__a)) {}
   __tree(const __tree &other) : __impl_(other.__impl_) {
@@ -479,9 +482,7 @@ class __tree {
 
   void erase(iterator position) { __erase_helper(position); }
   void erase(const_iterator position) { __erase_helper(position); }
-
   size_type erase(const key_type &__v);
-
   void erase(iterator first, iterator last) { __erase_helper(first, last); }
   void erase(const_iterator first, const_iterator last) {
     __erase_helper(first, last);
