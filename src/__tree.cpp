@@ -135,9 +135,10 @@ void __tree_rotate_right(__tree_node_base *const __x,
   __x->__parent_ = __y;
 }
 
-static void local_init_new_node(const bool __insert_left,
-                                __tree_node_base *&__x, __tree_node_base *&__p,
-                                __tree_node_base &__header) FT_NOEXCEPT {
+static void local_insert_new_node(const bool __insert_left,
+                                  __tree_node_base *&__x,
+                                  __tree_node_base *&__p,
+                                  __tree_node_base &__header) FT_NOEXCEPT {
   // initiate new node
   __x->__parent_ = __p;
   __x->__right_ = NULL;
@@ -162,6 +163,50 @@ static void local_init_new_node(const bool __insert_left,
   }
 }
 
+static void local_insert_fixup(__tree_node_base *&__x,
+                               __tree_node_base *&__root) {
+  while (__x != __root && __x->__parent_->__color_ == RED) {
+    __tree_node_base *const __xpp = __x->__parent_->__parent_;
+
+    if (__x->__parent_ == __xpp->__left_) {
+      __tree_node_base *const __y = __xpp->__right_;
+
+      if (__y && __y->__color_ == RED) {  // __x의 uncle 노드가 RED(case 1)
+        __x->__parent_->__color_ = BLACK;
+        __y->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __x = __xpp;
+      } else {  // __x의 uncle 노드가 black (case 2)
+        if (__x == __x->__parent_->__right_) {
+          __x = __x->__parent_;
+          __tree_rotate_left(__x, __root);
+        }
+        __x->__parent_->__color_ = BLACK;  // case 3
+        __xpp->__color_ = RED;
+        __tree_rotate_right(__xpp, __root);
+      }
+    } else {
+      __tree_node_base *const __y = __xpp->__left_;
+
+      if (__y && __y->__color_ == RED) {  // sym case 1
+        __x->__parent_->__color_ = BLACK;
+        __y->__color_ = BLACK;
+        __xpp->__color_ = RED;
+        __x = __xpp;
+      } else {
+        if (__x == __x->__parent_->__left_) {  // sym case 2
+          __x = __x->__parent_;
+          __tree_rotate_right(__x, __root);
+        }
+        __x->__parent_->__color_ = BLACK;  // sym case 3
+        __xpp->__color_ = RED;
+        __tree_rotate_left(__xpp, __root);
+      }
+    }
+  }
+  __root->__color_ = BLACK;
+}
+
 /**
  * @brief Insert new node in tree and rebalance.
  *        __x와 __p가 들어갈 위치는 찾아서 들어온다고 가정.
@@ -177,63 +222,17 @@ void __tree_insert_and_fixup(const bool __insert_left, __tree_node_base *__x,
                              __tree_node_base *__p,
                              __tree_node_base &__header) FT_NOEXCEPT {
   __tree_node_base *&__root = __header.__parent_;
-
-  local_init_new_node(__insert_left, __x, __p, __header);
-
-  // rebalance
-  // __x가 root까지 올라오거나,
-  // 부모가 red가 아닐때까지 (자식을 red로 넣었으므로!)
-  while (__x != __root && __x->__parent_->__color_ == RED) {
-    __tree_node_base *const __xpp = __x->__parent_->__parent_;
-
-    if (__x->__parent_ == __xpp->__left_) {
-      __tree_node_base *const __y = __xpp->__right_;
-
-      if (__y && __y->__color_ == RED) {  // __x의 uncle 노드가 RED
-        __x->__parent_->__color_ = BLACK;
-        __y->__color_ = BLACK;
-        __xpp->__color_ = RED;
-        __x = __xpp;
-      } else {  // __x의 uncle 노드가 black
-        if (__x == __x->__parent_->__right_) {
-          __x = __x->__parent_;
-          __tree_rotate_left(__x, __root);
-        }
-        __x->__parent_->__color_ = BLACK;
-        __xpp->__color_ = RED;
-        __tree_rotate_right(__xpp, __root);
-      }
-    } else {
-      __tree_node_base *const __y = __xpp->__left_;
-
-      if (__y && __y->__color_ == RED) {
-        __x->__parent_->__color_ = BLACK;
-        __y->__color_ = BLACK;
-        __xpp->__color_ = RED;
-        __x = __xpp;
-      } else {
-        if (__x == __x->__parent_->__left_) {
-          __x = __x->__parent_;
-          __tree_rotate_right(__x, __root);
-        }
-        __x->__parent_->__color_ = BLACK;
-        __xpp->__color_ = RED;
-        __tree_rotate_left(__xpp, __root);
-      }
-    }
-  }
-  __root->__color_ = BLACK;
+  local_insert_new_node(__insert_left, __x, __p, __header);
+  local_insert_fixup(__x, __root);
 }
 
-// TODO: explain logic
-__tree_node_base *__tree_erase_and_fixup(
-    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT {
+static void local_erase_node(__tree_node_base *const &__z,
+                             __tree_node_base *&__y, __tree_node_base *&__x,
+                             __tree_node_base *&__x_p,
+                             __tree_node_base &__header) {
   __tree_node_base *&__root = __header.__parent_;
   __tree_node_base *&__leftmost = __header.__left_;
   __tree_node_base *&__rightmost = __header.__right_;
-  __tree_node_base *__y = __z;
-  __tree_node_base *__x = NULL;
-  __tree_node_base *__x_p = NULL;
 
   if (__y->__left_ == NULL)
     __x = __y->__right_;
@@ -286,65 +285,88 @@ __tree_node_base *__tree_erase_and_fixup(
         __rightmost = __maximum(__x);
     }
   }
+}
 
-  if (__y->__color_ != RED) {
-    while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
-      if (__x == __x_p->__left_) {
-        __tree_node_base *__w = __x_p->__right_;
-        if (__w->__color_ == RED) {
-          __w->__color_ = BLACK;
-          __x_p->__color_ = RED;
-          __tree_rotate_left(__x_p, __root);
+static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
+                              __tree_node_base *&__root) {
+  while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
+    if (__x == __x_p->__left_) {
+      __tree_node_base *__w = __x_p->__right_;
+      if (__w->__color_ == RED) {
+        __w->__color_ = BLACK;
+        __x_p->__color_ = RED;
+        __tree_rotate_left(__x_p, __root);
+        __w = __x_p->__right_;
+      }
+      if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
+          (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
+        __w->__color_ = RED;
+        __x = __x_p;
+        __x_p = __x_p->__parent_;
+      } else {
+        if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
+          __w->__left_->__color_ = BLACK;
+          __w->__color_ = RED;
+          __tree_rotate_right(__w, __root);
           __w = __x_p->__right_;
         }
-        if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
-            (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
-          __w->__color_ = RED;
-          __x = __x_p;
-          __x_p = __x_p->__parent_;
-        } else {
-          if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
-            __w->__left_->__color_ = BLACK;
-            __w->__color_ = RED;
-            __tree_rotate_right(__w, __root);
-            __w = __x_p->__right_;
-          }
-          __w->__color_ = __x_p->__color_;
-          __x_p->__color_ = BLACK;
-          if (__w->__right_) __w->__right_->__color_ = BLACK;
-          __tree_rotate_left(__x_p, __root);
-          break;
-        }
+        __w->__color_ = __x_p->__color_;
+        __x_p->__color_ = BLACK;
+        if (__w->__right_) __w->__right_->__color_ = BLACK;
+        __tree_rotate_left(__x_p, __root);
+        break;
+      }
+    } else {
+      __tree_node_base *__w = __x_p->__left_;
+      if (__w->__color_ == RED) {
+        __w->__color_ = BLACK;
+        __x_p->__color_ = RED;
+        __tree_rotate_right(__x_p, __root);
+        __w = __x_p->__left_;
+      }
+      if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
+          (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
+        __w->__color_ = RED;
+        __x = __x_p;
+        __x_p = __x_p->__parent_;
       } else {
-        __tree_node_base *__w = __x_p->__left_;
-        if (__w->__color_ == RED) {
-          __w->__color_ = BLACK;
-          __x_p->__color_ = RED;
-          __tree_rotate_right(__x_p, __root);
+        if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
+          __w->__right_->__color_ = BLACK;
+          __w->__color_ = RED;
+          __tree_rotate_left(__w, __root);
           __w = __x_p->__left_;
         }
-        if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
-            (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
-          __w->__color_ = RED;
-          __x = __x_p;
-          __x_p = __x_p->__parent_;
-        } else {
-          if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
-            __w->__right_->__color_ = BLACK;
-            __w->__color_ = RED;
-            __tree_rotate_left(__w, __root);
-            __w = __x_p->__left_;
-          }
-          __w->__color_ = __x_p->__color_;
-          __x_p->__color_ = BLACK;
-          if (__w->__left_) __w->__left_->__color_ = BLACK;
-          __tree_rotate_right(__x_p, __root);
-          break;
-        }
+        __w->__color_ = __x_p->__color_;
+        __x_p->__color_ = BLACK;
+        if (__w->__left_) __w->__left_->__color_ = BLACK;
+        __tree_rotate_right(__x_p, __root);
+        break;
       }
     }
-    if (__x) __x->__color_ = BLACK;
   }
+  if (__x) __x->__color_ = BLACK;
+}
+
+/**
+ * @brief Delete Node in tree and rebalance and return deleted node
+ *        __y : Node to replace __z
+ *        __x : child node of __y
+ *        __x_p : parent of __x
+ *
+ * @param __z : node to delete
+ * @param __header : head of rb-tree
+ * @return __tree_node_base*
+ */
+__tree_node_base *__tree_erase_and_fixup(
+    __tree_node_base *const __z, __tree_node_base &__header) FT_NOEXCEPT {
+  __tree_node_base *&__root = __header.__parent_;
+  __tree_node_base *__y = __z;
+  __tree_node_base *__x = NULL;
+  __tree_node_base *__x_p = NULL;
+
+  local_erase_node(__z, __y, __x, __x_p, __header);
+  if (__y->__color_ != RED) local_erase_fixup(__x, __x_p, __root);
+
   return __y;
 }
 

@@ -590,8 +590,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_unique_pos(
   if (__comp) {
     if (__j == begin())           // leftmost
       return ret_pair(__x, __y);  // (NULL, leaf)
-    else
-      --__j;  // decrement node
+    --__j;                        // decrement node
   }
 
   if (__impl_.__key_comp(__S_key(__j.__node_),
@@ -640,7 +639,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__get_insert_hint_unique_pos(
       return __get_insert_unique_pos(__k);
     }
   } else if (__impl_.__key_comp(__S_key(__pos.__node_),
-                                __k)) {  // more than pos
+                                __k)) {  // greater than pos
     iterator __after = __pos;
 
     if (__pos.__node_ == __rightmost()) {

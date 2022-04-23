@@ -85,6 +85,14 @@ void tree_test(int argc, char **argv) {
     tree.print_tree();
     cptree.print_tree();
     atr.print_tree();
+    for (int i = 0; i < argc; ++i) {
+      test[i] =
+          ft::make_pair(generateRandomNumber(std::make_pair(-10000, 10000)),
+                        std::string(argv[0]));
+      if (i == 10) test[i] = ft::make_pair(i, std::string("HI Im Val"));
+    }
+    tree.insert_range(test, test + argc);
+    tree.print_tree();
     std::cout << "tree size is: " << tree.size() << "\n";
     iterator it = tree.find(10);
     if (it != tree.end()) std::cout << (*it).first << ":" << it->second << "\n";
