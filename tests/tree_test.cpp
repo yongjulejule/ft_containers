@@ -14,6 +14,9 @@ typedef ft::__tree<int, ft::pair<int, std::string>,
                    ft::select_first<ft::pair<int, std::string> >,
                    std::less<int>, std::allocator<ft::pair<int, std::string> > >
     my_tree;
+typedef ft::__tree<int, int, ft::identity<int>, std::less<int>,
+                   std::allocator<int> >
+    int_tree;
 
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
@@ -77,7 +80,7 @@ void tree_test(int argc, char **argv) {
     std::cout << "tree size is: " << tree.size() << "\n";
     std::cout << "delete random [" << argc / 3 << "] numbers of node\n";
 
-    for (int i = 1; i < (argc / 3); i++) {
+    for (int i = 1; i < (argc / 2); i++) {
       int num = generateRandomNumber(std::make_pair(0, argc));
       std::cout << "Key to delete: " << num << "\n";
       tree.erase(num);
@@ -215,6 +218,17 @@ int main(int argc, char **argv) {
   tree_test(argc, argv);
   alloc_test();
   benchmark_static();
+  int arr[] = {100, 101,   102,  103,      104,    453535, 34242, 13133, 17,
+               18,  15,    8,    1,        2,      4242,   3,     20,    19,
+               15,  53423, -1,   -2,       -3,     12,     6,     3,     42,
+               -52, 423,   2436, -1231245, -52543, 2345,   -42};
+  int_tree tree_int;
+  tree_int.insert_range(arr, arr + sizeof(arr) / sizeof(int));
+  tree_int.print_tree();
+  tree_int.erase(8);
+  tree_int.print_tree();
+  tree_int.erase(4242);
+  tree_int.print_tree();
 
   // int b = static_test::S_increment();
   // int c = static_test().increment();

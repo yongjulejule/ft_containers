@@ -951,6 +951,6 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
 }  // namespace ft
 
 // NOTE: for tester
-#include "../src/__tree.cpp"
+// #include "../src/__tree.cpp"
 
 #endif  // __TREE

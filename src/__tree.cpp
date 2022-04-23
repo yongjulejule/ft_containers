@@ -287,12 +287,16 @@ static void local_erase_node(__tree_node_base *const &__z,
   }
 }
 
+// FIXME : DELETE COUT
 static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
                               __tree_node_base *&__root) {
+  std::cout << "======begin fixup =======\n";
   while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
+    std::cout << "======begin loop =======\n";
     if (__x == __x_p->__left_) {
       __tree_node_base *__w = __x_p->__right_;
       if (__w->__color_ == RED) {
+        std::cout << "case 1\n";
         __w->__color_ = BLACK;
         __x_p->__color_ = RED;
         __tree_rotate_left(__x_p, __root);
@@ -300,16 +304,19 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
       }
       if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
           (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
+        std::cout << "case 2\n";
         __w->__color_ = RED;
         __x = __x_p;
         __x_p = __x_p->__parent_;
       } else {
         if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
+          std::cout << "case 3\n";
           __w->__left_->__color_ = BLACK;
           __w->__color_ = RED;
           __tree_rotate_right(__w, __root);
           __w = __x_p->__right_;
         }
+        std::cout << "case 4\n";
         __w->__color_ = __x_p->__color_;
         __x_p->__color_ = BLACK;
         if (__w->__right_) __w->__right_->__color_ = BLACK;
@@ -319,6 +326,7 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
     } else {
       __tree_node_base *__w = __x_p->__left_;
       if (__w->__color_ == RED) {
+        std::cout << "case 5\n";
         __w->__color_ = BLACK;
         __x_p->__color_ = RED;
         __tree_rotate_right(__x_p, __root);
@@ -326,16 +334,19 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
       }
       if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
           (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
+        std::cout << "case 6\n";
         __w->__color_ = RED;
         __x = __x_p;
         __x_p = __x_p->__parent_;
       } else {
         if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
+          std::cout << "case 7\n";
           __w->__right_->__color_ = BLACK;
           __w->__color_ = RED;
           __tree_rotate_left(__w, __root);
           __w = __x_p->__left_;
         }
+        std::cout << "case 8\n";
         __w->__color_ = __x_p->__color_;
         __x_p->__color_ = BLACK;
         if (__w->__left_) __w->__left_->__color_ = BLACK;
