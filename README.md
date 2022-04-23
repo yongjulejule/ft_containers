@@ -46,8 +46,8 @@ My c++ STL containers (c++98)
 		- [Modifiers:](#modifiers)
 		- [Allocator:](#allocator-1)
 		- [Non-member functions:](#non-member-functions)
-		- [__vector_base](#__vector_base)
-		- [__vector_base methods](#__vector_base-methods)
+		- [\_\_vector_base](#__vector_base)
+		- [\_\_vector_base methods](#__vector_base-methods)
 		- [private member function in vector](#private-member-function-in-vector)
 		- [exceptions](#exceptions)
 - [Stack](#stack)
@@ -254,6 +254,8 @@ struct vector_base{
 	~vector_base() { alloc.deallocate(v,last - v) ; }
 };
 ```
+
+이 문서 [__vector_base](#__vector_base)의 "간단한 테스트" 참고
 
 [Stroustrup's document](https://www.stroustrup.com/3rd_safe.pdf)
 
@@ -677,7 +679,7 @@ void swap (vector<T,Alloc>& x, vector<T,Alloc>& y);
 ```
 
 
-### __vector_base
+### \_\_vector_base
 
 `__vector_base` 에서 필요한 기능
 - 생성자에서 메모리 획득이 되어야 하며, 소멸자에서 메모리를 모두 해제해야 함 (RAII)
@@ -766,7 +768,7 @@ int main() {
 </details>
 
 
-### __vector_base methods
+### \_\_vector_base methods
 
 ```c++
 // construct n size of memory
