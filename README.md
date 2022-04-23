@@ -34,7 +34,7 @@ My c++ STL containers (c++98)
 		- [⚠️ Default Argument Do Not Participate in Overload Resolution](#️-default-argument-do-not-participate-in-overload-resolution)
 	- [enable_if](#enable_if)
 - [Allocator](#allocator)
-	- [C++ named requirements: Allocaotr](#c-named-requirements-allocaotr)
+	- [C++ named requirements: Allocator](#c-named-requirements-allocator)
 	- [C++ std::allocator](#c-stdallocator)
 - [Vector](#vector)
 	- [Prototype](#prototype)
@@ -56,14 +56,13 @@ My c++ STL containers (c++98)
 	- [구조](#구조)
 		- [tree iterator](#tree-iterator)
 	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
-	- [member types:](#member-types-1)
-	- [member functions:](#member-functions-1)
-	- [member functions:](#member-functions-2)
-	- [private member functions:](#private-member-functions)
+	- [Member types:](#member-types-1)
+	- [Member functions:](#member-functions-1)
+		- [constructor:](#constructor)
 - [map / set](#map--set)
 	- [prototype](#prototype-1)
 	- [member types](#member-types-2)
-	- [Member functions](#member-functions-3)
+	- [Member functions](#member-functions-2)
 		- [Iterators:](#iterators-1)
 		- [Capacity:](#capacity-1)
 		- [Element access:](#element-access-1)
@@ -73,24 +72,6 @@ My c++ STL containers (c++98)
 		- [Non-member functions:](#non-member-functions-1)
 - [TODO](#todo)
 - [Reference](#reference)
-	 in vector](#private-member function
-	-in-vector)
-		- [exceptions](#exceptions)
-- [Stack](#stack)
-- [RB-Tree (base of set and map)](#rb-tree-base-of-set-and-map)
-	- [RB-tree:](#rb-tree)
-	- [구조](#구조)
-		- [tree iterator](#tree-iterator)
-	- [RB-tree Node Algorithms](#rb-tree-node-algorithms)
-	- [member types:](#member-types-1)
-	- [member functions:](#member-functions-1)
-- [map / set](#map--set)
-	- [member types](#member-types-2)
-	- [member functions](#member-functions-2)
-- [TODO](#todo)
-- [Reference](#reference)
-
-<small><i><a href='http://ecotrust-canada.github.io/markdown-toc/'>Table of contents generated with markdown-toc</a></i></small>
 
 # Convention
 
@@ -299,7 +280,7 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 - `integral_constant`
   - `true_type`
   - `false_type`
-- `is_intrgral`
+- `is_integral`
 - `is_same`
 - `remove_cv`
 - `enable_if`
@@ -333,7 +314,7 @@ c++에서 컴파일시 타입에 맞는 [함수](https://en.cppreference.com/w/c
 
 - [name lookup](https://en.cppreference.com/w/cpp/language/lookup)
   - [unqualified name lookup](https://en.cppreference.com/w/cpp/language/unqualified_lookup)
-  - [qualified name loopup](https://en.cppreference.com/w/cpp/language/qualified_lookup)
+  - [qualified name lookup](https://en.cppreference.com/w/cpp/language/qualified_lookup)
 - [ADL (Argument Dependent Lookup)](https://en.cppreference.com/w/cpp/language/adl)
 - [template argument deduction](https://en.cppreference.com/w/cpp/language/template_argument_deduction)
 - [template argument substitution](https://en.cppreference.com/w/cpp/language/function_template#Template_argument_substitution)
@@ -363,7 +344,7 @@ struct enable_if<true, T> { typedef T type; };
 
 할당을 위한 `template class`
 
-## C++ named requirements: Allocaotr
+## C++ named requirements: Allocator
 
 [Allocator requiremnts](https://en.cppreference.com/w/cpp/named_req/Allocator#cite_ref-1)
 
@@ -949,53 +930,59 @@ __tree_node_base *__tree_erase_and_fixup(
 
 ```
 
-## member types:
+## Member types:
 
-TODO
+`map`과  `set`의 `Member type`을 따르며, `Node`의 타입도 있어야 함.
+또한 `allocator`는 인자로 받는 `allocator`가 아닌 `Node-type`으로 `rebind` 해야함.
 
-## member functions:
+```c++
+ private:
+  typedef __tree_node_base *_Base_ptr;
+  typedef const __tree_node_base *_Const_base_ptr;
+  typedef __tree_node<_Val> *_Link_type;
+  typedef const __tree_node<_Val> *_Const_link_type;
+
+ public:
+  typedef _Key key_type;
+  typedef _Val value_type;
+  typedef value_type *pointer;
+  typedef const value_type *const_pointer;
+  typedef value_type &reference;
+  typedef const value_type &const_reference;
+  typedef size_t size_type;
+  typedef ptrdiff_t difference_type;
+  typedef _Alloc allocator_type;
+
+  typedef typename _Alloc::template rebind<__tree_node<_Val> >::other
+      _Node_allocator;
+
+  typedef __tree_iterator<value_type> iterator;
+  typedef __tree_const_iterator<value_type> const_iterator;
+  typedef ft::reverse_iterator<iterator> reverse_iterator;
+  typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
+```
+
+노드의 타입이 크게 `Base_ptr`, `Link_type`, `iterator`로 분류됨.
+
+- `Base_ptr`: 트리의 left, right, parent만 필요한 경우
+- `Link_type`: `Base_ptr`에 트리의 값까지 필요한 경우
+- `iterator`: `Link_type`에 각종 연산자까지 필요한 경우
+
+## Member functions:
 
 트리의 member function을 기반으로 `map`, `set`의 member function이 작동하기 때문에, 각 컨테이너가 갖고 있는 기능들을 구현해야 함.
 
-대부분의 멤버 함수가 `map`, `set`과 겹치기 때문에, 다른 멤버 함수만 기술함.
-
-## member functions:
-
-constructor: 
+### constructor: 
 
 `map`, `set`에 따라 `strong-guarantee`를 보장해야함. 필요한 데이터는 모두 `impl`에 저장되어 있으므로, `impl`을 잘 설정해주면 됨.
 
 ```c++
-private:
-   __tree () {}; // can't construct without suitable arguments
 public:
+   __tree () {}; // can't construct without suitable arguments
    __tree (const _Compare& comp, const allocator_type& alloc = allocator_type())
        : __impl_(comp, alloc) {};
    __tree (const __tree& other) : __impl_(other.__impl_) { __copy_tree(other);};
 ```
-
-insert:
-
-TODO 
-
-```c++
-ft::pair<_Base_ptr, _Base_ptr> __get_insert_unique_pos(const key_type &__k);
-ft::pair<_Base_ptr, _Base_ptr> __get_insert_hint_unique_pos(
-   const_iterator __pos, const key_type &__k);
-ft::pair<iterator, bool> insert_unique(const value_type &__v); // strong-guarantee
-iterator insert_unique_with_hint(const_iterator __position, // strong-guarantee
-                                const value_type &__v);
-template <typename _InputIterator>
-void insert_range(_InputIterator __first, _InputIterator __last); // basic_guarantee
-```
-
-## private member functions:
-
-TODO
-
-```c++
-```
-
 
 # map / set
 
@@ -1130,7 +1117,6 @@ bool empty() const FT_NOEXCEPT; // No-throw
 - vector처럼 map, set, stack 문서화
 - rb-tree 문서화
 - rb-tree ppt 만들기
-- rb-tree `cpp` 파일에서 `hpp` 파일로 옮기기
 
 # Reference
 

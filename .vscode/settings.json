@@ -89,6 +89,7 @@
 		"libcxx",
 		"NOEXCEPT",
 		"NOEXCPT",
+		"ptrdiff",
 		"rbegin",
 		"rebalance",
 		"yongjule"
