@@ -81,10 +81,12 @@
 	},
 	"C_Cpp.errorSquiggles": "Enabled",
 	"cSpell.words": [
+		"Alloc",
 		"cplusplus",
 		"cppreference",
 		"crbegin",
 		"crend",
+		"deallocates",
 		"deque",
 		"libcxx",
 		"NOEXCEPT",
