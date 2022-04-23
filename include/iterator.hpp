@@ -15,9 +15,6 @@
 #include <cstddef>
 #include <iterator>
 
-// TODO: delete
-#include <iostream>
-
 #include "type_traits.hpp"
 
 namespace ft {

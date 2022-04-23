@@ -12,6 +12,7 @@
 #ifndef __TREE_HPP
 #define __TREE_HPP
 
+#include <iostream>
 #include <memory>
 
 #include "iterator.hpp"
@@ -67,10 +68,6 @@ struct __tree_node_base {
   _Base_ptr __right_;
 };
 
-// tree header
-// parent: root of tree
-// left: left-most element
-// right: right-most element
 struct __tree_header {
   __tree_node_base __header_;
   std::size_t __node_count_;
@@ -249,11 +246,7 @@ template <typename _Key, typename _Val, typename _KeyOfValue,
           typename _Compare = std::less<_Key>,
           typename _Alloc = std::allocator<_Val> >
 class __tree {
- public:
-  typedef typename _Alloc::template rebind<__tree_node<_Val> >::other
-      _Node_allocator;
-
- protected:
+ private:
   typedef __tree_node_base *_Base_ptr;
   typedef const __tree_node_base *_Const_base_ptr;
   typedef __tree_node<_Val> *_Link_type;
@@ -270,15 +263,23 @@ class __tree {
   typedef ptrdiff_t difference_type;
   typedef _Alloc allocator_type;
 
+  typedef typename _Alloc::template rebind<__tree_node<_Val> >::other
+      _Node_allocator;
+
   typedef __tree_iterator<value_type> iterator;
   typedef __tree_const_iterator<value_type> const_iterator;
   typedef ft::reverse_iterator<iterator> reverse_iterator;
   typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 
  private:
-  // _Node_allocator: rebind of allocator
-  // __tree_key_compare: key compare functor
-  // __tree_header: head of tree
+  /**
+   * @brief impl data of tree
+   *
+   * @class _Node_allocator: rebind of allocator
+   * @class __tree_key_compare: key compare functor
+   * @class __tree_header: head of tree
+   *
+   */
   template <typename _Key_compare>
   struct __tree_impl : public _Node_allocator,
                        public __tree_key_compare<_Key_compare>,
@@ -299,7 +300,6 @@ class __tree {
   _Node_allocator &__get_Node_allocator() { return this->__impl_; }
   const _Node_allocator &__get_Node_allocator() const { return this->__impl_; }
 
-  // SECTION: generate/delete node
   _Link_type __allocate_node() { return __get_Node_allocator().allocate(1); }
 
   void __deallocate_node(_Link_type __p) {
@@ -330,36 +330,46 @@ class __tree {
   }
 
   // SECTION: get specific node
+
+  // SECTION: return base-node type
   _Base_ptr &__root() { return this->__impl_.__header_.__parent_; }
   _Const_base_ptr __root() const { return this->__impl_.__header_.__parent_; }
 
   _Base_ptr &__leftmost() { return this->__impl_.__header_.__left_; }
-  _Const_base_ptr &__leftmost() const {
-    return this->__impl_.__header_.__left_;
-  }
+  _Const_base_ptr __leftmost() const { return this->__impl_.__header_.__left_; }
 
   _Base_ptr &__rightmost() { return this->__impl_.__header_.__right_; }
-  _Const_base_ptr &__rightmost() const {
+  _Const_base_ptr __rightmost() const {
     return this->__impl_.__header_.__right_;
-  }
-
-  _Link_type __begin() {
-    return static_cast<_Link_type>(this->__impl_.__header_.__parent_);
-  }
-  _Const_link_type __begin() const {
-    return static_cast<_Link_type>(this->__impl_.__header_.__parent_);
   }
 
   _Base_ptr __end() { return &this->__impl_.__header_; }
   _Const_base_ptr __end() const { return &this->__impl_.__header_; }
 
-  // SECTION: static member function
+  static _Base_ptr __S_minimum(_Base_ptr __x) { return __minimum(__x); }
+  static _Const_base_ptr __S_minimum(_Const_base_ptr __x) {
+    return __minimum(__x);
+  }
+
+  static _Base_ptr __S_maximum(_Base_ptr __x) { return __maximum(__x); }
+  static _Const_base_ptr __S_maximum(_Const_base_ptr __x) {
+    return __maximum(__x);
+  }
+
+  // SECTION: return key type
   static const _Key &__S_key(_Const_link_type __x) {
     return _KeyOfValue()(*__x->__valptr());
   }
-
   static const _Key &__S_key(_Const_base_ptr __x) {
     return __S_key(static_cast<_Const_link_type>(__x));
+  }
+
+  // SECTION: return node type
+  _Link_type __begin() {
+    return static_cast<_Link_type>(this->__impl_.__header_.__parent_);
+  }
+  _Const_link_type __begin() const {
+    return static_cast<_Link_type>(this->__impl_.__header_.__parent_);
   }
 
   static _Link_type __S_left(_Base_ptr __x) {
@@ -374,16 +384,6 @@ class __tree {
   }
   static _Const_link_type __S_right(_Const_base_ptr __x) {
     return static_cast<_Link_type>(__x->__right_);
-  }
-
-  static _Base_ptr __S_minimum(_Base_ptr __x) { return __minimum(__x); }
-  static _Const_base_ptr __S_minimum(_Const_base_ptr __x) {
-    return __minimum(__x);
-  }
-
-  static _Base_ptr __S_maximum(_Base_ptr __x) { return __maximum(__x); }
-  static _Const_base_ptr __S_maximum(_Const_base_ptr __x) {
-    return __maximum(__x);
   }
 
   // SECTION: helper for public member function
@@ -427,12 +427,9 @@ class __tree {
                                       const key_type &__k) const;
   iterator __insert_helper(_Base_ptr __x, _Base_ptr __p, const value_type &__v);
 
- public:
   // SECTION: constructor/destructor
- private:
-  __tree() {}  // can't construct without suitable arguments
-
  public:
+  __tree() {}
   __tree(const _Compare &_comp, const allocator_type &__a = allocator_type())
       : __impl_(_comp, _Node_allocator(__a)) {}
   __tree(const __tree &other) : __impl_(other.__impl_) {
@@ -508,6 +505,14 @@ class __tree {
   }
 
   // operations
+
+  /**
+   * @brief: find node by given key and return the node.
+   *         if not exist, return end()
+   *
+   * @param __k: key to find
+   * @return iterator
+   */
   iterator find(const key_type &__k) {
     iterator __found = __lower_bound_helper(__begin(), __end(), __k);
     if (__impl_.__key_comp(__k, __S_key(__found.__node_)) || __found == end())
@@ -699,7 +704,7 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::insert_unique_with_hint(
  * @brief copy tree include header of tree
  *
  * @param __x: root of new tree
- * @param __p: first, header of *this and than parent of __x
+ * @param __p: first, end() and than parent of __x
  * @return __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::_Link_type
  */
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
@@ -914,7 +919,6 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
   }
   return ft::pair<iterator, iterator>(iterator(__y), iterator(__y));
 }
-
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 ft::pair<
@@ -946,5 +950,8 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
 }
 
 }  // namespace ft
+
+// NOTE: for tester
+#include "../src/__tree.cpp"
 
 #endif  // __TREE

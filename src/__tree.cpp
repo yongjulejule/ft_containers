@@ -39,17 +39,15 @@ const __tree_node_base *__maximum(const __tree_node_base *__x) FT_NOEXCEPT {
 static __tree_node_base *local_tree_increment(__tree_node_base *__x)
     FT_NOEXCEPT {
   if (__x->__right_ != NULL) {
-    __x = __x->__right_;
-    while (__x->__left_ != NULL) __x = __x->__left_;
-  } else {
-    __tree_node_base *__y = __x->__parent_;
-    while (__x == __y->__right_) {
-      __x = __y;
-      __y = __y->__parent_;
-    }
-    if (__x->__right_ != __y) {
-      __x = __y;
-    }
+    return __minimum(__x->__right_);
+  }
+  __tree_node_base *__y = __x->__parent_;
+  while (__x == __y->__right_) {
+    __x = __y;
+    __y = __y->__parent_;
+  }
+  if (__x->__right_ != __y) {
+    __x = __y;
   }
   return __x;
 }
@@ -65,24 +63,18 @@ const __tree_node_base *__tree_increment(const __tree_node_base *__x)
 
 // Return: prev node by in-order traverse
 static __tree_node_base *local_tree_decrement(__tree_node_base *__x) {
-  // if __x is head of RB-tree
   if (__x->__color_ == RED && __x->__parent_->__parent_ == __x) {
-    __x = __x->__right_;
-    // left가 존재하면, left노드의 right-most
-  } else if (__x->__left_ != NULL) {
-    __tree_node_base *__y = __x->__left_;
-    while (__y->__right_ != 0) __y = __y->__right_;
-    __x = __y;
-    // left가 존재하지 않으면, 부모 노드가 조부모 노드의 left여야함.
-  } else {
-    __tree_node_base *__y = __x->__parent_;
-    while (__x == __y->__left_) {
-      __x = __y;
-      __y = __y->__parent_;
-    }
-    __x = __y;
+    return __x->__right_;
   }
-  return __x;
+  if (__x->__left_ != NULL) {
+    return __maximum(__x->__left_);
+  }
+  __tree_node_base *__y = __x->__parent_;
+  while (__x == __y->__left_) {
+    __x = __y;
+    __y = __y->__parent_;
+  }
+  return __y;
 }
 
 __tree_node_base *__tree_decrement(__tree_node_base *__x) FT_NOEXCEPT {
@@ -248,7 +240,6 @@ __tree_node_base *__tree_erase_and_fixup(
   else if (__y->__right_ == NULL)
     __x = __y->__left_;
   else {
-    // __y = __y->__right_;
     __y = __minimum(__y->__right_);  // __y: successor of __Z
     __x = __y->__right_;
   }
