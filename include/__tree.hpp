@@ -12,6 +12,7 @@
 #ifndef __TREE_HPP
 #define __TREE_HPP
 
+#include <algorithm>
 #include <memory>
 
 #include "iterator.hpp"
