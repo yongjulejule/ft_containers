@@ -18,6 +18,8 @@ typedef ft::__tree<int, int, ft::identity<int>, std::less<int>,
                    std::allocator<int> >
     int_tree;
 
+int_tree tree_int;
+
 template <typename _Key, typename _Val, typename _KeyOfValue, typename _Compare,
           typename _Alloc>
 void ft::__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::print_tree() {
@@ -30,14 +32,16 @@ void ft::__tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::print_tree(
     const std::string &prefix, _Link_type x, bool isLeft) {
   if (x != NULL) {
     std::cout << prefix;
-    std::cout << (isLeft ? "├──" : "└──");
+    std::cout << (isLeft ? "L├──" : "R└──");
     if (x->__color_ == RED) {
       std::cout << R std::cout << __S_key(x) << RESET << "\n";
     } else {
       std::cout << B std::cout << __S_key(x) << RESET << "\n";
     }
-    print_tree(prefix + (isLeft ? "│   " : "    "), __S_left(x), true);
-    print_tree(prefix + (isLeft ? "│   " : "    "), __S_right(x), false);
+    print_tree(prefix + (isLeft ? " │   " : "     "),
+               static_cast<_Link_type>(x->__left_), true);
+    print_tree(prefix + (isLeft ? " │   " : "     "),
+               static_cast<_Link_type>(x->__right_), false);
   }
 }
 
@@ -53,6 +57,19 @@ int generateRandomNumber(std::pair<int, int> range) {
   return ((static_cast<float>(rand())) / RAND_MAX) *
              (static_cast<long long>(range.second) - range.first + 1) +
          range.first;
+}
+int generateRandomNumber(int beg, int end) {
+  static bool first = true;
+  if (first) {
+    struct timeval tp;
+    gettimeofday(&tp, NULL);
+    srand(tp.tv_usec);
+    rand();
+    first = false;
+  }
+  return ((static_cast<float>(rand())) / RAND_MAX) *
+             (static_cast<long long>(end) - beg + 1) +
+         first;
 }
 
 void tree_test(int argc, char **argv) {
@@ -84,6 +101,7 @@ void tree_test(int argc, char **argv) {
       int num = generateRandomNumber(std::make_pair(0, argc));
       std::cout << "Key to delete: " << num << "\n";
       tree.erase(num);
+      tree.print_tree();
     }
     tree.print_tree();
     cptree.print_tree();
@@ -214,25 +232,28 @@ void benchmark_static() {
             << "non-static gap: " << gap2 << "\n";
 }
 
+#define GEN_NUM 100
 int main(int argc, char **argv) {
-  tree_test(argc, argv);
-  alloc_test();
-  benchmark_static();
-  int arr[] = {100, 101,   102,  103,      104,    453535, 34242, 13133, 17,
-               18,  15,    8,    1,        2,      4242,   3,     20,    19,
-               15,  53423, -1,   -2,       -3,     12,     6,     3,     42,
-               -52, 423,   2436, -1231245, -52543, 2345,   -42};
-  int_tree tree_int;
-  tree_int.insert_range(arr, arr + sizeof(arr) / sizeof(int));
+  // tree_test(argc, argv);
+  // alloc_test();
+  // benchmark_static();
+  ft::vector<int> numbers;
+  for (int i = 0; i < GEN_NUM; ++i)
+    numbers.push_back(generateRandomNumber(std::make_pair(0, GEN_NUM * 3)));
+  // int_tree tree_int;
+  tree_int.insert_range(numbers.begin(), numbers.end());
   tree_int.print_tree();
-  tree_int.erase(8);
-  tree_int.print_tree();
-  tree_int.erase(4242);
-  tree_int.print_tree();
+  for (int j = 0; j < 5; ++j) {
+    int i = generateRandomNumber(0, GEN_NUM - 1);
+    std::cout << "to erase: " << numbers[i] << "\n";
+    tree_int.erase(numbers[i]);
+  }
+  // tree_int.print_tree();
+  // tree_int.print_tree();
 
   // int b = static_test::S_increment();
   // int c = static_test().increment();
   //
   // std::string leak = std::string("leaks ") + std::string(argv[0]);
-  system("leaks mine.out 1>/dev/null");
+  // system("leaks mine.out 1>/dev/null");
 }

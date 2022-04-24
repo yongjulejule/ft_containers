@@ -552,9 +552,9 @@ class __tree {
     return allocator_type(__get_Node_allocator());
   }
 
-  // NOTE: print tree
+  // NOTE: to print tree
   void print_tree();
-  void print_tree(const std::string &prefix, _Link_type x, bool isLeft);
+  static void print_tree(const std::string &prefix, _Link_type x, bool isLeft);
 };
 
 /**
@@ -949,8 +949,5 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::equal_range(
 }
 
 }  // namespace ft
-
-// NOTE: for tester
-// #include "../src/__tree.cpp"
 
 #endif  // __TREE
