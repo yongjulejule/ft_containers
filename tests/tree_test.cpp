@@ -232,7 +232,7 @@ void benchmark_static() {
             << "non-static gap: " << gap2 << "\n";
 }
 
-#define GEN_NUM 100
+#define GEN_NUM 30
 int main(int argc, char **argv) {
   // tree_test(argc, argv);
   // alloc_test();
