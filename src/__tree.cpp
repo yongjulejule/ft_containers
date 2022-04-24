@@ -13,11 +13,6 @@
 
 #include "utility.hpp"
 
-typedef ft::__tree<int, int, ft::identity<int>, std::less<int>,
-                   std::allocator<int> >
-    int_tree;
-
-extern int_tree tree_int;
 namespace ft {
 
 __tree_node_base *__minimum(__tree_node_base *__x) FT_NOEXCEPT {
@@ -289,16 +284,12 @@ static void local_erase_node(__tree_node_base *const &__z,
   // }
 }
 
-// FIXME : DELETE COUT
 static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
                               __tree_node_base *&__root) {
-  // std::cout << "======begin fixup =======\n";
   while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
-    // std::cout << "======begin loop =======\n";
     if (__x == __x_p->__left_) {
       __tree_node_base *__w = __x_p->__right_;
       if (__w->__color_ == RED) {
-        // std::cout << "case 1\n";
         __w->__color_ = BLACK;
         __x_p->__color_ = RED;
         __tree_rotate_left(__x_p, __root);
@@ -306,19 +297,16 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
       }
       if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
           (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
-        // std::cout << "case 2\n";
         __w->__color_ = RED;
         __x = __x_p;
         __x_p = __x_p->__parent_;
       } else {
         if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
-          // std::cout << "case 3\n";
           __w->__left_->__color_ = BLACK;
           __w->__color_ = RED;
           __tree_rotate_right(__w, __root);
           __w = __x_p->__right_;
         }
-        // std::cout << "case 4\n";
         __w->__color_ = __x_p->__color_;
         __x_p->__color_ = BLACK;
         if (__w->__right_) __w->__right_->__color_ = BLACK;
@@ -328,7 +316,6 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
     } else {
       __tree_node_base *__w = __x_p->__left_;
       if (__w->__color_ == RED) {
-        // std::cout << "case 5\n";
         __w->__color_ = BLACK;
         __x_p->__color_ = RED;
         __tree_rotate_right(__x_p, __root);
@@ -336,19 +323,16 @@ static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
       }
       if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
           (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
-        // std::cout << "case 6\n";
         __w->__color_ = RED;
         __x = __x_p;
         __x_p = __x_p->__parent_;
       } else {
         if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
-          // std::cout << "case 7\n";
           __w->__right_->__color_ = BLACK;
           __w->__color_ = RED;
           __tree_rotate_left(__w, __root);
           __w = __x_p->__left_;
         }
-        // std::cout << "case 8\n";
         __w->__color_ = __x_p->__color_;
         __x_p->__color_ = BLACK;
         if (__w->__left_) __w->__left_->__color_ = BLACK;
@@ -377,39 +361,8 @@ __tree_node_base *__tree_erase_and_fixup(
   __tree_node_base *__x = NULL;
   __tree_node_base *__x_p = NULL;
 
-  // std::cout << "@@@@@@@@@@@@@@@@@before erase node\n";
-  // std::cout << __z << "," << __y << "\n";
-  // std::cout << "__z :" << *static_cast<int_tree::iterator>(__z)
-  //           << "__y :" << *static_cast<int_tree::iterator>(__y) << "__x :"
-  //           << (__x == NULL ? -4242 : *static_cast<int_tree::iterator>(__x))
-  //           << "__x_p :"
-  //           << (__x_p == NULL ? -4242 :
-  //           *static_cast<int_tree::iterator>(__x_p))
-  //           << "\n";
-  // tree_int.print_tree();
   local_erase_node(__z, __y, __x, __x_p, __header);
-  // std::cout << "@@@@@@@@@@@@@@@@@after erase node\n";
-  // std::cout << __z << "," << __y << "\n";
-  // std::cout << "__z :" << *static_cast<int_tree::iterator>(__z)
-  //           << "__y :" << *static_cast<int_tree::iterator>(__y) << "__x :"
-  //           << (__x == NULL ? -4242 : *static_cast<int_tree::iterator>(__x))
-  //           << "__x_p :"
-  //           << (__x_p == NULL ? -4242 :
-  //           *static_cast<int_tree::iterator>(__x_p))
-  //           << "\n";
-  // tree_int.print_tree();
   if (__y->__color_ != RED) local_erase_fixup(__x, __x_p, __root);
-  // std::cout << "@@@@@@@@@@@@@@@@@after fixup node\n";
-  // std::cout << "__z :" << *static_cast<int_tree::iterator>(__z)
-  //           << "__y :" << *static_cast<int_tree::iterator>(__y) << "__x :"
-  //           << (__x == NULL ? -4242 : *static_cast<int_tree::iterator>(__x))
-  //           << "__x_p :"
-  //           << (__x_p == NULL ? -4242 :
-  //           *static_cast<int_tree::iterator>(__x_p))
-  //           << "\n";
-  // tree_int.print_tree();
-
-  // std::cout << __z << "," << __y << "\n";
   return __y;
 }
 

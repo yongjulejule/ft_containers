@@ -247,6 +247,7 @@ int main(int argc, char **argv) {
     int i = generateRandomNumber(0, GEN_NUM - 1);
     std::cout << "to erase: " << numbers[i] << "\n";
     tree_int.erase(numbers[i]);
+    tree_int.print_tree();
   }
   // tree_int.print_tree();
   // tree_int.print_tree();

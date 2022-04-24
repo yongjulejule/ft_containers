@@ -12,7 +12,6 @@
 #ifndef __TREE_HPP
 #define __TREE_HPP
 
-#include <iostream>
 #include <memory>
 
 #include "iterator.hpp"
