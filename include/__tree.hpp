@@ -699,7 +699,6 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::insert_unique_with_hint(
   return iterator(__ret.first);
 }
 
-// TODO: add comment
 /**
  * @brief copy tree include header of tree
  *
@@ -716,17 +715,19 @@ __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::__copy_tree(_Link_type __x,
   __top->__parent_ = __p;                // link parent
 
   if (__x->__right_) {
-    __top->__right_ = __copy_tree(__S_right(__x), __top);
+    __top->__right_ =
+        __copy_tree(__S_right(__x), __top);  // copy right until NULL
   }
   __p = __top;
   __x = __S_left(__x);
 
-  while (__x != NULL) {
+  while (__x != NULL) {  // copy left until NULL
     _Link_type __y = __clone_node(__x);
     __p->__left_ = __y;
     __y->__parent_ = __p;
     if (__x->__right_) {
-      __y->__right_ = __copy_tree(__S_right(__x), __y);
+      __y->__right_ =
+          __copy_tree(__S_right(__x), __y);  // if left has right, copy again
     }
     __p = __y;
     __x = __S_left(__x);

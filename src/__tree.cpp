@@ -260,9 +260,9 @@ static void local_erase_node(__tree_node_base *const &__z,
     return;
   }
 
-  __x = (__y->__left_ == NULL) ? __y->__right_ : __y->__left_;
-  __x_p = __y->__parent_;
-  if (__x) __x->__parent_ = __y->__parent_;
+  __x = (__z->__left_ == NULL) ? __z->__right_ : __z->__left_;
+  __x_p = __z->__parent_;
+  if (__x) __x->__parent_ = __z->__parent_;
   if (__root == __z)
     __root = __x;
   else if (__z->__parent_->__left_ == __z)
@@ -283,61 +283,77 @@ static void local_erase_node(__tree_node_base *const &__z,
   }
 }
 
+inline static bool local_erase_fixup_left(__tree_node_base *&__x,
+                                          __tree_node_base *&__x_p,
+                                          __tree_node_base *&__root) {
+  __tree_node_base *__w = __x_p->__right_;
+  if (__w->__color_ == RED) {
+    __w->__color_ = BLACK;
+    __x_p->__color_ = RED;
+    __tree_rotate_left(__x_p, __root);
+    __w = __x_p->__right_;
+  }
+  if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
+      (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
+    __w->__color_ = RED;
+    __x = __x_p;
+    __x_p = __x_p->__parent_;
+  } else {
+    if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
+      __w->__left_->__color_ = BLACK;
+      __w->__color_ = RED;
+      __tree_rotate_right(__w, __root);
+      __w = __x_p->__right_;
+    }
+    __w->__color_ = __x_p->__color_;
+    __x_p->__color_ = BLACK;
+    if (__w->__right_) __w->__right_->__color_ = BLACK;
+    __tree_rotate_left(__x_p, __root);
+    return true;
+  }
+  return false;
+}
+
+inline static bool local_erase_fixup_right(__tree_node_base *&__x,
+                                           __tree_node_base *&__x_p,
+                                           __tree_node_base *&__root) {
+  __tree_node_base *__w = __x_p->__left_;
+  if (__w->__color_ == RED) {
+    __w->__color_ = BLACK;
+    __x_p->__color_ = RED;
+    __tree_rotate_right(__x_p, __root);
+    __w = __x_p->__left_;
+  }
+  if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
+      (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
+    __w->__color_ = RED;
+    __x = __x_p;
+    __x_p = __x_p->__parent_;
+  } else {
+    if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
+      __w->__right_->__color_ = BLACK;
+      __w->__color_ = RED;
+      __tree_rotate_left(__w, __root);
+      __w = __x_p->__left_;
+    }
+    __w->__color_ = __x_p->__color_;
+    __x_p->__color_ = BLACK;
+    if (__w->__left_) __w->__left_->__color_ = BLACK;
+    __tree_rotate_right(__x_p, __root);
+    return true;
+  }
+  return false;
+}
+
 static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,
                               __tree_node_base *&__root) {
-  while (__x != __root && (__x == NULL || __x->__color_ == BLACK)) {
+  bool __is_end = false;
+  while (__x != __root && (__x == NULL || __x->__color_ == BLACK) &&
+         !__is_end) {
     if (__x == __x_p->__left_) {
-      __tree_node_base *__w = __x_p->__right_;
-      if (__w->__color_ == RED) {
-        __w->__color_ = BLACK;
-        __x_p->__color_ = RED;
-        __tree_rotate_left(__x_p, __root);
-        __w = __x_p->__right_;
-      }
-      if ((__w->__left_ == NULL || __w->__left_->__color_ == BLACK) &&
-          (__w->__right_ == NULL || __w->__right_->__color_ == BLACK)) {
-        __w->__color_ = RED;
-        __x = __x_p;
-        __x_p = __x_p->__parent_;
-      } else {
-        if (__w->__right_ == NULL || __w->__right_->__color_ == BLACK) {
-          __w->__left_->__color_ = BLACK;
-          __w->__color_ = RED;
-          __tree_rotate_right(__w, __root);
-          __w = __x_p->__right_;
-        }
-        __w->__color_ = __x_p->__color_;
-        __x_p->__color_ = BLACK;
-        if (__w->__right_) __w->__right_->__color_ = BLACK;
-        __tree_rotate_left(__x_p, __root);
-        break;
-      }
+      __is_end = local_erase_fixup_left(__x, __x_p, __root);
     } else {
-      __tree_node_base *__w = __x_p->__left_;
-      if (__w->__color_ == RED) {
-        __w->__color_ = BLACK;
-        __x_p->__color_ = RED;
-        __tree_rotate_right(__x_p, __root);
-        __w = __x_p->__left_;
-      }
-      if ((__w->__right_ == NULL || __w->__right_->__color_ == BLACK) &&
-          (__w->__left_ == NULL || __w->__left_->__color_ == BLACK)) {
-        __w->__color_ = RED;
-        __x = __x_p;
-        __x_p = __x_p->__parent_;
-      } else {
-        if (__w->__left_ == NULL || __w->__left_->__color_ == BLACK) {
-          __w->__right_->__color_ = BLACK;
-          __w->__color_ = RED;
-          __tree_rotate_left(__w, __root);
-          __w = __x_p->__left_;
-        }
-        __w->__color_ = __x_p->__color_;
-        __x_p->__color_ = BLACK;
-        if (__w->__left_) __w->__left_->__color_ = BLACK;
-        __tree_rotate_right(__x_p, __root);
-        break;
-      }
+      __is_end = local_erase_fixup_right(__x, __x_p, __root);
     }
   }
   if (__x) __x->__color_ = BLACK;
