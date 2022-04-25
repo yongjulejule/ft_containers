@@ -109,5 +109,6 @@ int main(int argc, char **argv) {
   max_size_test();
   map_test(argc, argv);
   compare_test(argc, argv);
+  sizeof(ft::__tree_node_base);
   system("leaks mine.out");
 }
