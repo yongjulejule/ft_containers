@@ -306,10 +306,10 @@ void vector_construct_test() {
         "ft::vector<char> v((std::istreambuf_iterator<char>(source)), "
         "std::istreambuf_iterator<char>()) ");
     std::ifstream source("Makefile", std::ios::binary);
-    // ft::vector<char> v((std::istreambuf_iterator<char>(source)),
-    //                    std::istreambuf_iterator<char>());
-    // print_vector(v.begin(), v.end());
-    // print_vector(v);
+    ft::vector<char> v((std::istreambuf_iterator<char>(source)),
+                       std::istreambuf_iterator<char>());
+    print_vector(v.begin(), v.end());
+    print_vector(v);
   }
 
   {

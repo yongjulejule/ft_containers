@@ -20,17 +20,23 @@
 namespace ft {
 
 // tags for iterator_traits
+#if defined(_LIBCPP_ITERATOR) || defined(_STL_ITERATOR_H)
+
 typedef std::input_iterator_tag input_iterator_tag;
 typedef std::output_iterator_tag output_iterator_tag;
 typedef std::forward_iterator_tag forward_iterator_tag;
 typedef std::bidirectional_iterator_tag bidirectional_iterator_tag;
 typedef std::random_access_iterator_tag random_access_iterator_tag;
 
-// struct input_iterator_tag {};
-// struct output_iterator_tag {};
-// struct forward_iterator_tag : input_iterator_tag {};
-// struct bidirectional_iterator_tag : forward_iterator_tag {};
-// struct random_access_iterator_tag : bidirectional_iterator_tag {};
+#else  // !defined(_LIBCPP_ITERATOR) && !defined(_STL_ITERATOR_H)
+
+struct input_iterator_tag {};
+struct output_iterator_tag {};
+struct forward_iterator_tag : input_iterator_tag {};
+struct bidirectional_iterator_tag : forward_iterator_tag {};
+struct random_access_iterator_tag : bidirectional_iterator_tag {};
+
+#endif  // defined(_LIBCPP_ITERATOR) || defined(_STL_ITERATOR_H)
 
 /**
  * @brief base of iterator. common to %iterator classes.
@@ -307,6 +313,29 @@ reverse_iterator<_Iter> operator+(
     typename reverse_iterator<_Iter>::difference_type __n,
     const reverse_iterator<_Iter> &__it) {
   return reverse_iterator<_Iter>(__it.base() - __n);
+}
+
+template <typename _InputIterator>
+inline typename iterator_traits<_InputIterator>::difference_type __distance(
+    _InputIterator __first, _InputIterator __last, ft::input_iterator_tag) {
+  typename iterator_traits<_InputIterator>::difference_type d(0);
+  for (; __first != __last; ++__first) ++d;
+  return d;
+}
+
+template <typename _RandIterator>
+inline typename iterator_traits<_RandIterator>::difference_type __distance(
+    _RandIterator __first, _RandIterator __last,
+    ft::random_access_iterator_tag) {
+  return __last - __first;
+}
+
+template <typename _InputIterator>
+inline typename iterator_traits<_InputIterator>::difference_type distance(
+    _InputIterator first, _InputIterator last) {
+  return ft::__distance(
+      first, last,
+      typename iterator_traits<_InputIterator>::iterator_category());
 }
 
 }  // namespace ft
