@@ -67,8 +67,9 @@ My c++ STL containers (c++98)
 		- [Capacity:](#capacity-1)
 		- [Element access:](#element-access-1)
 		- [Modifiers:](#modifiers-1)
-		- [Allocator:](#allocator-2)
 		- [Observers:](#observers)
+		- [Operations:](#operations)
+		- [Allocator:](#allocator-2)
 		- [Non-member functions:](#non-member-functions-1)
 - [TODO](#todo)
 - [Reference](#reference)
@@ -80,7 +81,6 @@ My c++ STL containers (c++98)
 - 라이브러리에서만 사용되는 메소드, 클래스는 __class_name 과 같은 형태로 작성
 - 외부로 공개되지 않는 변수는 __variable_name_ 과 같은 형태로 작성
 - format는 [google style guide](https://google.github.io/styleguide/cppguide.html)에 따름
-
 - private한 클래스 __class_name
 - private한 type은 _Type_Name
 - private 멤버 변수 __variable_name_
@@ -94,12 +94,26 @@ My c++ STL containers (c++98)
 
 # About STL(Standard Template Library) containers
 
+프로그래밍에 있어 자주 사용하는 자료구조들을 class template로 만들어 둬서 다른 object들을 element로 자료구조에 맞게 저장해줌. 이런 컨테이너는 각 element를 위한 공간을 관리해주고, 각 데이터에 접근하는 멤버 함수를 제공하며 이터레이터를 통하여 직접적으로 접근하게도 해줌.
+
 - sequence container
+  - sequentially하게 접근할 수 있는 자료구조
+	- vector, deque, list, array(c++11), forward_list(c++11)이 이에 속함
 - associative container
-- unordered associative container
+  - 빠르게 탐색할 수 있는 정렬된 자료구조(`O(log(n))`)
+  - element들은 position이 아니라 key에 의해 접근됨
+	- set, multiset, map, multimap이 여기에 속함
+- unordered associative container (c++11)
+  - 정렬되지 않고 hash가 되어있는 자료구조.
+  - 탐색에 `amortized O(1) ~ O(n)` 의 시간복잡도를 지님.
+	- unordered_set, unordered_multiset, unordered_map, unordered_multimap이 여기에 속함
 - container adapter
+  - sequential container의 다른 인터페이스를 제공하는 container adaptor
+	- stack, queue, priority_queue가 여기에 속함
 
 # Keywords
+
+컨테이너 구현에 있어서 필요한 지식들
 
 ## Functor (Function Object)
 
@@ -279,6 +293,7 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 
 ## type_traits
 
+TODO : 정리하기
 - `integral_constant`
   - `true_type`
   - `false_type`
@@ -293,6 +308,8 @@ c++에는 `allocator_traits`, `type_traits`, `iterator_traits`, `char_traits` �
 
 ![iterator traits](asset/iterator_traits.png)
 <p align='center' color='gray'> Reference: https://www.cplusplus.com/reference/iterator/ </p>
+
+이터레이터 예시 이미지 넣기
 
 ### InputIterator
 
@@ -344,7 +361,7 @@ struct enable_if<true, T> { typedef T type; };
 
 # Allocator
 
-할당을 위한 `template class`
+할당을 위한 `template class`. container 내부는 이 `allocator`를 통하여 메모리 관리를 함.
 
 ## C++ named requirements: Allocator
 
@@ -471,8 +488,8 @@ typedef ft::reverse_iterator<const_iterator> const_reverse_iterator;
 constructor:
 
 - exception safety: Strong.
-  - [first, last) 가 정상적이지 않으면 UB
-  - `allocator::constructor`가 정상적이지 않으면 UB
+- [first, last) 가 정상적이지 않으면 UB
+- `allocator::constructor`가 정상적이지 않으면 UB
 
 ```c++
 // default constructor which constructs an empty container
@@ -1022,7 +1039,7 @@ public:
 private:
    typedef __tree<key_type, value_type, ft::select_first<value_type>,
                  key_compare, allocator_type> // for map
-   typedef __tree<key_type, key_type, ft::select_first<value_type>,
+   typedef __tree<key_type, key_type, ft::identify<value_type>,
                  key_compare, allocator_type> // for set
       __base;
 
@@ -1057,11 +1074,48 @@ public:
 
 ## Member functions
 
+대부분의 멤버 함수가 map/set에서 동일하니, 다른 부분만 별도 표기
+
 constructor:
+
+- exception-safety: strong.
+- [first, last)가 정상적이지 않으면 UB
+- allocator::construct가 정상적이지 않으면 UB
+
+```c++
+// empty constructor.
+explicit map (const key_compare& comp = key_compare(),
+              const allocator_type& alloc = allocator_type());
+
+// range constructor insert [first , last) to container
+template <class InputIterator>
+map (InputIterator first, InputIterator last,
+       const key_compare& comp = key_compare(),
+       const allocator_type& alloc = allocator_type());
+
+// copy constructor
+map (const map& x);
+```
 
 destructor:
 
+- exception-safety: no-throw
+
+```c++
+// destroy all element and deallocate all storage
+~map();
+```
+
 operator=:
+
+- exception-safety: basic
+- allocator::construct가 정상적이지 않으면 UB
+- value_type이 copy assignable하지 않으면 UB
+
+```c++
+// destroy nodes and assign new nodes
+map& operator=(const map& x);
+```
 
 ### Iterators:
 
@@ -1077,26 +1131,145 @@ reverse_iterator rend() FT_NOEXCEPT;
 
 ### Capacity:
 
+- exception-safety: no-throw
+
 ```c++
 // 컨테이너에 저장된 elements의 수를 반환
-size_type size() const FT_NOEXCEPT; // No-throw
+size_type size() const FT_NOEXCEPT; 
 
 // 컨테이너에 할당할 수 있는 최대 메모리를 반환
-size_type max_size() const FT_NOEXCEPT; // No-throw
+size_type max_size() const FT_NOEXCEPT; 
 
 // 컨테이너가 비었는지 여부를 boolean으로 반환
-bool empty() const FT_NOEXCEPT; // No-throw
+bool empty() const FT_NOEXCEPT; 
 ```
 
 ### Element access:
 
+set은 value가 key밖에 없고, 수정이 불가하므로 `operator[]`가 정의되어 있지 않음
+
+- exception-safety: strong
+- allocator:construct가 정상적이지 않으면 UB
+- mapped_type이 default-constructible 하지 않으면 UB
+
+```c++
+// k에 해당하는 value의 레퍼런스를 리턴, 만약 k가 존재하지 않는다면 insert
+mapped_type& operator[](const key_type& k);
+```
+
 ### Modifiers:
+
+- position이나, range가 정상적이지 않으면 UB
+- allocator::construct가 정상적이지 않으면 UB
+
+```c++
+// val을 적절한 위치에 삽입.
+// 만약 중복된다면 (중복된 원소의 위치, false) 반환
+// 성공한다면 (삽입한 원소의 위치, true) 반환
+pair<iterator,bool> insert (const value_type& val); // strong-guarantee
+
+// insert with hint
+// hint 근처부터 삽입할 위치를 찾아 삽입
+// 만약 중복된다면 중복된 원소의 위치 반환
+// 성공한다면 삽입한 원소의 위치 반환
+iterator insert (iterator position, const value_type& val); // strong-guarantee
+
+// [first, last) 범위 내 element들을 map에 삽입.
+template <class InputIterator>
+void insert (InputIterator first, InputIterator last); // basic-guarantee
+
+
+// position에 있는 노드 삭제
+void erase (iterator position); // strong-guarantee
+
+// k 에 해당하는 노드 삭제
+// set에선 key_type이 아니라 value_type로 정의되어 있지면 결국 같음
+// 지워진 노드의 수를 반환하는데, unique한 key를 가지므로 1 혹은 0 임
+size_type erase(const key_type &k); // strong-guarantee
+
+// [first, last) 범위의 노드 삭제.
+void erase(iterator first, iterator last); // basic-guarantee
+
+// 데이터 스왑. allocator와 comparison object도 swap 할지 여부는 undefined
+void swap(map & x); // no-throw
+
+// 컨테이너의 모든 element destroy 
+void clear(); // no-throw
+```
+### Observers:
+
+- exception-safety: strong
+
+해당 comparison object의 복사본을 반환
+
+```c++
+key_compare key_comp() const;
+value_compare value_comp() const;
+```
+
+### Operations:
+
+- exception-safety: strong
+- 인자로 받은 값이 특정 키와 같은지 아닌지 비교할때, 두 개의 키 a, b가 (comp(a, b) == false && comp(b, a) == false)면 같다고 여김.
+
+`map`과 `set`의 프로토타입이 좀 다른데, 이는 `set`의 모든 `iterator`가 `const_iterator`이기 때문이다.
+결국 `const`인 꼴만 `set`에 존재하는것! (c++98 한정. c++11에선 const_iterator꼴이 별도로 생김)
+
+```c++
+// val의 위치를 찾아 iterator를 리턴, 못찾으면 end() 리턴
+iterator find(const key_type &val); // for map
+const_iterator find(const key_type &val) const; // for map
+iterator find(const value_type &val) const; // for set
+
+// 컨테이너 안에서 k 와 같은 요소의 수를 리턴한다.
+// 모든 element가 unique 하므로 1 혹은 0만 리턴될 수 있음.
+size_type count(const key_type & k) const;
+
+// key_comp(element, k)가 처음으로 false를 리턴하는 element의 iterator를 리턴
+// 결국 k가 존재하면 k의 이터레이터가 반환되고 존재하지 않으면 k보다 큰 첫 element의 이터레이터 반환
+// 조건에 맞는 노드가 없으면 end() 반환
+iterator lower_bound(const key_type &k); // for map
+const_iterator lower_bound(const key_type &k) const; // for map
+iterator lower_bound(const value_type &k) const; // for set
+
+// key_comp(k, element)가 처음으로 true를 리턴하는 노드의 iterator 리턴
+// 조건에 맞는 노드가 없으면 end() 반환
+iterator upper_bound(const key_type &k); // for map
+const_iterator upper_bound(const key_type &k) const; // for map
+iterator upper_bound(const value_type &k) const; // for set
+
+// pair(lower_bound(k), upper_bound(k))를 반환.
+pair<iterator, iterator> equal_range (const key_type &k); // for map
+pair<const_iterator, const_iterator> equal_range (const key_type &k) const; // for map
+pair<iterator, iterator> equal_range (const key_type &k) const; // for set
+```
 
 ### Allocator:
 
-### Observers:
+```c++
+// allocator 리턴
+allocator_type get_allocator() const; // no-throw
+```
 
 ### Non-member functions:
+
+relational operators:
+
+```c++
+bool operator == (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+bool operator != (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+bool operator <  (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+bool operator <= (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+bool operator > (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+bool operator >= (const map<Key, T, Comp, Alloc>& lhs, const map<Key, T, Comp, Alloc>& rhs);
+```
+
+swap()
+
+```c++
+void swap (map<Key, T, Comp, Alloc>& x, map<Key, T, Comp, Alloc>& y);
+```
+
 
 # TODO
 
@@ -1119,6 +1292,9 @@ bool empty() const FT_NOEXCEPT; // No-throw
 - vector처럼 map, set, stack 문서화
 - rb-tree 문서화
 - rb-tree ppt 만들기
+- container에 대한 설명 추가
+- vector, map, set에 대한 이미지 만들기
+- iterator 이미지 만들기
 
 # Reference
 
