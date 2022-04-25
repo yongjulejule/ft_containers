@@ -12,9 +12,9 @@
 #ifndef __TREE_HPP
 #define __TREE_HPP
 
-#include <algorithm>
 #include <memory>
 
+#include "algorithm.hpp"
 #include "iterator.hpp"
 #include "utility.hpp"
 
@@ -470,8 +470,9 @@ class __tree {
   // capacity
   bool empty() const { return __impl_.__node_count_ == 0; }
   size_type max_size() const {
-    return std::min<size_type>(__get_Node_allocator().max_size(),
-                               std::numeric_limits<difference_type>::max());
+    return ft::min(
+        __get_Node_allocator().max_size(),
+        static_cast<size_type>(std::numeric_limits<difference_type>::max()));
   }
   size_type size() const { return __impl_.__node_count_; }
 
@@ -802,7 +803,6 @@ void __tree<_Key, _Val, _KeyOfValue, _Compare, _Alloc>::swap(__tree &__t) {
     __t.__root()->__parent_ = __t.__end();
     ft::swap(__impl_.__node_count_, __t.__impl_.__node_count_);
   }
-  ft::swap(__impl_.__key_comp, __t.__impl_.__key_comp);
   ft::swap(__get_Node_allocator(), __t.__get_Node_allocator());
 }
 

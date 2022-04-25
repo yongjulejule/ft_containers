@@ -59,6 +59,11 @@ bool lexicographical_compare(InputIterator1 first1, InputIterator1 last1,
   }
   return (first2 != last2);
 }
+
+template <typename T>
+const T& min(const T& x, const T& y) {
+  return (x < y) ? x : y;
+}
 }  // namespace ft
 
 #endif  // ALGORITHMS_HPP

@@ -54,8 +54,60 @@ void map_test(int argc, char **argv) {
   std::cout << "key comp : " << sizeof(key_cmp.__key_comp) << "\n";
 }
 
+template <typename T>
+void print_iter(T it, T ite) {
+  for (; it != ite; ++it) print()(*it);
+}
+
+void compare_test(int argc, char **argv) {
+  std::cout << std::boolalpha;
+  ft::map<int, std::string> a;
+  ft::map<int, std::string> b;
+  ft::pair<int, std::string> pr;
+  for (int i = 0; i < argc; ++i) {
+    pr = ft::make_pair(i, argv[i]);
+    if (i != argc - 1) {
+      b.insert(pr);
+    }
+    a.insert(pr);
+  }
+  PRINT("map a");
+  print_iter(a.begin(), a.end());
+  PRINT("map b");
+  print_iter(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  b.insert(pr);
+  PRINT("map a");
+  print_iter(a.begin(), a.end());
+  PRINT("map b");
+  print_iter(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  b.erase(pr.first);
+  PRINT("map a");
+  print_iter(a.begin(), a.end());
+  PRINT("map b");
+  print_iter(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+  ++pr.first;
+  b.insert(pr);
+  PRINT("map a");
+  print_iter(a.begin(), a.end());
+  PRINT("map b");
+  print_iter(b.begin(), b.end());
+  PRINT("a == b, a != b, a < b, a <= b, a > b, a >= b");
+  PRINT(a == b, ", ", a != b, ", ", a<b, ", ", a <= b, ", ", a> b, ", ",
+        a >= b);
+}
+
 int main(int argc, char **argv) {
   max_size_test();
   map_test(argc, argv);
+  compare_test(argc, argv);
   system("leaks mine.out");
 }

@@ -281,7 +281,6 @@ static void local_erase_node(__tree_node_base *const &__z,
     else
       __rightmost = __maximum(__x);
   }
-  // }
 }
 
 static void local_erase_fixup(__tree_node_base *&__x, __tree_node_base *&__x_p,

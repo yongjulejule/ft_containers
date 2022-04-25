@@ -89,6 +89,7 @@
 		"deallocates",
 		"deque",
 		"libcxx",
+		"multiset",
 		"NOEXCEPT",
 		"NOEXCPT",
 		"ptrdiff",

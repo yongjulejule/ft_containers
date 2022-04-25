@@ -123,6 +123,22 @@ class map {
     return (*__it).second;
   }
 
+  mapped_type& at(const key_type& k) {
+    iterator __it = lower_bound(k);
+
+    if (__it == end() || key_compare()(k, (*__it).first))
+      throw std::out_of_range("map: out of range");
+    return (*__it).second;
+  }
+
+  const mapped_type& at(const key_type& k) const {
+    iterator __it = lower_bound(k);
+
+    if (__it == end() || key_compare()(k, (*__it).first))
+      throw std::out_of_range("map: out of range");
+    return (*__it).second;
+  }
+
   // modifiers
   pair<iterator, bool> insert(const value_type& val) {
     return __tree_.insert_unique(val);
@@ -174,10 +190,10 @@ class map {
     return allocator_type(__tree_.get_allocator());
   }
 
-  template <typename _K1, typename _T1, typename _C1, typename _A1>
-  friend bool operator==(const map& lhs, const map& rhs);
-  template <typename _K1, typename _T1, typename _C1, typename _A1>
-  friend bool operator<(const map& lhs, const map& rhs);
+  // template <typename _K1, typename _T1, typename _C1, typename _A1>
+  // friend bool operator==(const map& lhs, const map& rhs);
+  // template <typename _K1, typename _T1, typename _C1, typename _A1>
+  // friend bool operator<(const map& lhs, const map& rhs);
 };
 
 template <typename _Key, typename _T, typename _Compare, typename _Alloc>
