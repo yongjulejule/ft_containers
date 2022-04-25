@@ -306,6 +306,8 @@ TODO : 정리하기
 
 ## iterator_traits
 
+![iterator](asset/iterator.png)
+
 ![iterator traits](asset/iterator_traits.png)
 <p align='center' color='gray'> Reference: https://www.cplusplus.com/reference/iterator/ </p>
 
@@ -439,6 +441,8 @@ void destroy( pointer p ); // Calls ((T*)p)->~T()
 ```
 
 # Vector
+
+![vector](asset/vector.png)
 
 ## Prototype
 
@@ -862,7 +866,7 @@ STL의 map과 set은 sorted associative container로 탐색과 삽입, 삭제에
 4. 만약 한 노드가 `red` 이면 자식 노드(들)은 `black` 이다.
 5. 각각 노드에서, 그 노드로부터 `leaves` 까지의 `simple path`들은 같은 수의 `black` 노드를 지난다. (`root` 노드에서 가장 아래 까지(`leaf` 노드들 까지) 어느 경로로 내려가도 같은 수의 `black` 노드를 만나며, 꼭 `root` 노드일 필요 없이 어떤 노드를 선택해도 그 노드로부터 끝까지 내려가면서 만나는 `black` 의 수는 같다. )
 
-[이미지 삽입]
+[자세한 설명은 PDF 참조](asset/rb-tree.pdf)
 
 ## 구조
 
@@ -1004,6 +1008,10 @@ public:
 ```
 
 # map / set
+
+![map](asset/map.png)
+
+![set](asset/set.png)
 
 `map`과 `set`은 `associative container`로써 탐색을 빠르게 진행할 수 있는 자료구조임.($O(log(n))$)
 두 컨테이너 모두 unique한 `key`를 가지지만, `map`의 경우 `key-value`의 `pair`로 저장되고 `set`은 `key`만 존재함.
