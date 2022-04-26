@@ -1297,13 +1297,6 @@ void swap (map<Key, T, Comp, Alloc>& x, map<Key, T, Comp, Alloc>& y);
 - [x] std::pair
 - [x] std::make_pair
 
-- vector처럼 map, set, stack 문서화
-- rb-tree 문서화
-- rb-tree ppt 만들기
-- container에 대한 설명 추가
-- vector, map, set에 대한 이미지 만들기
-- iterator 이미지 만들기
-
 # Reference
 
 [cplusplus](https://www.cplusplus.com/)
