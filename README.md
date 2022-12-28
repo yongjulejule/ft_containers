@@ -238,6 +238,8 @@ void f1() { try { f2() } catch (...) { std::cout << "back to here!\n"; } }
   - the basic guarantee에 추가로 operation이 실패시 아무런 영향을 미치지 않음.
 - The nothrow guarantee for some operations:
   - the basic guarantee에 추가로 일부 operation은 예외를 발생시키지 않음.
+  
+[Stroustrup 님의 standard library exception safety](https://www.stroustrup.com/3rd_safe.pdf)
 
 [한국문서](https://scvgoe.github.io/2019-07-06-Exception-Safety/)
 
