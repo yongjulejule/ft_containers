@@ -83,8 +83,8 @@ My c++ STL containers (c++98)
 - format는 [google style guide](https://google.github.io/styleguide/cppguide.html)에 따름
 - private한 클래스 __class_name
 - private한 type은 _Type_Name
-- private 멤버 변수 __variable_name_
-- private한 함수의 지역변수 __variable_name
+- private 멤버 변수 \_\_variable\_name_
+- private한 함수의 지역변수 \_\_variable\_name
 
 # Functional Specification
 
